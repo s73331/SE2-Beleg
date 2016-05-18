@@ -42,7 +42,7 @@ public class QueryView extends View {
         frame.pack();
         frame.setVisible(false);
     }
-    public void addFrameController(FrameController controller) {
+    public void addFrameListener(FrameController controller) {
         frame.addWindowListener(controller);
     }
     public void addQueryUpdateListener(Controller controller) {

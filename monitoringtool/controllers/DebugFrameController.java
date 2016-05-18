@@ -17,6 +17,6 @@ public class DebugFrameController extends FrameController {
     }
 
     public void windowClosing(WindowEvent we) {
-        model.toggleQueriesOpened();
+        model.toggleDebugOpened();
     }
 }

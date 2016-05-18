@@ -21,7 +21,6 @@ import controllers.QueryUpdateController;
 public class MonitoringTool {
     public MonitoringTool() {
         Model model=Model.getModel();
-        System.out.println(model);
         MonitoringView view=new MonitoringView(model);
         view.addDebugController(new MonitoringDebugController(model,view.getDebugView()));
         view.addQueryController(new MonitoringQueryController(model,view.getQueryView()));
@@ -29,7 +28,7 @@ public class MonitoringTool {
         view.addEmergencyController(new MonitoringEmergencyController(model, view));
         view.addQueryUpdateController(new QueryUpdateController(model, view.getQueryView()));
         view.addDebugToggleController(new DebugToggleController(model, view.getDebugView()));
-        view.getQueryView().addFrameController(new QueryFrameController(model));
+        view.getQueryView().addFrameListener(new QueryFrameController(model));
         view.getDebugView().addFrameListener(new DebugFrameController(model));
     }
     
