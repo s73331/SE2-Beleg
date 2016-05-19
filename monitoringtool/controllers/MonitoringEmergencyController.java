@@ -1,9 +1,10 @@
-package controllers;
+package monitoringtool.controllers;
 import java.awt.event.ActionEvent;
 
-import base.Controller;
-import base.Model;
-import base.View;
+import monitoringtool.base.Controller;
+import monitoringtool.base.Model;
+import monitoringtool.base.View;
+
 
 /**
  * Controller, which makes a button initiate a emergency shutdown of the connected EV3.

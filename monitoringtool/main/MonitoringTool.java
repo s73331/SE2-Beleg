@@ -1,15 +1,15 @@
-package main;
-import base.Model;
-import views.MonitoringView;
+package monitoringtool.main;
+import monitoringtool.base.Model;
+import monitoringtool.controllers.DebugFrameController;
+import monitoringtool.controllers.DebugToggleController;
+import monitoringtool.controllers.MonitoringDebugController;
+import monitoringtool.controllers.MonitoringEmergencyController;
+import monitoringtool.controllers.MonitoringFixController;
+import monitoringtool.controllers.MonitoringQueryController;
+import monitoringtool.controllers.QueryFrameController;
+import monitoringtool.controllers.QueryUpdateController;
+import monitoringtool.views.MonitoringView;
 
-import controllers.DebugFrameController;
-import controllers.DebugToggleController;
-import controllers.MonitoringDebugController;
-import controllers.MonitoringEmergencyController;
-import controllers.MonitoringFixController;
-import controllers.MonitoringQueryController;
-import controllers.QueryFrameController;
-import controllers.QueryUpdateController;
 
 
 /**

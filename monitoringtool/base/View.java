@@ -1,4 +1,4 @@
-package base;
+package monitoringtool.base;
 
 import javax.swing.JPanel;
 

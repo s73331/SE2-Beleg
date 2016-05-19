@@ -1,4 +1,4 @@
-package base;
+package monitoringtool.base;
 
 /**
  * Implementation of the model in the MVC pattern.

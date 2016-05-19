@@ -1,9 +1,10 @@
-package controllers;
+package monitoringtool.controllers;
 
 import java.awt.event.WindowEvent;
 
-import base.FrameController;
-import base.Model;
+import monitoringtool.base.FrameController;
+import monitoringtool.base.Model;
+
 
 /**
  * Controller, which synchronizes the query frame state to the model when listening to it.

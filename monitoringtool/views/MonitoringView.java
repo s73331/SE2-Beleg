@@ -1,4 +1,4 @@
-package views;
+package monitoringtool.views;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -6,11 +6,12 @@ import java.awt.event.WindowAdapter;
 
 import javax.swing.*;
 
-import controllers.MonitoringToolCloser;
+import monitoringtool.base.Controller;
+import monitoringtool.base.Model;
+import monitoringtool.base.View;
+import monitoringtool.controllers.MonitoringToolCloser;
 
-import base.Controller;
-import base.Model;
-import base.View;
+
 
 /**
  * 

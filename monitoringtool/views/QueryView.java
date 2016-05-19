@@ -1,4 +1,4 @@
-package views;
+package monitoringtool.views;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -9,10 +9,11 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 
-import base.Controller;
-import base.FrameController;
-import base.Model;
-import base.View;
+import monitoringtool.base.Controller;
+import monitoringtool.base.FrameController;
+import monitoringtool.base.Model;
+import monitoringtool.base.View;
+
 
 /**
  * 

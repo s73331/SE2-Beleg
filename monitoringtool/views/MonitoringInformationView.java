@@ -1,10 +1,11 @@
-package views;
+package monitoringtool.views;
 import java.awt.GridLayout;
 
 import javax.swing.JLabel;
 
-import base.Model;
-import base.View;
+import monitoringtool.base.Model;
+import monitoringtool.base.View;
+
 
 /**
  * 
