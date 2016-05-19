@@ -17,6 +17,7 @@ public class MonitoringQueryController extends Controller {
         super(model, queryView);
     }
     public void actionPerformed(ActionEvent ae) {
+        model.updateQuery();
         model.toggleQueriesOpened();
         view.update();
     }

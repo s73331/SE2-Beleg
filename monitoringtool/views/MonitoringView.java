@@ -18,7 +18,7 @@ import monitoringtool.controllers.MonitoringToolCloser;
  * @author martin
  *
  */
-public class MonitoringView extends View {
+public class MonitoringView extends JPanel implements View {
     private static final long serialVersionUID = -8754066383077022418L;
     private JButton debugButton, fixButton, queryButton, emergencyButton;
     private QueryView queryView;
@@ -26,8 +26,6 @@ public class MonitoringView extends View {
     private MonitoringInformationView monitoringInformationView;
     private JFrame frame;
     public MonitoringView(Model model) {
-        super(model);
-        
         queryView=new QueryView(model);
         debugView=new DebugView(model);
         

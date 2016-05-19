@@ -19,14 +19,15 @@ import monitoringtool.base.View;
  * @author martin
  *
  */
-public class DebugView extends View {
+public class DebugView extends JPanel implements View {
     private static final long serialVersionUID = 7326178942021896621L;
     private JFrame frame;
     private JButton toggleButton;
     private JLabel state;
     private JTextArea debugLog;
+    private Model model;
     public DebugView(Model model) {
-        super(model);
+        this.model=model;
         setLayout(new BorderLayout());
         JPanel centerPanel=new JPanel();
         add(centerPanel, BorderLayout.NORTH);
@@ -38,7 +39,7 @@ public class DebugView extends View {
         debugLog=new JTextArea();
         add(debugLog, BorderLayout.CENTER);
         setPreferredSize(new Dimension(500,500));
-        frame=new JFrame("Debug");
+        frame=new JFrame("Debug - Gerät "+model.getDeviceID());
         frame.add(this);
         frame.pack();
         update();
