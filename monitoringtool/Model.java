@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import ev3utils.PSQLHelper;
-import ev3utils.PropertyHelper;
 
 /**
  * Implementation of the model in the MVC pattern.
@@ -14,24 +12,22 @@ import ev3utils.PropertyHelper;
  * 
  */
 public class Model {
-    private boolean debugOpened;                                                    //is debug frame opened?
-    private boolean debugMode;                                                      //is debug mode enabled?
-    private boolean queryOpened;                                                    //is query frame opened?
-    private String deviceID;                                          //TODO: load from properties
+    private boolean debugMode=false;                                                //is debug mode enabled?
+    private String deviceID;
     private String[] recipes={"naps2", "flap2", "hop1"};                            //TODO
     private String lastRecipe="flap2";                                              //TODO
     private String currentItem="x205";                                              //TODO
     private String onlineTime="3h 24m 32s";                                         //TODO
     private int itemCount=33;                                                       //TODO
     private int failCount=2;                                                        //TODO
-    private String debugLog="*Print Trace of Debug Messages*";                      //TODO
+    private String debugLog="";
     private ResultSet queryResult;
-    private String[] queryColumnNames={"uno", "dos", "tres"};                       //TODO
     private String[] queries;
-    private String currentQuery="select * from PTIME where tool='ET1001';";         //TODO
+    private String currentQuery;
     private PSQLHelper psql;
     private boolean psqlFailed=false;
     private PropertyHelper propertyHelper;
+    private boolean mqttError=false;
     private static Model model;
     static {
         try {
@@ -56,12 +52,6 @@ public class Model {
     }
     public static Model getInstance() {
         return model;
-    }
-    public void toggleDebugOpened() {
-        debugOpened^=true;
-    }
-    public boolean isDebugOpened() {
-        return debugOpened;
     }
     public boolean isDebugging() {
         return debugMode;
@@ -97,24 +87,14 @@ public class Model {
     public String getDebugLog() {
         return debugLog;
     }
-    public boolean isQueriesOpened() {
-        return queryOpened;
-    }
-    public void toggleQueriesOpened() {
-        queryOpened^=true;
-    }
     public ResultSet getQueryResult() {
         return queryResult;
-    }
-    public Object[] getColumnNames() {
-        return queryColumnNames;
     }
     public String[] getQueries() {
         return queries;
     }
     public void updateQuery() {
         if(psqlFailed) return;
-        //TODO
         try {
             queryResult=psql.executeQuery(currentQuery);
         } catch (SQLException e) {
@@ -145,5 +125,17 @@ public class Model {
     }
     public void setSQLError(boolean b) {
         psqlFailed=true;        
+    }
+    public void setMqttError(boolean b) {
+        mqttError=true;
+    }
+    public String getMqttServerURI() {
+        return propertyHelper.getMqttServerURI();
+    }
+    public boolean hasMqttError() {
+        return mqttError;
+    }
+    public void addDebug(String debug) {
+        debugLog+=debug+"\n";
     }
 }

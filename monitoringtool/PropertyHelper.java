@@ -1,4 +1,4 @@
-package ev3utils;
+package monitoringtool;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,6 +27,7 @@ public class PropertyHelper {
         if(!isIntParsable(properties.getProperty("height"))) throw new IOException("key height can not be parsed to int");
         if(!properties.containsKey("width")) throw new IOException("key width not found");
         if(!isIntParsable(properties.getProperty("width"))) throw new IOException("key width can not be parsed to int");
+        if(!properties.containsKey("mqttserveruri")) throw new IOException("key mqttserveruri not found");
         
     }
     public static boolean isIntParsable(String input){
@@ -67,5 +68,8 @@ public class PropertyHelper {
     }
     public int getWidth() {
         return Integer.parseInt(properties.getProperty("width"));
+    }
+    public String getMqttServerURI() {
+        return properties.getProperty("mqttserveruri");
     }
 }

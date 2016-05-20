@@ -28,6 +28,7 @@
             <Text fx:id="onlineTime" />
             <Text fx:id="processedItems" />
             <Text fx:id="failedItems" />
+            <Text fx:id="mqttError" id="mqttError" />
         </VBox>
     </left>
     <center>

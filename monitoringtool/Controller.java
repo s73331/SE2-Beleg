@@ -3,6 +3,12 @@ package monitoringtool;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleStringProperty;
@@ -18,10 +24,10 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 
-public class Controller implements InvalidationListener {
+public class Controller implements InvalidationListener, MqttCallback {
     private Model model=Model.getInstance();
     @FXML
-    Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation;
+    Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation, mqttError;
     @FXML
     Pane debugPane, queryPane, informationPane;
     @FXML
@@ -29,6 +35,7 @@ public class Controller implements InvalidationListener {
     @FXML
     TableView<ObservableList<String>> queryContent;
     ObservableList<String> queries;
+    private MqttClient mqtt;
     public void initialize() {
         recipes.setText("Rezepte: "+model.getRecipesString());
         currentRecipe.setText("Zurzeit benutztes Rezept: "+model.getCurrentRecipe());
@@ -37,9 +44,6 @@ public class Controller implements InvalidationListener {
         processedItems.setText("Abgearbeitete Teile: "+model.getProcessedItems());
         failedItems.setText("Fehlgeschlagene Teile: "+model.getFailedItems());
         showDebug();
-        for(int i=0;i<=1000;i++) {
-            debugInformation.setText(debugInformation.getText()+"kek"+i+"\n");
-        }
         queries=FXCollections.observableArrayList();
         for(String query:model.getQueries()) {
             queries.add(query);
@@ -47,6 +51,30 @@ public class Controller implements InvalidationListener {
         queryList.setItems(queries);
         queryList.getSelectionModel().select(0);
         queryList.getSelectionModel().getSelectedItems().addListener(this);
+        try {
+            mqtt=new MqttClient(model.getMqttServerURI(), MqttClient.generateClientId());
+            mqtt.connect();
+            mqtt.setCallback(this);
+            mqtt.subscribe(model.getDeviceID());
+        } catch (MqttException e) {
+            model.setMqttError(true);
+            mqttError.setText("\nMQTT Error");
+            informationPane.setStyle("-fx-background-color:blue");
+            e.printStackTrace();
+        }
+    }
+    private boolean publish(String message) {
+        if(model.hasMqttError()) return false;
+        try {
+            mqtt.publish(model.getDeviceID(), new MqttMessage(message.getBytes()));
+        } catch (MqttException e) {
+            model.setMqttError(true);
+            mqttError.setText("\nMQTT Error");
+            informationPane.setStyle("-fx-background-color:blue");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
     public void showDebug() {
         debugPane.setVisible(true);
@@ -58,12 +86,13 @@ public class Controller implements InvalidationListener {
         queryPane.setVisible(true);
     }
     public void emergencyShutdown() {
-        System.out.println("emergencyShutdown");
+        publish("emergency shutdown");
     }
     public void fixMachine() {
-        System.out.println("fixMachine");
+        publish("manual fix");
     }
     public void toggleDebug() {
+        if(model.hasMqttError()) return;
         model.toggleDebug();
         String debugStateText="Debug Mode: ";
         if(model.isDebugging()) {
@@ -71,18 +100,17 @@ public class Controller implements InvalidationListener {
         } else {
             debugStateText+="off";
         }
-        debugState.setText(debugStateText);
+        if(publish("debug "+model.isDebugging())) {
+            debugState.setText(debugStateText);
+        }
     }
-    //@SuppressWarnings({ "rawtypes", "unchecked" })
     public void updateQuery() {
+        model.setCurrentQuery(queryList.getSelectionModel().getSelectedItem());
         model.updateQuery();
         ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
         ResultSet resultSet=model.getQueryResult();
         queryContent.getColumns().remove(0, queryContent.getColumns().size());
         try {
-            /**********************************
-             * TABLE COLUMN ADDED DYNAMICALLY *
-             **********************************/
             for(int i=0 ; i<resultSet.getMetaData().getColumnCount(); i++) {
                 final int j=i;
                 //We are using non property style for making dynamic table
@@ -90,20 +118,16 @@ public class Controller implements InvalidationListener {
                 col.setCellValueFactory(new Callback<CellDataFeatures<ObservableList<String>, String>, ObservableValue<String>>() {
                     public ObservableValue<String> call(CellDataFeatures<ObservableList<String>, String> p) {
                         // p.getValue() returns the Person instance for a particular TableView row
-                        System.out.println("j: "+j);
                         try {
                         return new SimpleStringProperty(p.getValue().get(j).toString());
                         } catch(NullPointerException npe) {
-                            System.out.println("NullPointerException @j="+j);
-                            return new SimpleStringProperty("null");
+                            System.out.println("NullPointerException @column:"+j);
+                            return new SimpleStringProperty("");
                         }
                     }
                  });
                 queryContent.getColumns().add(col); 
             }
-            /********************************
-             * Data added to ObservableList *
-             ********************************/
             while(resultSet.next()){
                 //Iterate Row
                 ObservableList<String> row = FXCollections.observableArrayList();
@@ -111,7 +135,6 @@ public class Controller implements InvalidationListener {
                     //Iterate Column
                     row.add(resultSet.getString(i));
                 }
-                System.out.println("Row [1] added "+row);
                 data.add(row);
             }
         } catch(SQLException sqle) {
@@ -123,5 +146,22 @@ public class Controller implements InvalidationListener {
     public void invalidated(Observable arg0) {
         model.setCurrentQuery(queryList.getSelectionModel().getSelectedItem());
         updateQuery();
+    }
+    public void connectionLost(Throwable cause) {
+        model.setMqttError(true);        
+    }
+    public void deliveryComplete(IMqttDeliveryToken token) {
+        // not used
+    }
+    public void messageArrived(String topic, MqttMessage message) {
+        String information=new String(message.getPayload());
+        if(information.startsWith("debug")) {
+            information=information.substring(6);
+            if("true".equals(information)||"false".equals(information)) return;
+            model.addDebug(information);
+            debugInformation.setText(model.getDebugLog());
+            return;
+        }
+        
     }
 }

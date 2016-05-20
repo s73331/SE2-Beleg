@@ -10,7 +10,8 @@ import javafx.stage.Stage;
  
 public class MonitoringTool extends Application {
     private Model model;
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ClassNotFoundException {
+        Class.forName("org.postgresql.Driver");
         launch(args);
     }
     @Override
@@ -21,5 +22,8 @@ public class MonitoringTool extends Application {
         Scene scene=new Scene(root, model.getWidth(), model.getHeight());
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+    public void stop() {
+        System.exit(0);
     }
 }
