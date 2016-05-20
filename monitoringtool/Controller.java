@@ -10,6 +10,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -115,7 +116,7 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
         }
     }
     public void fixMachine() {
-        if("maint".equals(model.getMachineState())) {
+        if("MAINT".equals(model.getMachineState())) {
             publish("manual fix");
         } else {
             logger.info("not in maint, not sending manual fix");
@@ -191,7 +192,7 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
             logger.warn("delivery complete, MqttException: "+e);
         }
     }
-    public void messageArrived(String topic, MqttMessage message) {
+    public void messageArrived(String topic, MqttMessage message) throws MqttPersistenceException, MqttException {
         logger.info("message arrived on "+topic+": "+message);
         String[] information=new String(message.getPayload()).split(" ");
         if(information.length==2) {
@@ -202,9 +203,16 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
             return;
             }
             if("emergency".equals(information[0])&&"shutdown".equals(information[1])) return;
+            if("manual".equals(information[0])&&"fix".equals(information[1])) return;
+        }
+        if(information.length==1&&"hello".equals(information[0])) {
+            // no idea why and how
+            //as this is in the callback, one can't simply call publish
+            //but with this code it somehow works
+            mqtt.getTopic(model.getDeviceID()).publish(new MqttMessage(("debug "+model.isDebugging()).getBytes()));
+            return;
         }
         logger.warn("undefined message"+information);
-        
     }
     @Override
     public void run() {

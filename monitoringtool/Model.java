@@ -111,7 +111,6 @@ public class Model {
         return deviceID;
     }
     public void shutdown() {
-        if(psqlFailed) return;
         try {
             psql.close();
         } catch (SQLException e) {
@@ -146,7 +145,7 @@ public class Model {
         logger.debug("debug added: "+debug);
     }
     public void setMachineState(String state) {
-        if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state))
+        if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state)||"DOWN".equals(state))
         {
             machineState=state;
             logger.info("new machine state: "+state);
@@ -157,6 +156,7 @@ public class Model {
     }
     public String getBackgroundColor() {
         switch(machineState) {
+        case "DOWN":      return "aqua";
         case "PROC":      return "greenyellow";
         case "IDLE":      return "yellow";
         case "MAINT":     return "darksalmon";
