@@ -47,7 +47,7 @@ public class Model {
         deviceID=propertyHelper.getDeviceID();
         queries=propertyHelper.getQueries();
         try {
-            psql=new PSQLHelper(this, propertyHelper.getHost(), propertyHelper.getPort(), propertyHelper.getDb(), propertyHelper.getUser(), propertyHelper.getPass());
+            psql=new PSQLHelper(propertyHelper.getHost(), propertyHelper.getPort(), propertyHelper.getDb(), propertyHelper.getUser(), propertyHelper.getPass());
         } catch (SQLException sqle) {
             logger.error("could not initialize PSQLHelper: "+sqle);
             psqlFailed=true;
@@ -129,6 +129,7 @@ public class Model {
         return propertyHelper.getWidth();
     }
     public void setSQLError(boolean b) {
+        logger.info("psql error");
         psqlFailed=true;
     }
     public void setMqttError(boolean b) {
@@ -167,5 +168,8 @@ public class Model {
     }
     public void setRecipes(String recipes) {
         this.recipes=recipes;
+    }
+    public boolean hasSQLError() {
+        return psqlFailed;
     }
 }

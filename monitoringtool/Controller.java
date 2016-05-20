@@ -44,7 +44,7 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
         psql=model.getPSQLHelper();
         currentRecipe.setText("Zurzeit benutztes Rezept: "+model.getCurrentRecipe());
         logger.debug("currentRecipe initialized");
-        currentItem.setText("Zurzeit bearbeitetes Rezept: "+model.getCurrentItem());
+        currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
         logger.debug("currentItem initialized");
         onlineTime.setText("Online seit: "+model.getOnlineTime());
         logger.debug("onlineTime initialized");
@@ -181,7 +181,7 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
     public void connectionLost(Throwable cause) {
         logger.error("mqtt connection lost");
         model.setMqttError(true);
-        informationPane.setStyle("-fx-background-color: "+model.getBackgroundColor());
+        mqttError.setText("\nMQTT connection lost");
     }
     public void deliveryComplete(IMqttDeliveryToken token) {
         // not used
@@ -192,26 +192,41 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
         }
     }
     public void messageArrived(String topic, MqttMessage message) {
-        logger.info("message arrived: "+message);
+        logger.info("message arrived on "+topic+": "+message);
         String[] information=new String(message.getPayload()).split(" ");
-        if(information.length==2&&"debug".equals(information[0])) {
+        if(information.length==2) {
+            if("debug".equals(information[0])) {
             if("true".equals(information[1])||"false".equals(information[1])) return;
             model.addDebug(information[1]);
             debugInformation.setText(model.getDebugLog());
             return;
+            }
+            if("emergency".equals(information[0])&&"shutdown".equals(information[1])) return;
         }
         logger.warn("undefined message"+information);
+        
     }
     @Override
     public void run() {
         while(true) {
             logger.info("updating SQL information");
-            try {
-                model.setMachineState(psql.getMachineState(model.getDeviceID()));
-                informationPane.setStyle("-fx-background-color: "+model.getBackgroundColor()+";");
-            } catch (SQLException e) {
-                model.setSQLError(true);
+            model.setMachineState(psql.getMachineState(model.getDeviceID()));
+            informationPane.setStyle("-fx-background-color: "+model.getBackgroundColor()+";");
+            model.setRecipes(psql.getRecipes(model.getDeviceID()));
+            recipes.setText("Rezepte: "+model.getRecipes());
+            if(model.hasMqttError()) {
+                try {
+                    mqtt.connect();
+                    logger.info("MqttClient reconnected");
+                    model.setMqttError(false);
+                    mqttError.setText("");
+                } catch (MqttException e) {
+                    logger.error("MqttException: "+e);
+                    model.setMqttError(true);
+                    mqttError.setText("\nMQTT Error");
+                }
             }
+            if(model.hasSQLError()) model.setSQLError(!model.getPSQLHelper().renewConnection());
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException e) {
