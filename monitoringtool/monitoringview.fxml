@@ -22,7 +22,7 @@
     </top>
     <left>
         <VBox fx:id="informationPane" id="informationPane">
-            <Text fx:id="recipes" />
+            <Text fx:id="recipes" text="Rezepte: "/>
             <Text fx:id="currentRecipe" />
             <Text fx:id="currentItem" />
             <Text fx:id="onlineTime" />
