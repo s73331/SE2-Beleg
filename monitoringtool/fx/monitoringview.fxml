@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.layout.StackPane?>
+<?import java.net.URL?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.40" fx:controller="monitoringtool.fx.Controller">
+    <top>
+        <FlowPane alignment="center">
+            <Button onAction="#showDebug" text="Debug"/>
+            <Button onAction="#showQuery" text="Query"/>
+            <Button onAction="#emergencyShutdown" text="Not-Aus"/>
+            <Button onAction="#fixMachine" text="Entstören"/>
+        </FlowPane>
+    </top>
+    <left>
+        <VBox>
+            <Text fx:id="recipes" />
+            <Text fx:id="currentRecipe" />
+            <Text fx:id="currentItem" />
+            <Text fx:id="onlineTime" />
+            <Text fx:id="processedItems" />
+            <Text fx:id="failedItems" />
+        </VBox>
+    </left>
+    <center>
+        <StackPane fx:id="stackPane">
+            <Pane fx:id="debugPane" id="debugPane">
+                <Text text="debug" />
+            </Pane>
+            <Pane fx:id="queryPane" id="queryPane">
+                <Text text="query" />
+            </Pane>
+        </StackPane>
+    </center>
+    <stylesheets>
+        <URL value="@style.css" />
+    </stylesheets>
+</BorderPane>

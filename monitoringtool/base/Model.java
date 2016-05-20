@@ -69,6 +69,13 @@ public class Model {
     public String[] getRecipes() {
         return recipes;
     }
+    public String getRecipesString() {
+        String ret="";
+        for(String s:recipes) {
+            ret+=s+", ";
+        }
+        return ret.substring(0, ret.length()-2);
+    }
     public String getCurrentRecipe() {
         return lastRecipe;
     }
@@ -78,10 +85,10 @@ public class Model {
     public String getOnlineTime() {
         return onlineTime;
     }
-    public int getItemCount() {
+    public int getProcessedItems() {
         return itemCount;
     }
-    public int getFailCount() {
+    public int getFailedItems() {
         return failCount;
     }
     public void toggleDebug() {
@@ -129,5 +136,11 @@ public class Model {
     }
     public void setCurrentQuery(String name) {
         currentQuery=propertyHelper.getQuery(name);
+    }
+    public int getHeight() {
+        return propertyHelper.getHeight();
+    }
+    public int getWidth() {
+        return propertyHelper.getWidth();
     }
 }

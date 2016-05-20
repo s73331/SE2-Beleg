@@ -39,7 +39,7 @@ public class MonitoringInformationView extends JPanel implements View {
         lastRecipe.setText("Zurzeit genutztes Rezept: "+model.getCurrentRecipe());
         currentPart.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
         onlineTime.setText("Online seit: "+model.getOnlineTime());
-        partCount.setText("Bearbeitete Teile: "+model.getItemCount());
-        errorCount.setText("Fehlgeschlagene Teile: "+model.getFailCount());
+        partCount.setText("Bearbeitete Teile: "+model.getProcessedItems());
+        errorCount.setText("Fehlgeschlagene Teile: "+model.getFailedItems());
     }
 }

@@ -23,6 +23,11 @@ public class PropertyHelper {
         for(String query : getQueries()) {
             if(!properties.containsKey(query)) throw new IOException("key "+query+" not found");
         }
+        if(!properties.containsKey("height")) throw new IOException("key height not found");
+        if(!isIntParsable(properties.getProperty("height"))) throw new IOException("key height can not be parsed to int");
+        if(!properties.containsKey("width")) throw new IOException("key width not found");
+        if(!isIntParsable(properties.getProperty("width"))) throw new IOException("key width can not be parsed to int");
+        
     }
     public static boolean isIntParsable(String input){
         boolean parsable = true;
@@ -56,5 +61,11 @@ public class PropertyHelper {
     }
     public String getQuery(String name) {
         return properties.getProperty(name);
+    }
+    public int getHeight() {
+        return Integer.parseInt(properties.getProperty("height"));
+    }
+    public int getWidth() {
+        return Integer.parseInt(properties.getProperty("width"));
     }
 }

@@ -1,0 +1,6 @@
+#debugPane {
+    -fx-fill: RED;
+}
+#queryPane {
+    -fx-fill: blue;
+}
