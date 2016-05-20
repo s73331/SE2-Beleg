@@ -70,4 +70,7 @@ public class PSQLHelper {
         logger.info("recipes from psql: "+result.replace("\n", "\\n"));
         return result;
     }
+    public void close() throws SQLException {
+        connection.close();
+    }
 }
