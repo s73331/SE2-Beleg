@@ -1,8 +1,7 @@
-package monitoringtool.fx;
+package monitoringtool;
 
 import java.io.IOException;
 
-import monitoringtool.base.Model;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;

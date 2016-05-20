@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TableView?>
+<?import java.net.URL?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.40" fx:controller="monitoringtool.Controller">
+    <top>
+        <HBox id="buttonPane">
+            <Button onAction="#showDebug" text="Debug"/>
+            <Button onAction="#showQuery" text="Query"/>
+            <Button onAction="#emergencyShutdown" text="Not-Aus"/>
+            <Button onAction="#fixMachine" text="Entstören"/>
+        </HBox>
+    </top>
+    <left>
+        <VBox fx:id="informationPane" id="informationPane">
+            <Text fx:id="recipes" />
+            <Text fx:id="currentRecipe" />
+            <Text fx:id="currentItem" />
+            <Text fx:id="onlineTime" />
+            <Text fx:id="processedItems" />
+            <Text fx:id="failedItems" />
+        </VBox>
+    </left>
+    <center>
+        <StackPane fx:id="stackPane">
+            <BorderPane fx:id="debugPane" id="debugPane">
+                <top>
+                    <HBox id="debugTop">
+                        <Text fx:id="debugState" text="Debug Mode: off" />
+                        <Button text="toggle" onAction="#toggleDebug" />
+                    </HBox>
+                </top>
+                <center>
+                    <ScrollPane>
+                        <Text fx:id="debugInformation" />
+                    </ScrollPane>
+                </center>
+            </BorderPane>
+            <BorderPane fx:id="queryPane" id="queryPane">
+                <left>
+                    <BorderPane id="queryLeft">
+                        <center>
+                            <ListView fx:id="queryList" />
+                        </center>
+                        <bottom>
+                            <HBox id="updateQueryPane">
+                                <Button onAction="#updateQuery" id="updateQuery" text="aktualisieren" />
+                            </HBox>
+                        </bottom>
+                    </BorderPane>
+                </left>
+                <center>
+                    <TableView fx:id="queryContent" />
+                </center>
+            </BorderPane>
+        </StackPane>
+    </center>
+    <stylesheets>
+        <URL value="@style.css" />
+    </stylesheets>
+</BorderPane>

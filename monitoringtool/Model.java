@@ -1,4 +1,4 @@
-package monitoringtool.base;
+package monitoringtool;
 
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -142,5 +142,8 @@ public class Model {
     }
     public int getWidth() {
         return propertyHelper.getWidth();
+    }
+    public void setSQLError(boolean b) {
+        psqlFailed=true;        
     }
 }

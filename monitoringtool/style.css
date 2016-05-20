@@ -1,0 +1,17 @@
+#informationPane {
+    -fx-padding: 10px;
+}
+#buttonPane {
+    -fx-alignment: center;
+    -fx-padding: 10px;
+    -fx-spacing: 10px;
+}
+#debugTop {
+    -fx-spacing: 10px;
+    -fx-padding: 10px;
+    -fx-alignment: center;
+}
+#updateQueryPane {
+    -fx-alignment: center;
+    -fx-padding: 10px;
+}
