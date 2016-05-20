@@ -13,7 +13,7 @@ public class PSQLHelper {
     private static final Logger logger=LogManager.getLogger();
     private Connection connection;
     private Statement statement;
-    String url;
+    private String url;
     public PSQLHelper(String host, int port, String database, String user, String pass) throws SQLException {
         if(host==null) throw new IllegalArgumentException("host can not be null");
         if(port<1||port>65535) throw new IllegalArgumentException("illegal port number");
@@ -22,6 +22,7 @@ public class PSQLHelper {
         connection=DriverManager.getConnection(url);
         logger.info("database connection established");
         statement=connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+        statement.setQueryTimeout(1);
     }
     public boolean renewConnection() {
         try {
@@ -38,16 +39,11 @@ public class PSQLHelper {
         logger.info("executing query: "+query);
         return statement.executeQuery(query);
     }
-    public void close() throws SQLException {
-        connection.close();
-    }
     public String getMachineState(String deviceID) {
-        String query="select event from events where entity='"+deviceID+"' and event like '->%' order by timestamp desc limit 1;";
-        logger.info(query);
         ResultSet resultSet;
         String result="";
         try {
-            resultSet = statement.executeQuery(query);
+            resultSet = executeQuery("select event from events where entity='"+deviceID+"' and event like '->%' order by timestamp desc limit 1;");
             resultSet.next();
             result=resultSet.getString("event");
         } catch (SQLException e) {

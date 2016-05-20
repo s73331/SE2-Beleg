@@ -195,13 +195,15 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
     public void messageArrived(String topic, MqttMessage message) throws MqttPersistenceException, MqttException {
         logger.info("message arrived on "+topic+": "+message);
         String[] information=new String(message.getPayload()).split(" ");
-        if(information.length==2) {
-            if("debug".equals(information[0])) {
-            if("true".equals(information[1])||"false".equals(information[1])) return;
-            model.addDebug(information[1]);
-            debugInformation.setText(model.getDebugLog());
-            return;
+        if("debug".equals(information[0])) {
+            if(information.length==2&&("true".equals(information[1])||"false".equals(information[1]))) return;
+            if(information.length>1) {
+                model.addDebug(new String(message.getPayload()).substring("debug ".length()));
+                debugInformation.setText(model.getDebugLog());
+                return;
             }
+        }
+        if(information.length==2) {
             if("emergency".equals(information[0])&&"shutdown".equals(information[1])) return;
             if("manual".equals(information[0])&&"fix".equals(information[1])) return;
         }
