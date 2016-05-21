@@ -77,7 +77,7 @@ public class PSQLHelper {
     }
     public String getOnlineTime(String deviceID) {
         try {
-            ResultSet rs=executeQuery("SELECT CURRENT_TIMESTAMP - (SELECT timestamp FROM events WHERE entity='"+deviceID+"' AND event LIKE '->%' AND timestamp > (SELECT timestamp FROM events WHERE entity='RTA1002' AND event='->DOWN' ORDER BY timestamp DESC LIMIT 1) ORDER BY timestamp ASC LIMIT 1) AS onlinetime;");
+            ResultSet rs=executeQuery("SELECT CURRENT_TIMESTAMP - (SELECT timestamp FROM events WHERE entity='"+deviceID+"' AND event LIKE '->%' AND timestamp > (SELECT timestamp FROM events WHERE entity='"+deviceID+"' AND event='->DOWN' ORDER BY timestamp DESC LIMIT 1) ORDER BY timestamp ASC LIMIT 1) AS onlinetime;");
             rs.next();
             logger.info("onlinetime from psql: "+rs.getString("onlinetime"));
             return rs.getString("onlinetime");

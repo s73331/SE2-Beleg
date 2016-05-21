@@ -137,6 +137,8 @@ public class Model implements MqttCallback {
     }
     public synchronized String getMachineState() {
         String state=psql.getMachineState(deviceID);
+        if("0".equals(state)) state="DOWN";
+        if("UKN".equals(state)) state="DOWN";
         if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state)||"DOWN".equals(state)) {
             machineState=state;
             logger.info("new machine state: "+state);
@@ -239,9 +241,11 @@ public class Model implements MqttCallback {
         }
     }
     public synchronized String getOnlineTime() {
+        if("DOWN".equals(psql.getMachineState(deviceID))) return "DOWN";
         return psql.getOnlineTime(deviceID);
     }
     public synchronized String getCurrentItem() {
+        if("DOWN".equals(psql.getMachineState(deviceID))) return "DOWN";
         return psql.getCurrentItem(deviceID);
     }
     public synchronized String getFailedItems() {

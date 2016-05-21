@@ -124,11 +124,21 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
     public void run() {
         while(true) {
             logger.info("updating SQL information");
-            model.getMachineState();
+            String state=model.getMachineState();
             informationPane.setStyle("-fx-background-color: "+model.getBackgroundColor()+";");
-            recipes.setText("Rezepte: "+model.getRecipes());
-            currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
-            onlineTime.setText("Online seit:"+model.getOnlineTime());
+            String recs=model.getRecipes();
+            if(recs.length()>0) {
+                recipes.setText("Rezepte: "+model.getRecipes());
+            } else {
+                recipes.setText("");
+            }
+            if("DOWN".equals(state)) {
+                currentItem.setText("");
+                onlineTime.setText("");
+            } else {
+                currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
+                onlineTime.setText("Online seit:"+model.getOnlineTime());
+            }
             processedItems.setText("Abgearbeitete Teile: "+model.getProcessedItems());
             failedItems.setText("Fehlgeschlagene Teile: "+model.getFailedItems());
             if(model.fixMqtt()) {
