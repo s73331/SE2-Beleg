@@ -5,12 +5,7 @@ import java.sql.SQLException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
+import org.eclipse.paho.client.mqttv3.*;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -39,7 +34,7 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
     @FXML
     TableView<ObservableList<String>> queryContent;
     ObservableList<String> queries;
-    private MqttClient mqtt;
+    private MqttAsyncClient mqtt;
     private PSQLHelper psql;
     public void initialize() {
         psql=model.getPSQLHelper();
@@ -64,17 +59,20 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
         queryList.getSelectionModel().getSelectedItems().addListener(this);
         logger.debug("queryList initialized");
         try {
-            mqtt=new MqttClient(model.getMqttServerURI(), MqttClient.generateClientId());
+            mqtt=new MqttAsyncClient(model.getMqttServerURI(), MqttAsyncClient.generateClientId()); //todo: ClientID
             logger.debug("MqttClient constructed");
-            mqtt.connect();
-            logger.debug("MqttClient connected");
             mqtt.setCallback(this);
-            mqtt.subscribe(model.getDeviceID());
+            IMqttToken conToken = mqtt.connect();
+            conToken.waitForCompletion();
+            logger.debug("MqttClient connected");
+            IMqttToken subToken = mqtt.subscribe(model.getDeviceID(),0);  //Qos 0?
+            subToken.waitForCompletion();
             logger.info("subscribed to mqtt topic "+model.getDeviceID());
+
         } catch (MqttException e) {
             logger.error("MqttException: "+e);
             model.setMqttError(true);
-            mqttError.setText("\nMQTT Error");
+            mqttError.setText("\nMQTT Error1");
             informationPane.setStyle("-fx-background-color:blue");
         }
         new Thread(this).start();
@@ -89,7 +87,7 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
         } catch (MqttException e) {
             logger.error("MqttException: "+e);
             model.setMqttError(true);
-            mqttError.setText("\nMQTT Error");
+            mqttError.setText("\nMQTT Error2");
             informationPane.setStyle("-fx-background-color:blue");
             e.printStackTrace();
             return false;
@@ -208,10 +206,7 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
             if("manual".equals(information[0])&&"fix".equals(information[1])) return;
         }
         if(information.length==1&&"hello".equals(information[0])) {
-            // no idea why and how
-            //as this is in the callback, one can't simply call publish
-            //but with this code it somehow works
-            mqtt.getTopic(model.getDeviceID()).publish(new MqttMessage(("debug "+model.isDebugging()).getBytes()));
+            mqtt.publish(model.getDeviceID(),new MqttMessage(("debug "+model.isDebugging()).getBytes()));
             return;
         }
         logger.warn("undefined message"+information);
@@ -226,14 +221,15 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
             recipes.setText("Rezepte: "+model.getRecipes());
             if(model.hasMqttError()) {
                 try {
-                    mqtt.connect();
+                    IMqttToken conToken = mqtt.connect();
+                    conToken.waitForCompletion();
                     logger.info("MqttClient reconnected");
                     model.setMqttError(false);
                     mqttError.setText("");
                 } catch (MqttException e) {
                     logger.error("MqttException: "+e);
                     model.setMqttError(true);
-                    mqttError.setText("\nMQTT Error");
+                    mqttError.setText("\nMQTT Error3");
                 }
             }
             if(model.hasSQLError()) model.setSQLError(!model.getPSQLHelper().renewConnection());
