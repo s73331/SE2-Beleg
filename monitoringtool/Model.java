@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +28,7 @@ public class Model implements MqttCallback {
     private String deviceID;
     private String debugLog="";
     private ResultSet queryResult;
-    private Collection<String> queries;
+    private Set<String> queries;
     private String currentQuery;
     private PSQLHelper psql;
     private PropertyHelper propertyHelper;
@@ -35,10 +36,8 @@ public class Model implements MqttCallback {
     private boolean mqttError=false;
     private MqttAsyncClient mqtt;
     private MqttMiniCallback callback;
-    private static Model model;
-    static {
-        model=new Model();
-    }
+    private boolean dispatchActive=false;
+    private static Model model=new Model();
     private Model() {
         try {
             propertyHelper=new PropertyHelper("monitoringtool.properties");
@@ -48,6 +47,9 @@ public class Model implements MqttCallback {
         }
         deviceID=propertyHelper.getDeviceID();
         queries=propertyHelper.getQueries();
+        if(!queries.add("Dispatchliste")){
+            logger.warn("ignoring users query \"Dispatchliste\"");
+        }
         psql=new PSQLHelper(propertyHelper.getHost(), propertyHelper.getPort(), propertyHelper.getDb(), propertyHelper.getUser(), propertyHelper.getPass());
         logger.info("PSQLHelper created");
         try {
@@ -111,7 +113,13 @@ public class Model implements MqttCallback {
         }
     }
     public synchronized void setCurrentQuery(String name) {
-        currentQuery=propertyHelper.getQuery(name);
+        if("Dispatchliste".equals(name)) {
+            currentQuery="SELECT * FROM lot WHERE disptool='"+deviceID+"';";
+            dispatchActive=true;
+        } else {
+            currentQuery=propertyHelper.getQuery(name);
+            dispatchActive=false;
+        }
         logger.info("new currentQuery: "+name);
     }
     public synchronized int getHeight() {
@@ -252,5 +260,8 @@ public class Model implements MqttCallback {
     }
     public synchronized String getProcessedItems() {
         return psql.getProcessedItems(deviceID);
+    }
+    public synchronized boolean isDispatchActive() {
+        return dispatchActive;
     }
 }

@@ -13,6 +13,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
@@ -32,6 +33,8 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
     ListView<String> queryList;
     @FXML
     TableView<ObservableList<String>> queryContent;
+    @FXML
+    Button fixButton, shutdownButton;
     private ObservableList<String> queries;
     public void initialize() {
         logger.debug("currentRecipe initialized");
@@ -122,6 +125,16 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
         while(true) {
             logger.info("updating SQL information");
             String state=model.getMachineState();
+            if("MAINT".equals(state)) {
+                fixButton.setDisable(false);
+            } else {
+                fixButton.setDisable(true);
+            }
+            if("DOWN".equals(state)) {
+                shutdownButton.setDisable(true);
+            } else {
+                shutdownButton.setDisable(false);
+            }
             informationPane.setStyle("-fx-background-color: "+model.getBackgroundColor()+";");
             buttonPane.setStyle("-fx-background-color: "+model.getBackgroundColor()+";");
             String recs=model.getRecipes();
@@ -150,6 +163,7 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
             } else {
                 mqttError.setText("MQTT Error 3");
             }
+            if(queryPane.isVisible()&&model.isDispatchActive()) model.updateQuery();
             try {
                 logger.debug("sleeping for 10s");
                 Thread.sleep(10000);

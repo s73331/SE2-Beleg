@@ -16,8 +16,8 @@
         <HBox fx:id="buttonPane" id="buttonPane">
             <Button onAction="#showDebug" text="Debug"/>
             <Button onAction="#showQuery" text="Query"/>
-            <Button onAction="#emergencyShutdown" text="Not-Aus"/>
-            <Button onAction="#fixMachine" text="Entstören"/>
+            <Button onAction="#emergencyShutdown" text="Not-Aus" fx:id="shutdownButton" />
+            <Button onAction="#fixMachine" text="Entstören" fx:id="fixButton" />
         </HBox>
     </top>
     <left>

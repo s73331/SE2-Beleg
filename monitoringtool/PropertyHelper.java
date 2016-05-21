@@ -3,8 +3,8 @@ package monitoringtool;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -70,8 +70,8 @@ public class PropertyHelper {
     public String getDeviceID() {
         return properties.getProperty("deviceID");
     }
-    public Collection<String> getQueries() {
-        return queries.keySet();
+    public Set<String> getQueries() {
+        return new HashSet<String>(queries.keySet()); //HashSet supports the add(String) method as opposed to the keySet of a HashMap
     }
     public int getHeight() {
         return Integer.parseInt(properties.getProperty("height"));
