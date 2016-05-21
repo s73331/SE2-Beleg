@@ -6,6 +6,12 @@ import java.sql.SQLException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 
 /**
@@ -14,8 +20,8 @@ import org.apache.logging.log4j.Logger;
  * @author martin
  * 
  */
-public class Model {
-    private  static final Logger logger=LogManager.getRootLogger();
+public class Model implements MqttCallback {
+    private static final Logger logger=LogManager.getRootLogger();
     private boolean debugMode=false;                                                //is debug mode enabled?
     private String deviceID;
     private String recipes;
@@ -29,10 +35,12 @@ public class Model {
     private String[] queries;
     private String currentQuery;
     private PSQLHelper psql;
-    private boolean psqlFailed=false;
+    private boolean sqlError=false;
     private PropertyHelper propertyHelper;
-    private String machineState;
+    private String machineState="DOWN";
     private boolean mqttError=false;
+    private MqttAsyncClient mqtt;
+    private MqttMiniCallback callback;
     private static Model model;
     static {
         model=new Model();
@@ -48,113 +56,110 @@ public class Model {
         queries=propertyHelper.getQueries();
         try {
             psql=new PSQLHelper(propertyHelper.getHost(), propertyHelper.getPort(), propertyHelper.getDb(), propertyHelper.getUser(), propertyHelper.getPass());
+            logger.info("PSQLHelper created");
         } catch (SQLException sqle) {
             logger.error("could not initialize PSQLHelper: "+sqle);
-            psqlFailed=true;
+            sqlError=true;
+        }
+        try {
+            logger.debug("kek");
+            mqtt=new MqttAsyncClient(propertyHelper.getMqttServerURI(), MqttAsyncClient.generateClientId()); //todo: ClientID
+            logger.debug("MqttClient constructed");
+            mqtt.setCallback(this);
+            IMqttToken conToken = mqtt.connect();
+            conToken.waitForCompletion();
+            logger.debug("MqttClient connected");
+            IMqttToken subToken = mqtt.subscribe(deviceID,0);  //Qos 0?
+            subToken.waitForCompletion();
+            logger.info("subscribed to mqtt topic "+deviceID);
+
+        } catch (MqttException mqtte) {
+            logger.error("MqttException: "+mqtte);
+            mqttError=true;
+        } catch (IllegalArgumentException iae) {
+            logger.error("IllegalArgumentException: "+iae);
+            mqttError=true;
+        } catch(NullPointerException npe) {
+            logger.error("NullPointerException: "+npe);
+            mqttError=true;
         }
         logger.debug("initialized Model");
-    }
-    public PSQLHelper getPSQLHelper() {
-        return psql;
     }
     public static Model getInstance() {
         return model;
     }
-    public boolean isDebugging() {
+    public synchronized boolean isDebugging() {
         return debugMode;
     }
-    public String getRecipes() {
-        return recipes;
-    }
-    public String getCurrentRecipe() {
+    public synchronized String getCurrentRecipe() {
         return lastRecipe;
     }
-    public String getCurrentItem() {
+    public synchronized String getCurrentItem() {
         return currentItem;
     }
-    public String getOnlineTime() {
+    public synchronized String getOnlineTime() {
         return onlineTime;
     }
-    public int getProcessedItems() {
+    public synchronized int getProcessedItems() {
         return itemCount;
     }
-    public int getFailedItems() {
+    public synchronized int getFailedItems() {
         return failCount;
     }
-    public void toggleDebug() {
-        debugMode^=true;
-        logger.debug("debug toggled");
+    public synchronized void toggleDebug() {
+        if(mqttError) return;
+        debugMode^=publish("debug "+!debugMode);
     }
-    public String getDebugLog() {
+    public synchronized String getDebugLog() {
         return debugLog;
     }
-    public ResultSet getQueryResult() {
-        return queryResult;
-    }
-    public String[] getQueries() {
+    public synchronized String[] getQueries() {
         return queries;
     }
-    public void updateQuery() {
-        if(psqlFailed) {
+    public synchronized ResultSet updateQuery() {
+        if(sqlError) {
             logger.info("previous PSQLError, not updating query");
-            return;
+            return null;
         }
         try {
             queryResult=psql.executeQuery(currentQuery);
             logger.info("updated query");
+            return queryResult;
         } catch (SQLException e) {
-            psqlFailed=true;
+            sqlError=true;
             logger.error("SQLException: "+e+"\ncurrent query: "+currentQuery);
+            return null;
         }
     }
-    public String getDeviceID() {
+    public synchronized String getDeviceID() {
         return deviceID;
     }
-    public void shutdown() {
+    public synchronized void shutdown() {
+        if(sqlError) return;
         try {
             psql.close();
         } catch (SQLException e) {
             logger.error("SQLException when closing SQLConnection");
         }
     }
-    public void setCurrentQuery(String name) {
+    public synchronized void setCurrentQuery(String name) {
         currentQuery=propertyHelper.getQuery(name);
         logger.info("new currentQuery: "+name);
     }
-    public int getHeight() {
+    public synchronized int getHeight() {
         return propertyHelper.getHeight();
     }
-    public int getWidth() {
+    public synchronized int getWidth() {
         return propertyHelper.getWidth();
     }
-    public void setSQLError(boolean b) {
-        logger.info("psql error");
-        psqlFailed=true;
-    }
-    public void setMqttError(boolean b) {
-        mqttError=b;
-    }
-    public String getMqttServerURI() {
-        return propertyHelper.getMqttServerURI();
-    }
-    public boolean hasMqttError() {
+    public synchronized boolean hasMqttError() {
         return mqttError;
     }
-    public void addDebug(String debug) {
+    public synchronized void addDebug(String debug) {
         debugLog+=debug+"\n";
         logger.debug("debug added: "+debug);
     }
-    public void setMachineState(String state) {
-        if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state)||"DOWN".equals(state))
-        {
-            machineState=state;
-            logger.info("new machine state: "+state);
-        } else {
-            logger.warn("illegal state string");
-            throw new IllegalArgumentException("illegal state string");
-        }
-    }
-    public String getBackgroundColor() {
+    public synchronized String getBackgroundColor() {
         switch(machineState) {
         case "DOWN":      return "aqua";
         case "PROC":      return "greenyellow";
@@ -163,13 +168,134 @@ public class Model {
         }
         return null;
     }
-    public String getMachineState() {
+    public synchronized String getMachineState() {
         return machineState;
     }
-    public void setRecipes(String recipes) {
-        this.recipes=recipes;
+    public synchronized String updateMachineState() {
+        String state="";
+        if(sqlError) {
+            state="DOWN";
+        } else {
+            state=psql.updateMachineState(deviceID);
+        }
+        if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state)||"DOWN".equals(state)) {
+            machineState=state;
+            logger.info("new machine state: "+state);
+        } else {
+            logger.warn("illegal state string");
+            throw new IllegalArgumentException("illegal state string");
+        }
+        return machineState;
     }
-    public boolean hasSQLError() {
-        return psqlFailed;
+    public synchronized String updateRecipes() {
+        if(sqlError) return "";
+        recipes=psql.updateRecipes(deviceID);
+        return recipes;
+    }
+    public synchronized boolean sqlFix() {
+        if(sqlError) {
+            try {
+                psql=new PSQLHelper(propertyHelper.getHost(), propertyHelper.getPort(), propertyHelper.getDb(), propertyHelper.getUser(), propertyHelper.getPass());
+                logger.info("PSQLHelper created");
+                sqlError=false;
+            } catch (SQLException e) {
+                logger.error("could not create PSQLHelper");
+            }
+            return sqlError;
+        }
+        return true;
+    }
+    @Override
+    public synchronized void connectionLost(Throwable arg0) {
+        logger.error("mqtt connection lost");
+        mqttError=true;
+        callback.connectionLost();
+    }
+    @Override
+    public synchronized void deliveryComplete(IMqttDeliveryToken token) {
+        try {
+            logger.debug("delivery complete: "+token.getMessage());
+        } catch (MqttException e) {
+            logger.warn("delivery complete, MqttException: "+e);
+        }
+    }
+    @Override
+    public synchronized void messageArrived(String topic, MqttMessage message) throws Exception {
+        logger.info("message arrived on "+topic+": "+message);
+        String[] information=new String(message.getPayload()).split(" ");
+        if(information.length==2) {
+            if("emergency".equals(information[0])&&"shutdown".equals(information[1])) return;
+            if("manual".equals(information[0])&&"fix".equals(information[1])) return;
+        }
+        if(information.length==1&&"hello".equals(information[0])) {
+            publish("debug "+debugMode);
+            return;
+        }
+        if("debug".equals(information[0])) {
+            if(information.length==2&&("true".equals(information[1])||"false".equals(information[1]))) return;
+            if(information.length>1) {
+                String debug=new String(message.getPayload()).substring("debug ".length());
+                debugLog+=debug+"\n";
+                logger.debug("debug added: "+debug);
+                callback.debugArrived();
+                return;
+            }
+        }
+        logger.warn("undefined message"+information);
+    }
+    public synchronized void setMqttCallback(MqttMiniCallback callback) {
+        this.callback=callback;
+    }
+    public synchronized boolean publish(String message) {
+        if(mqttError) {
+            logger.warn("MqttError, not publishing: "+message);
+            return false;
+        }
+        try {
+            mqtt.publish(deviceID, new MqttMessage(message.getBytes()));
+        } catch (MqttException e) {
+            logger.error("MqttException: "+e);
+            mqttError=true;
+            return false;
+        }
+        logger.info("published message to "+deviceID+": "+message);
+        return true;
+    }
+    public synchronized boolean fixMqtt() {
+        if(model.hasMqttError()) {
+            try {
+                IMqttToken conToken = mqtt.connect();
+                conToken.waitForCompletion();
+                logger.info("MqttClient reconnected");
+                mqttError=false;
+            } catch (MqttException e) {
+                logger.error("MqttException: "+e);
+                mqttError=true;
+                return false;
+            }
+        }
+        return true;
+    }
+    public synchronized void setSQLError(boolean b) {
+        logger.fatal("model.setSQLError called");
+        sqlError=b;
+    }
+    public synchronized void emergencyShutdown() {
+        if(mqttError) {
+            logger.info("mqttError, not publishing emergency shutdown");
+            return;
+        }
+        if("DOWN".equals(machineState)) {
+            logger.info("machine down, not publishing emergency shutdown");
+            return;
+        }
+        publish("emergency shutdown");
+    }
+    public synchronized void fixMachine() {
+        if("MAINT".equals(model.getMachineState())) {
+            model.publish("manual fix");
+        } else {
+            logger.info("not in maint, not sending manual fix");
+        }
     }
 }

@@ -32,6 +32,7 @@ public class MonitoringTool extends Application {
         logger.debug("start finished");
     }
     public void stop() {
+        model.shutdown();
         logger.info("exiting normally");
         System.exit(0);
     }

@@ -5,7 +5,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class PropertyHelper {
+    private static final Logger logger=LogManager.getRootLogger();
     private Properties properties;
     public PropertyHelper(String file) throws IOException {
         InputStream fileStream=new FileInputStream(file);
@@ -70,6 +74,7 @@ public class PropertyHelper {
         return Integer.parseInt(properties.getProperty("width"));
     }
     public String getMqttServerURI() {
+        logger.debug("mqttserveruri: "+properties.getProperty("mqttserveruri"));
         return properties.getProperty("mqttserveruri");
     }
 }

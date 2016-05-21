@@ -23,6 +23,7 @@ public class PSQLHelper {
         logger.info("database connection established");
         statement=connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
         statement.setQueryTimeout(1);
+        logger.debug("statement created");
     }
     public boolean renewConnection() {
         try {
@@ -39,7 +40,7 @@ public class PSQLHelper {
         logger.info("executing query: "+query);
         return statement.executeQuery(query);
     }
-    public String getMachineState(String deviceID) {
+    public String updateMachineState(String deviceID) {
         ResultSet resultSet;
         String result="";
         try {
@@ -53,7 +54,7 @@ public class PSQLHelper {
         logger.info("state from psql: "+result);
         return result;
     }
-    public String getRecipes(String deviceID) {
+    public String updateRecipes(String deviceID) {
         String query="select recipe from ptime where tool='"+deviceID+"';";
         logger.info(query);
         ResultSet resultSet;

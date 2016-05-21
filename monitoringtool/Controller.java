@@ -5,7 +5,6 @@ import java.sql.SQLException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.paho.client.mqttv3.*;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -22,7 +21,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 
-public class Controller implements InvalidationListener, MqttCallback, Runnable {
+public class Controller implements InvalidationListener, MqttMiniCallback, Runnable {
     private Model model=Model.getInstance();
     private  static final Logger logger=LogManager.getRootLogger();
     @FXML
@@ -33,11 +32,8 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
     ListView<String> queryList;
     @FXML
     TableView<ObservableList<String>> queryContent;
-    ObservableList<String> queries;
-    private MqttAsyncClient mqtt;
-    private PSQLHelper psql;
+    private ObservableList<String> queries;
     public void initialize() {
-        psql=model.getPSQLHelper();
         currentRecipe.setText("Zurzeit benutztes Rezept: "+model.getCurrentRecipe());
         logger.debug("currentRecipe initialized");
         currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
@@ -49,7 +45,6 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
         failedItems.setText("Fehlgeschlagene Teile: "+model.getFailedItems());
         logger.debug("failedItems initialized");
         showDebug();
-        logger.debug("showing debug");
         queries=FXCollections.observableArrayList();
         for(String query:model.getQueries()) {
             queries.add(query);
@@ -58,42 +53,8 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
         queryList.getSelectionModel().select(0);
         queryList.getSelectionModel().getSelectedItems().addListener(this);
         logger.debug("queryList initialized");
-        try {
-            mqtt=new MqttAsyncClient(model.getMqttServerURI(), MqttAsyncClient.generateClientId()); //todo: ClientID
-            logger.debug("MqttClient constructed");
-            mqtt.setCallback(this);
-            IMqttToken conToken = mqtt.connect();
-            conToken.waitForCompletion();
-            logger.debug("MqttClient connected");
-            IMqttToken subToken = mqtt.subscribe(model.getDeviceID(),0);  //Qos 0?
-            subToken.waitForCompletion();
-            logger.info("subscribed to mqtt topic "+model.getDeviceID());
-
-        } catch (MqttException e) {
-            logger.error("MqttException: "+e);
-            model.setMqttError(true);
-            mqttError.setText("\nMQTT Error1");
-            informationPane.setStyle("-fx-background-color:blue");
-        }
+        model.setMqttCallback(this);
         new Thread(this).start();
-    }
-    private boolean publish(String message) {
-        if(model.hasMqttError()) {
-            logger.warn("MqttError, not publishing: "+message);
-            return false;
-        }
-        try {
-            mqtt.publish(model.getDeviceID(), new MqttMessage(message.getBytes()));
-        } catch (MqttException e) {
-            logger.error("MqttException: "+e);
-            model.setMqttError(true);
-            mqttError.setText("\nMQTT Error2");
-            informationPane.setStyle("-fx-background-color:blue");
-            e.printStackTrace();
-            return false;
-        }
-        logger.info("published message to "+model.getDeviceID()+": "+message);
-        return true;
     }
     public void showDebug() {
         logger.info("showing debug");
@@ -107,21 +68,12 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
         queryPane.setVisible(true);
     }
     public void emergencyShutdown() {
-        if(model.hasMqttError()) {
-            logger.info("MQTT Error, not sending emergency shutdown");
-        } else {
-            publish("emergency shutdown");
-        }
+        model.emergencyShutdown();
     }
     public void fixMachine() {
-        if("MAINT".equals(model.getMachineState())) {
-            publish("manual fix");
-        } else {
-            logger.info("not in maint, not sending manual fix");
-        }
+        model.fixMachine();
     }
     public void toggleDebug() {
-        if(model.hasMqttError()) return;
         model.toggleDebug();
         String debugStateText="Debug Mode: ";
         if(model.isDebugging()) {
@@ -129,15 +81,16 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
         } else {
             debugStateText+="off";
         }
-        if(publish("debug "+model.isDebugging())) {
-            debugState.setText(debugStateText);
-        }
+        debugState.setText(debugStateText);
     }
     public void updateQuery() {
         model.setCurrentQuery(queryList.getSelectionModel().getSelectedItem());
-        model.updateQuery();
         ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
-        ResultSet resultSet=model.getQueryResult();
+        ResultSet resultSet=model.updateQuery();
+        if(resultSet==null) {
+            logger.warn("resultSet is null");
+            return;
+        }
         queryContent.getColumns().remove(0, queryContent.getColumns().size());
         try {
             for(int i=0 ; i<resultSet.getMetaData().getColumnCount(); i++) {
@@ -167,8 +120,7 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
                 data.add(row);
             }
         } catch(SQLException sqle) {
-            sqle.printStackTrace();
-            model.setSQLError(true);
+            logger.error("SQLException on controller"+sqle);
         }
         queryContent.setItems(data);
     }
@@ -177,68 +129,35 @@ public class Controller implements InvalidationListener, MqttCallback, Runnable 
         model.setCurrentQuery(queryList.getSelectionModel().getSelectedItem());
         updateQuery();
     }
-    public void connectionLost(Throwable cause) {
-        logger.error("mqtt connection lost");
-        model.setMqttError(true);
-        mqttError.setText("\nMQTT connection lost");
-    }
-    public void deliveryComplete(IMqttDeliveryToken token) {
-        // not used
-        try {
-            logger.debug("delivery complete: "+token.getMessage());
-        } catch (MqttException e) {
-            logger.warn("delivery complete, MqttException: "+e);
-        }
-    }
-    public void messageArrived(String topic, MqttMessage message) throws MqttPersistenceException, MqttException {
-        logger.info("message arrived on "+topic+": "+message);
-        String[] information=new String(message.getPayload()).split(" ");
-        if("debug".equals(information[0])) {
-            if(information.length==2&&("true".equals(information[1])||"false".equals(information[1]))) return;
-            if(information.length>1) {
-                model.addDebug(new String(message.getPayload()).substring("debug ".length()));
-                debugInformation.setText(model.getDebugLog());
-                return;
-            }
-        }
-        if(information.length==2) {
-            if("emergency".equals(information[0])&&"shutdown".equals(information[1])) return;
-            if("manual".equals(information[0])&&"fix".equals(information[1])) return;
-        }
-        if(information.length==1&&"hello".equals(information[0])) {
-            mqtt.publish(model.getDeviceID(),new MqttMessage(("debug "+model.isDebugging()).getBytes()));
-            return;
-        }
-        logger.warn("undefined message"+information);
-    }
     @Override
     public void run() {
         while(true) {
+            model.sqlFix();
             logger.info("updating SQL information");
-            model.setMachineState(psql.getMachineState(model.getDeviceID()));
+            model.updateMachineState();
             informationPane.setStyle("-fx-background-color: "+model.getBackgroundColor()+";");
-            model.setRecipes(psql.getRecipes(model.getDeviceID()));
-            recipes.setText("Rezepte: "+model.getRecipes());
-            if(model.hasMqttError()) {
-                try {
-                    IMqttToken conToken = mqtt.connect();
-                    conToken.waitForCompletion();
-                    logger.info("MqttClient reconnected");
-                    model.setMqttError(false);
-                    mqttError.setText("");
-                } catch (MqttException e) {
-                    logger.error("MqttException: "+e);
-                    model.setMqttError(true);
-                    mqttError.setText("\nMQTT Error3");
-                }
+            recipes.setText("Rezepte: "+model.updateRecipes());
+            if(model.fixMqtt()) {
+                mqttError.setText("");
+            } else {
+                mqttError.setText("MQTT Error 3");
             }
-            if(model.hasSQLError()) model.setSQLError(!model.getPSQLHelper().renewConnection());
             try {
+                logger.debug("sleeping for 10s");
                 Thread.sleep(10000);
+                logger.debug("slept for 10s");
             } catch (InterruptedException e) {
                 logger.info("terminating sql update thread");
                 break;
             }
         }
+    }
+    @Override
+    public void connectionLost() {
+        mqttError.setText("\nMQTT connection lost");
+    }
+    @Override
+    public void debugArrived() {
+        debugInformation.setText(model.getDebugLog());
     }
 }
