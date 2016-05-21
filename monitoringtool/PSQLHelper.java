@@ -14,48 +14,49 @@ public class PSQLHelper {
     private Connection connection;
     private Statement statement;
     private String url;
-    public PSQLHelper(String host, int port, String database, String user, String pass) throws SQLException {
+    private boolean sqlError;
+    public PSQLHelper(String host, int port, String database, String user, String pass) {
         if(host==null) throw new IllegalArgumentException("host can not be null");
         if(port<1||port>65535) throw new IllegalArgumentException("illegal port number");
         if(database==null) throw new IllegalArgumentException("host can not be null");
         url="jdbc:postgresql://"+host+":"+port+"/"+database+"?user="+user+"&password="+pass;
-        connection=DriverManager.getConnection(url);
-        logger.info("database connection established");
-        statement=connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-        statement.setQueryTimeout(1);
-        logger.debug("statement created");
+        connect();
     }
-    public boolean renewConnection() {
+    private boolean connect() {
         try {
             connection=DriverManager.getConnection(url);
             logger.info("database connection established");
             statement=connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            statement.setQueryTimeout(1);
+            logger.debug("statement created");
+            sqlError=false;
             return true;
         } catch (SQLException e) {
-            logger.info("could not renew connection: "+e);
+            logger.error("could not connect to database");
+            sqlError=true;
+            return false;
         }
-        return false;
     }
     public ResultSet executeQuery(String query) throws SQLException {
+        if(sqlError&&!connect()) throw new SQLException("no connection to database");
         logger.info("executing query: "+query);
         return statement.executeQuery(query);
     }
-    public String updateMachineState(String deviceID) {
+    public String getMachineState(String deviceID) {
         ResultSet resultSet;
         String result="";
         try {
-            resultSet = executeQuery("select event from events where entity='"+deviceID+"' and event like '->%' order by timestamp desc limit 1;");
+            resultSet = executeQuery("SELECT state FROM tool WHERE tool='"+deviceID+"';");
             resultSet.next();
-            result=resultSet.getString("event");
+            result=resultSet.getString("state");
         } catch (SQLException e) {
             logger.error("getMachineState: SQLException: "+e);;
         }
-        result=result.substring(2);
         logger.info("state from psql: "+result);
         return result;
     }
-    public String updateRecipes(String deviceID) {
-        String query="select recipe from ptime where tool='"+deviceID+"';";
+    public String getRecipes(String deviceID) {
+        String query="SELECT recipe FROM ptime WHERE tool='"+deviceID+"';";
         logger.info(query);
         ResultSet resultSet;
         String result="";
@@ -73,5 +74,49 @@ public class PSQLHelper {
     }
     public void close() throws SQLException {
         connection.close();
+    }
+    public String getOnlineTime(String deviceID) {
+        try {
+            ResultSet rs=executeQuery("SELECT CURRENT_TIMESTAMP - (SELECT timestamp FROM events WHERE entity='"+deviceID+"' AND event LIKE '->%' AND timestamp > (SELECT timestamp FROM events WHERE entity='RTA1002' AND event='->DOWN' ORDER BY timestamp DESC LIMIT 1) ORDER BY timestamp ASC LIMIT 1) AS onlinetime;");
+            rs.next();
+            logger.info("onlinetime from psql: "+rs.getString("onlinetime"));
+            return rs.getString("onlinetime");
+        } catch(SQLException sqle) {
+            logger.error("updateOnlineTime: SQLException "+sqle);
+            return "";
+        }
+    }
+    public String getCurrentItem(String deviceID) {
+        try {
+            ResultSet rs=executeQuery("SELECT note FROM events WHERE entity='"+deviceID+"' AND event='->PROC' ORDER BY TIMESTAMP DESC LIMIT 1;");
+            rs.next();
+            logger.info("current item from psql: "+rs.getString("note"));
+            return rs.getString("note");
+        } catch(SQLException sqle) {
+            logger.error("updateCurrentItem: SQLException "+sqle);
+            return "";
+        }
+    }
+    public String getFailedItems(String deviceID) {
+        try {
+            ResultSet rs=executeQuery("SELECT COUNT(*) FROM events WHERE event='->MAINT' AND entity='"+deviceID+"' AND note LIKE '' GROUP BY event");
+            rs.next();
+            logger.info("failed items from psql: "+rs.getString("count"));
+        return rs.getString("count");
+        } catch(SQLException sqle) {
+            logger.error("updateCurrentItem: SQLException "+sqle);
+            return "";
+        }
+    }
+    public String getProcessedItems(String deviceID) {
+        try {
+            ResultSet rs=executeQuery("SELECT COUNT(*) FROM events WHERE entity='"+deviceID+"' AND note='Processing finished' GROUP BY note;");
+            rs.next();
+            logger.info("processed items from psql: "+rs.getString("count"));
+            return rs.getString("count");
+        } catch (SQLException sqle) {
+            logger.error("updateCurrentItem: SQLException "+sqle);
+            return "";
+        }
     }
 }

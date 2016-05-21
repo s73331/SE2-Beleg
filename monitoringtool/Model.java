@@ -24,18 +24,11 @@ public class Model implements MqttCallback {
     private static final Logger logger=LogManager.getRootLogger();
     private boolean debugMode=false;                                                //is debug mode enabled?
     private String deviceID;
-    private String recipes;
-    private String lastRecipe="flap2";                                              //TODO
-    private String currentItem="x205";                                              //TODO
-    private String onlineTime="3h 24m 32s";                                         //TODO
-    private int itemCount=33;                                                       //TODO
-    private int failCount=2;                                                        //TODO
     private String debugLog="";
     private ResultSet queryResult;
     private String[] queries;
     private String currentQuery;
     private PSQLHelper psql;
-    private boolean sqlError=false;
     private PropertyHelper propertyHelper;
     private String machineState="DOWN";
     private boolean mqttError=false;
@@ -54,13 +47,8 @@ public class Model implements MqttCallback {
         }
         deviceID=propertyHelper.getDeviceID();
         queries=propertyHelper.getQueries();
-        try {
-            psql=new PSQLHelper(propertyHelper.getHost(), propertyHelper.getPort(), propertyHelper.getDb(), propertyHelper.getUser(), propertyHelper.getPass());
-            logger.info("PSQLHelper created");
-        } catch (SQLException sqle) {
-            logger.error("could not initialize PSQLHelper: "+sqle);
-            sqlError=true;
-        }
+        psql=new PSQLHelper(propertyHelper.getHost(), propertyHelper.getPort(), propertyHelper.getDb(), propertyHelper.getUser(), propertyHelper.getPass());
+        logger.info("PSQLHelper created");
         try {
             logger.debug("kek");
             mqtt=new MqttAsyncClient(propertyHelper.getMqttServerURI(), MqttAsyncClient.generateClientId()); //todo: ClientID
@@ -91,21 +79,6 @@ public class Model implements MqttCallback {
     public synchronized boolean isDebugging() {
         return debugMode;
     }
-    public synchronized String getCurrentRecipe() {
-        return lastRecipe;
-    }
-    public synchronized String getCurrentItem() {
-        return currentItem;
-    }
-    public synchronized String getOnlineTime() {
-        return onlineTime;
-    }
-    public synchronized int getProcessedItems() {
-        return itemCount;
-    }
-    public synchronized int getFailedItems() {
-        return failCount;
-    }
     public synchronized void toggleDebug() {
         if(mqttError) return;
         debugMode^=publish("debug "+!debugMode);
@@ -117,16 +90,11 @@ public class Model implements MqttCallback {
         return queries;
     }
     public synchronized ResultSet updateQuery() {
-        if(sqlError) {
-            logger.info("previous PSQLError, not updating query");
-            return null;
-        }
         try {
             queryResult=psql.executeQuery(currentQuery);
             logger.info("updated query");
             return queryResult;
         } catch (SQLException e) {
-            sqlError=true;
             logger.error("SQLException: "+e+"\ncurrent query: "+currentQuery);
             return null;
         }
@@ -135,7 +103,6 @@ public class Model implements MqttCallback {
         return deviceID;
     }
     public synchronized void shutdown() {
-        if(sqlError) return;
         try {
             psql.close();
         } catch (SQLException e) {
@@ -169,15 +136,7 @@ public class Model implements MqttCallback {
         return null;
     }
     public synchronized String getMachineState() {
-        return machineState;
-    }
-    public synchronized String updateMachineState() {
-        String state="";
-        if(sqlError) {
-            state="DOWN";
-        } else {
-            state=psql.updateMachineState(deviceID);
-        }
+        String state=psql.getMachineState(deviceID);
         if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state)||"DOWN".equals(state)) {
             machineState=state;
             logger.info("new machine state: "+state);
@@ -187,23 +146,8 @@ public class Model implements MqttCallback {
         }
         return machineState;
     }
-    public synchronized String updateRecipes() {
-        if(sqlError) return "";
-        recipes=psql.updateRecipes(deviceID);
-        return recipes;
-    }
-    public synchronized boolean sqlFix() {
-        if(sqlError) {
-            try {
-                psql=new PSQLHelper(propertyHelper.getHost(), propertyHelper.getPort(), propertyHelper.getDb(), propertyHelper.getUser(), propertyHelper.getPass());
-                logger.info("PSQLHelper created");
-                sqlError=false;
-            } catch (SQLException e) {
-                logger.error("could not create PSQLHelper");
-            }
-            return sqlError;
-        }
-        return true;
+    public synchronized String getRecipes() {
+        return psql.getRecipes(deviceID);
     }
     @Override
     public synchronized void connectionLost(Throwable arg0) {
@@ -276,10 +220,6 @@ public class Model implements MqttCallback {
         }
         return true;
     }
-    public synchronized void setSQLError(boolean b) {
-        logger.fatal("model.setSQLError called");
-        sqlError=b;
-    }
     public synchronized void emergencyShutdown() {
         if(mqttError) {
             logger.info("mqttError, not publishing emergency shutdown");
@@ -297,5 +237,17 @@ public class Model implements MqttCallback {
         } else {
             logger.info("not in maint, not sending manual fix");
         }
+    }
+    public synchronized String getOnlineTime() {
+        return psql.getOnlineTime(deviceID);
+    }
+    public synchronized String getCurrentItem() {
+        return psql.getCurrentItem(deviceID);
+    }
+    public synchronized String getFailedItems() {
+        return psql.getFailedItems(deviceID);
+    }
+    public synchronized String getProcessedItems() {
+        return psql.getProcessedItems(deviceID);
     }
 }

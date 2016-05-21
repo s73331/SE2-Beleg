@@ -34,16 +34,7 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
     TableView<ObservableList<String>> queryContent;
     private ObservableList<String> queries;
     public void initialize() {
-        currentRecipe.setText("Zurzeit benutztes Rezept: "+model.getCurrentRecipe());
         logger.debug("currentRecipe initialized");
-        currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
-        logger.debug("currentItem initialized");
-        onlineTime.setText("Online seit: "+model.getOnlineTime());
-        logger.debug("onlineTime initialized");
-        processedItems.setText("Abgearbeitete Teile: "+model.getProcessedItems());
-        logger.debug("processedItems initialized");
-        failedItems.setText("Fehlgeschlagene Teile: "+model.getFailedItems());
-        logger.debug("failedItems initialized");
         showDebug();
         queries=FXCollections.observableArrayList();
         for(String query:model.getQueries()) {
@@ -132,11 +123,14 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
     @Override
     public void run() {
         while(true) {
-            model.sqlFix();
             logger.info("updating SQL information");
-            model.updateMachineState();
+            model.getMachineState();
             informationPane.setStyle("-fx-background-color: "+model.getBackgroundColor()+";");
-            recipes.setText("Rezepte: "+model.updateRecipes());
+            recipes.setText("Rezepte: "+model.getRecipes());
+            currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
+            onlineTime.setText("Online seit:"+model.getOnlineTime());
+            processedItems.setText("Abgearbeitete Teile: "+model.getProcessedItems());
+            failedItems.setText("Fehlgeschlagene Teile: "+model.getFailedItems());
             if(model.fixMqtt()) {
                 mqttError.setText("");
             } else {
