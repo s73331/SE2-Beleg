@@ -13,7 +13,7 @@
 <?import java.net.URL?>
 <BorderPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.40" fx:controller="monitoringtool.Controller">
     <top>
-        <HBox id="buttonPane">
+        <HBox fx:id="buttonPane" id="buttonPane">
             <Button onAction="#showDebug" text="Debug"/>
             <Button onAction="#showQuery" text="Query"/>
             <Button onAction="#emergencyShutdown" text="Not-Aus"/>
@@ -21,8 +21,8 @@
         </HBox>
     </top>
     <left>
-        <VBox fx:id="informationPane" id="informationPane">
-            <Text fx:id="recipes" text="Rezepte: "/>
+        <VBox fx:id="informationPane" id="informationPane" minWidth="100">
+            <Text fx:id="recipes" />
             <Text fx:id="currentRecipe" />
             <Text fx:id="currentItem" />
             <Text fx:id="onlineTime" />

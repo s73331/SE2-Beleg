@@ -3,7 +3,12 @@ package monitoringtool;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 public class PropertyHelper {
     private static final Logger logger=LogManager.getRootLogger();
     private Properties properties;
+    Map<String, String> queries=new HashMap<String, String>();
     public PropertyHelper(String file) throws IOException {
         InputStream fileStream=new FileInputStream(file);
         properties=new Properties();
@@ -18,21 +24,24 @@ public class PropertyHelper {
         //checks
         if(!properties.containsKey("host")) throw new IOException("key host not found");
         if(!properties.containsKey("port")) throw new IOException("key port not found");
-        if(!isIntParsable(properties.getProperty("port"))) throw new IOException("key port can not be parsed to int");
         if(!properties.containsKey("db")) throw new IOException("key db not found");
         if(!properties.containsKey("user")) throw new IOException("key user not found");
         if(!properties.containsKey("pass")) throw new IOException("key pass not found");
         if(!properties.containsKey("deviceID")) throw new IOException("key deviceID not found");
-        if(!properties.containsKey("queries")) throw new IOException("key queries not found");
-        for(String query : getQueries()) {
-            if(!properties.containsKey(query)) throw new IOException("key "+query+" not found");
-        }
         if(!properties.containsKey("height")) throw new IOException("key height not found");
-        if(!isIntParsable(properties.getProperty("height"))) throw new IOException("key height can not be parsed to int");
         if(!properties.containsKey("width")) throw new IOException("key width not found");
-        if(!isIntParsable(properties.getProperty("width"))) throw new IOException("key width can not be parsed to int");
         if(!properties.containsKey("mqttserveruri")) throw new IOException("key mqttserveruri not found");
-        
+        if(!isIntParsable(properties.getProperty("port"))) throw new IOException("key port can not be parsed to int");
+        if(!isIntParsable(properties.getProperty("width"))) throw new IOException("key width can not be parsed to int");
+        if(!isIntParsable(properties.getProperty("height"))) throw new IOException("key height can not be parsed to int");
+        Set<String> allProperties=properties.stringPropertyNames();
+        Iterator<String> queryIterator=allProperties.iterator();
+        while(queryIterator.hasNext()) {
+            String s=queryIterator.next();
+            if(s.startsWith("query_")) {
+                queries.put(s.substring(6).replace('_',' '), properties.getProperty(s));
+            }
+        }
     }
     public static boolean isIntParsable(String input){
         boolean parsable = true;
@@ -61,11 +70,8 @@ public class PropertyHelper {
     public String getDeviceID() {
         return properties.getProperty("deviceID");
     }
-    public String[] getQueries() {
-        return properties.getProperty("queries").split(":");
-    }
-    public String getQuery(String name) {
-        return properties.getProperty(name);
+    public Collection<String> getQueries() {
+        return queries.keySet();
     }
     public int getHeight() {
         return Integer.parseInt(properties.getProperty("height"));
@@ -76,5 +82,8 @@ public class PropertyHelper {
     public String getMqttServerURI() {
         logger.debug("mqttserveruri: "+properties.getProperty("mqttserveruri"));
         return properties.getProperty("mqttserveruri");
+    }
+    public String getQuery(String name) {
+        return queries.get(name);
     }
 }

@@ -3,6 +3,7 @@ package monitoringtool;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,7 +27,7 @@ public class Model implements MqttCallback {
     private String deviceID;
     private String debugLog="";
     private ResultSet queryResult;
-    private String[] queries;
+    private Collection<String> queries;
     private String currentQuery;
     private PSQLHelper psql;
     private PropertyHelper propertyHelper;
@@ -41,8 +42,8 @@ public class Model implements MqttCallback {
     private Model() {
         try {
             propertyHelper=new PropertyHelper("monitoringtool.properties");
-        } catch (IOException e) {
-            logger.fatal("error: could not load properties\ncwd: "+System.getProperty("user.dir")+"\nexpected file: monitoringtool.properties");
+        } catch (IOException ioe) {
+            logger.fatal("error: could not load properties\ncwd: "+System.getProperty("user.dir")+"\nexpected file: monitoringtool.properties\n"+ioe);
             System.exit(1);
         }
         deviceID=propertyHelper.getDeviceID();
@@ -86,7 +87,7 @@ public class Model implements MqttCallback {
     public synchronized String getDebugLog() {
         return debugLog;
     }
-    public synchronized String[] getQueries() {
+    public synchronized Collection<String> getQueries() {
         return queries;
     }
     public synchronized ResultSet updateQuery() {
@@ -95,7 +96,7 @@ public class Model implements MqttCallback {
             logger.info("updated query");
             return queryResult;
         } catch (SQLException e) {
-            logger.error("SQLException: "+e+"\ncurrent query: "+currentQuery);
+            logger.error("SQLException: "+e+", current query: "+currentQuery);
             return null;
         }
     }
@@ -137,14 +138,12 @@ public class Model implements MqttCallback {
     }
     public synchronized String getMachineState() {
         String state=psql.getMachineState(deviceID);
-        if("0".equals(state)) state="DOWN";
-        if("UKN".equals(state)) state="DOWN";
         if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state)||"DOWN".equals(state)) {
             machineState=state;
             logger.info("new machine state: "+state);
         } else {
-            logger.warn("illegal state string");
-            throw new IllegalArgumentException("illegal state string");
+            logger.warn("illegal state string, defaulting to DOWN");
+            return "DOWN";
         }
         return machineState;
     }

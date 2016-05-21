@@ -61,7 +61,7 @@ public class PSQLHelper {
         ResultSet resultSet;
         String result="";
         try {
-            resultSet = statement.executeQuery(query);
+            resultSet = executeQuery(query);
             while(resultSet.next()) {
                 if(resultSet.getString("recipe")!=null)result+=resultSet.getString("recipe")+",\n";
             }
@@ -73,7 +73,12 @@ public class PSQLHelper {
         return result;
     }
     public void close() throws SQLException {
-        connection.close();
+        try {
+            connection.close();
+            logger.info("psql connection closed");
+        } catch(NullPointerException npe) {
+            logger.error("NullPointerException when closing psql connection");
+        }
     }
     public String getOnlineTime(String deviceID) {
         try {

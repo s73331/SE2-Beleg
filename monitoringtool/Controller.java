@@ -27,7 +27,7 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
     @FXML
     Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation, mqttError;
     @FXML
-    Pane debugPane, queryPane, informationPane;
+    Pane debugPane, queryPane, informationPane, buttonPane;
     @FXML
     ListView<String> queryList;
     @FXML
@@ -36,10 +36,7 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
     public void initialize() {
         logger.debug("currentRecipe initialized");
         showDebug();
-        queries=FXCollections.observableArrayList();
-        for(String query:model.getQueries()) {
-            queries.add(query);
-        }
+        queries=FXCollections.observableArrayList(model.getQueries());
         queryList.setItems(queries);
         queryList.getSelectionModel().select(0);
         queryList.getSelectionModel().getSelectedItems().addListener(this);
@@ -126,6 +123,7 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
             logger.info("updating SQL information");
             String state=model.getMachineState();
             informationPane.setStyle("-fx-background-color: "+model.getBackgroundColor()+";");
+            buttonPane.setStyle("-fx-background-color: "+model.getBackgroundColor()+";");
             String recs=model.getRecipes();
             if(recs.length()>0) {
                 recipes.setText("Rezepte: "+model.getRecipes());
@@ -139,8 +137,14 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
                 currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
                 onlineTime.setText("Online seit:"+model.getOnlineTime());
             }
-            processedItems.setText("Abgearbeitete Teile: "+model.getProcessedItems());
-            failedItems.setText("Fehlgeschlagene Teile: "+model.getFailedItems());
+            String processed=model.getProcessedItems();
+            if(!processed.isEmpty()) {
+                processedItems.setText("Abgearbeitete Teile: "+processed);
+            }
+            String failed=model.getFailedItems();
+            if(!failed.isEmpty()) {
+                failedItems.setText("Fehlgeschlagene Teile: "+failed);
+            }
             if(model.fixMqtt()) {
                 mqttError.setText("");
             } else {
