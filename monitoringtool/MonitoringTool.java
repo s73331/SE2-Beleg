@@ -15,13 +15,14 @@ public class MonitoringTool extends Application {
     private Model model;
     private static final Logger logger=LogManager.getRootLogger();
     public static void main(String[] args) throws ClassNotFoundException {
-        logger.info("entering main");
+        logger.info("main(...): entered");
         Class.forName("org.postgresql.Driver");
         logger.debug("loaded org.postgresql.Driver");
         launch(args);
     }
     @Override
     public void start(Stage primaryStage) throws IOException {
+        logger.debug("start(): entered");
         model=Model.getInstance();
         primaryStage.setTitle("Monitoring Tool - Gerät "+model.getDeviceID());
         Pane root=(Pane)FXMLLoader.load(getClass().getResource("monitoringview.fxml"));
@@ -33,7 +34,7 @@ public class MonitoringTool extends Application {
     }
     public void stop() {
         model.shutdown();
-        logger.info("exiting normally");
+        logger.info("exiting successfully");
         System.exit(0);
     }
 }

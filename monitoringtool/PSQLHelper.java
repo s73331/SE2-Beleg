@@ -14,31 +14,44 @@ public class PSQLHelper {
     private Connection connection;
     private Statement statement;
     private String url;
-    private boolean sqlError;
-    public PSQLHelper(String host, int port, String database, String user, String pass) {
+    private boolean error;
+    private PSQLListener listener;
+    public PSQLHelper(String host, int port, String database, String user, String pass, PSQLListener listener) {
         if(host==null) throw new IllegalArgumentException("host can not be null");
         if(port<1||port>65535) throw new IllegalArgumentException("illegal port number");
         if(database==null) throw new IllegalArgumentException("host can not be null");
+        this.listener=listener;
         url="jdbc:postgresql://"+host+":"+port+"/"+database+"?user="+user+"&password="+pass;
         connect();
     }
+    private void reportError() {
+        error=true;
+        if(listener!=null) listener.errorOccured();
+    }
+    private void reportFix() {
+        error=false;
+        if(listener!=null) listener.errorFixed();
+    }
     private boolean connect() {
         try {
+            logger.debug("connect(): url: "+url);
             connection=DriverManager.getConnection(url);
             logger.info("database connection established");
             statement=connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
             statement.setQueryTimeout(1);
-            logger.debug("statement created");
-            sqlError=false;
+            logger.debug("connect(): query timeout:"+statement.getQueryTimeout());
+            logger.debug("connect(): statement created");
+            reportFix();
             return true;
-        } catch (SQLException e) {
+        } catch (SQLException sqle) {
             logger.error("could not connect to database");
-            sqlError=true;
+            logger.debug("connect(): "+sqle);
+            reportError();
             return false;
         }
     }
     public ResultSet executeQuery(String query) throws SQLException {
-        if(sqlError&&!connect()) throw new SQLException("no connection to database");
+        if(error&&!connect()) return null;
         logger.info("executing query: "+query);
         return statement.executeQuery(query);
     }
@@ -47,10 +60,17 @@ public class PSQLHelper {
         String result="";
         try {
             resultSet = executeQuery("SELECT state FROM tool WHERE tool='"+deviceID+"';");
-            resultSet.next();
-            result=resultSet.getString("state");
-        } catch (SQLException e) {
-            logger.error("getMachineState: SQLException: "+e);;
+            if(resultSet==null) return result;
+            if(resultSet.next()) {
+                result=resultSet.getString("state");
+            } else {
+                logger.fatal("no tool "+deviceID);
+                logger.debug("getMachineState(): ResultSet"+resultSet);
+            }
+        } catch (SQLException sqle) {
+            logger.error("SQLException when getting machine state");
+            logger.debug("getMachineState(): "+sqle);
+            reportError();
         }
         logger.info("state from psql: "+result);
         return result;
@@ -62,11 +82,14 @@ public class PSQLHelper {
         String result="";
         try {
             resultSet = executeQuery(query);
+            if(resultSet==null) return "";
             while(resultSet.next()) {
                 if(resultSet.getString("recipe")!=null)result+=resultSet.getString("recipe")+",\n";
             }
-        } catch (SQLException e) {
-            logger.error("getRecipes: SQLException: "+e);;
+        } catch (SQLException sqle) {
+            logger.error("SQLException when getting recipes");
+            logger.debug("getRecipes(): "+sqle);
+            reportError();
         }
         if(result.length()>2) result=result.substring(0, result.length()-2);
         logger.info("recipes from psql: "+result.replace("\n", "\\n"));
@@ -78,49 +101,83 @@ public class PSQLHelper {
             logger.info("psql connection closed");
         } catch(NullPointerException npe) {
             logger.error("NullPointerException when closing psql connection");
+            logger.debug("close(): "+npe);
+            reportError();
         }
     }
     public String getOnlineTime(String deviceID) {
         try {
             ResultSet rs=executeQuery("SELECT CURRENT_TIMESTAMP - (SELECT timestamp FROM events WHERE entity='"+deviceID+"' AND event LIKE '->%' AND timestamp > (SELECT timestamp FROM events WHERE entity='"+deviceID+"' AND event='->DOWN' ORDER BY timestamp DESC LIMIT 1) ORDER BY timestamp ASC LIMIT 1) AS onlinetime;");
-            rs.next();
-            logger.info("onlinetime from psql: "+rs.getString("onlinetime"));
-            return rs.getString("onlinetime");
+            if(rs==null) return "";
+            if(rs.next()) {
+                logger.info("onlinetime from psql: "+rs.getString("onlinetime"));
+                return rs.getString("onlinetime");
+            } else {
+                logger.warn("no online time");
+                logger.debug("getOnlineTime(): ResultSet: "+rs);
+                return "";
+            }
         } catch(SQLException sqle) {
-            logger.error("updateOnlineTime: SQLException "+sqle);
+            logger.error("SQLException when getting online time");
+            logger.debug("getOnlineTime(): "+sqle);
+            reportError();
             return "";
         }
     }
     public String getCurrentItem(String deviceID) {
         try {
             ResultSet rs=executeQuery("SELECT note FROM events WHERE entity='"+deviceID+"' AND event='->PROC' ORDER BY TIMESTAMP DESC LIMIT 1;");
-            rs.next();
-            logger.info("current item from psql: "+rs.getString("note"));
-            return rs.getString("note");
+            if(rs==null) return "";
+            if(rs.next()) {
+                logger.info("current item from psql: "+rs.getString("note"));
+                return rs.getString("note");
+            } else {
+                logger.warn("no current item");
+                logger.debug("getCurrentItem(): ResultSet: "+rs);
+                return "";
+            }
         } catch(SQLException sqle) {
-            logger.error("updateCurrentItem: SQLException "+sqle);
+            logger.error("SQLException when getting current item");
+            logger.debug("getCurrentItem(): "+sqle);
+            reportError();
             return "";
         }
     }
     public String getFailedItems(String deviceID) {
         try {
             ResultSet rs=executeQuery("SELECT COUNT(*) FROM events WHERE event='->MAINT' AND entity='"+deviceID+"' AND note LIKE '' GROUP BY event");
-            rs.next();
-            logger.info("failed items from psql: "+rs.getString("count"));
-        return rs.getString("count");
+            if(rs==null) return "";
+            if(rs.next()) {
+                logger.info("failed items from psql: "+rs.getString("count"));
+                return rs.getString("count");
+            } else {
+                logger.warn("no failed items");
+                logger.debug("getFailedItems(): ResultSet: "+rs);
+                return "";
+            }
         } catch(SQLException sqle) {
-            logger.error("updateCurrentItem: SQLException "+sqle);
+            logger.error("SQLException when getting failed items");
+            logger.debug("getFailedItems(): "+sqle);
+            reportError();
             return "";
         }
     }
     public String getProcessedItems(String deviceID) {
         try {
             ResultSet rs=executeQuery("SELECT COUNT(*) FROM events WHERE entity='"+deviceID+"' AND note='Processing finished' GROUP BY note;");
-            rs.next();
+            if(rs==null) return "";
+            if(rs.next()) {
             logger.info("processed items from psql: "+rs.getString("count"));
             return rs.getString("count");
+            } else {
+                logger.warn("no processed items");
+                logger.debug("getProcessedItems(): ResultSet: "+rs);
+                return "";
+            }
         } catch (SQLException sqle) {
-            logger.error("updateCurrentItem: SQLException "+sqle);
+            logger.error("SQLException when getting processed items");
+            logger.debug("getProcessedItems(): "+sqle);
+            reportError();
             return "";
         }
     }
