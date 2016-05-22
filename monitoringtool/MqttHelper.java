@@ -16,6 +16,7 @@ public class MqttHelper implements MqttCallback {
     private String deviceID;
     private MqttModel model;
     private PropertyHelper propertyHelper;
+    private boolean status;                 //true: online, false: offine
     public MqttHelper(PropertyHelper propertyHelper, String deviceID, MqttModel model) {
         if(deviceID==null) throw new IllegalArgumentException("deviceID can not be null");
         if(propertyHelper==null) throw new IllegalArgumentException("propertyHelper can not be null");
@@ -38,7 +39,7 @@ public class MqttHelper implements MqttCallback {
             logger.info("subscribed to mqtt topic "+deviceID);
             error=false;
             model.mqttConnected();
-            return true;
+            return publish("hello");
         } catch (MqttException mqtte) {
             logger.error("MqttException when creating MqttClient, connecting and subscribing");
             logger.debug("connect():"+mqtte);
@@ -100,10 +101,24 @@ public class MqttHelper implements MqttCallback {
                 return;
             }
         }
-        if(information.length==1&&"hello".equals(information[0])) {
-            logger.debug("messageArrived(): answering debug state");
-            publish("debug "+model.isDebugging());
-            return;
+        if(information.length==1) {
+            if("online".equals(information[0])) {
+                logger.info("device is now online");
+                status=true;
+                publish("debug "+model.isDebugging());
+                model.reportedOnline();
+                return;
+            }
+            if("offline".equals(information[0])) {
+                logger.info("device is now offline");
+                status=false;
+                model.reportedOffline();
+                return;
+            }
+            if("hello".equals(information[0])) {
+                logger.debug("messageArrived(): ignoring message: "+message);
+                return;
+            }
         }
         if("debug".equals(information[0])) {
             if(information.length==2&&("true".equals(information[1])||"false".equals(information[1]))) {
@@ -125,5 +140,8 @@ public class MqttHelper implements MqttCallback {
     }
     public boolean hasError() {
         return error;
+    }
+    public boolean isOnline() {
+        return status;
     }
 }

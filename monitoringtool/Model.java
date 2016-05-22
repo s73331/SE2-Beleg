@@ -32,7 +32,7 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     private String currentItem;
     private String failedItems;
     private String processedItems;
-    private String onlineTime;
+    private String onlineTime="";
     private View view;
     private static Model model=new Model();
     private Model() {
@@ -106,6 +106,9 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     }
     public synchronized boolean isDispatchActive() {
         return dispatchActive;
+    }
+    public synchronized boolean isMqttOnline() {
+        return mqtt.isOnline();
     }
     public boolean isResultSetClosed() {
         try {
@@ -193,8 +196,11 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     }
     @Override
     public synchronized void addDebug(String debug) {
-        debugLog+=debug+"\n";
+        debugLog+=debug;
         logger.debug("addDebug(): "+debug);
+        if(!debugMode) {
+            mqtt.publish("debug false");
+        }
     }
     public void debugArrived() {
         if(view!=null) view.update();
@@ -219,6 +225,14 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     }
     @Override
     public synchronized void mqttConnected() {
+        if(view!=null) view.update();
+    }
+    @Override
+    public synchronized void reportedOffline() {
+        if(view!=null) view.update();
+    }
+    @Override
+    public synchronized void reportedOnline() {
         if(view!=null) view.update();
     }
     @Override

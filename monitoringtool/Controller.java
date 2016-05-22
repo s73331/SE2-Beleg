@@ -27,7 +27,7 @@ public class Controller implements InvalidationListener, Runnable, View {
     private Model model=Model.getInstance();
     private  static final Logger logger=LogManager.getLogger();
     @FXML
-    Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation, mqttError, sqlError;
+    Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation, mqttError, sqlError, mqttStatus;
     @FXML
     Pane debugPane, queryPane, informationPane, buttonPane;
     @FXML
@@ -35,7 +35,7 @@ public class Controller implements InvalidationListener, Runnable, View {
     @FXML
     TableView<ObservableList<String>> queryContent;
     @FXML
-    Button fixButton, shutdownButton;
+    Button fixButton, shutdownButton, debugButton, queryButton;
     private ObservableList<String> queries;
     public void initialize() {
         logger.debug("initialize(): entered");
@@ -134,16 +134,6 @@ public class Controller implements InvalidationListener, Runnable, View {
         logger.info("refreshing view");
         String state=model.getState();
         logger.debug("got state: "+state);
-        if("MAINT".equals(state)||"".equals(state)) {
-            fixButton.setDisable(false);
-        } else {
-            fixButton.setDisable(true);
-        }
-        if("DOWN".equals(state)) {
-            shutdownButton.setDisable(true);
-        } else {
-            shutdownButton.setDisable(false);
-        }
         String backgroundColor;
         switch(state) {
         case "PROC":   backgroundColor="greenyellow";
@@ -160,44 +150,71 @@ public class Controller implements InvalidationListener, Runnable, View {
         informationPane.setStyle("-fx-background-color: "+backgroundColor+";");
         buttonPane.setStyle("-fx-background-color: "+backgroundColor+";");
         String recs=model.getRecipes();
+        debugInformation.setText(model.getDebugLog());
         if(recs.length()>0) {
             recipes.setText("Rezepte: "+model.getRecipes());
         } else {
             recipes.setText("");
         }
-        if("DOWN".equals(state)) {
-            currentItem.setText("");
+        currentItem.setText("");
+        onlineTime.setText("Online seit:"+model.getOnlineTime());
+        debugButton.setDisable(false);
+        shutdownButton.setDisable(false);
+        fixButton.setDisable(true);
+        switch(state) {
+        case "":
+        case "DOWN":
+            shutdownButton.setDisable(true);
+            debugButton.setDisable(true);
             onlineTime.setText("");
-        } 
-        if("PROC".equals(state)) {
-                currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
-        } else {
-                currentItem.setText("");
+            break;
+        case "PROC":
+            currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
+            break;
+        case "MAINT":
+            fixButton.setDisable(false);
+            break;
+        case "IDLE":
+        default:
         }
-        if("".equals(state)||"DOWN".equals(state)) {
-            onlineTime.setText("");
+        if(model.hasSQLError()) {               //sql error as 3nd last, medium priority
+            queryButton.setDisable(true);
+            debugButton.setDisable(false);
+            fixButton.setDisable(false);
+            shutdownButton.setDisable(false);
+            sqlError.setText("SQL Error");
         } else {
-            onlineTime.setText("Online seit:"+model.getOnlineTime());
+            queryButton.setDisable(false);
+            sqlError.setText("");
+        }
+        if(model.isMqttOnline()) {              // mqtt status as 2nd last, high priority
+            mqttStatus.setText("device is online via MQTT");
+            debugButton.setDisable(false);
+            shutdownButton.setDisable(false);
+        } else {
+            mqttStatus.setText("device is offline via MQTT");
+            debugButton.setDisable(true);
+            fixButton.setDisable(true);
+            shutdownButton.setDisable(true);
+        }
+        if(model.hasMqttError()) {              //Mqtt Error last, highest priority
+            debugButton.setDisable(true);
+            fixButton.setDisable(true);
+            shutdownButton.setDisable(true);
+            mqttError.setText("MQTT Error");
+            mqttStatus.setText("");
+        } else {
+            mqttError.setText("");
         }
         String processed=model.getProcessedItems();
         if(!"".equals(processed)) {
             processedItems.setText("Abgearbeitete Teile: "+processed);
         }
         String failed=model.getFailedItems();
-        if(!failed.isEmpty()) {
+        if(!"".equals(failed)) {
             failedItems.setText("Fehlgeschlagene Teile: "+failed);
         }
-        debugInformation.setText(model.getDebugLog());
-        if(model.hasSQLError()) {
-            sqlError.setText("SQL Error");
-        } else {
-            sqlError.setText("");
-        }
-        if(model.hasMqttError()) {
-            mqttError.setText("MQTT Error");
-        } else {
-            mqttError.setText("");
-        }
+
         updateQuery();
         logger.info("refreshed view");
     } 

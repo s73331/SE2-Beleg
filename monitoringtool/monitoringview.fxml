@@ -15,7 +15,7 @@
     <top>
         <HBox fx:id="buttonPane" id="buttonPane">
             <Button onAction="#showDebug" text="Debug"/>
-            <Button onAction="#showQuery" text="Query"/>
+            <Button onAction="#showQuery" text="Query" fx:id="queryButton" />
             <Button onAction="#emergencyShutdown" text="Not-Aus" fx:id="shutdownButton" />
             <Button onAction="#fixMachine" text="Entstören" fx:id="fixButton" />
         </HBox>
@@ -28,6 +28,7 @@
             <Text fx:id="onlineTime" />
             <Text fx:id="processedItems" />
             <Text fx:id="failedItems" />
+            <Text fx:id="mqttStatus" />
             <Text fx:id="mqttError" styleClass="error" />
             <Text fx:id="sqlError" styleClass="error" />
         </VBox>
@@ -38,7 +39,7 @@
                 <top>
                     <HBox id="debugTop">
                         <Text fx:id="debugState" text="Debug Mode: off" />
-                        <Button text="toggle" onAction="#toggleDebug" />
+                        <Button fx:id="debugButton" text="toggle" onAction="#toggleDebug" />
                     </HBox>
                 </top>
                 <center>
