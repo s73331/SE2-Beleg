@@ -26,11 +26,11 @@ public class PSQLHelper {
     }
     private void reportError() {
         error=true;
-        if(listener!=null) listener.errorOccured();
+        if(listener!=null) listener.psqlErrorOccured();
     }
     private void reportFix() {
         error=false;
-        if(listener!=null) listener.errorFixed();
+        if(listener!=null) listener.psqlErrorFixed();
     }
     private boolean connect() {
         try {
@@ -51,7 +51,7 @@ public class PSQLHelper {
         }
     }
     public ResultSet executeQuery(String query) throws SQLException {
-        if(error&&!connect()) return null;
+        if(error&&!connect()||query==null) return null;
         logger.info("executing query: "+query);
         return statement.executeQuery(query);
     }
@@ -145,7 +145,7 @@ public class PSQLHelper {
     }
     public String getFailedItems(String deviceID) {
         try {
-            ResultSet rs=executeQuery("SELECT COUNT(*) FROM events WHERE event='->MAINT' AND entity='"+deviceID+"' AND note LIKE '' GROUP BY event");
+            ResultSet rs=executeQuery("SELECT COUNT(*) FROM events WHERE event='->MAINT' AND entity='"+deviceID+"' AND note LIKE '' GROUP BY event;");
             if(rs==null) return "";
             if(rs.next()) {
                 logger.info("failed items from psql: "+rs.getString("count"));
@@ -180,5 +180,8 @@ public class PSQLHelper {
             reportError();
             return "";
         }
+    }
+    public boolean hasError() {
+        return error;
     }
 }

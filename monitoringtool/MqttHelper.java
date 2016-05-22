@@ -10,13 +10,13 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 public class MqttHelper implements MqttCallback {
-    private static final Logger logger=LogManager.getRootLogger();
+    private static final Logger logger=LogManager.getLogger();
     private MqttAsyncClient mqtt;
     private boolean error=false;
     private String deviceID;
-    private Model model;
+    private MqttModel model;
     private PropertyHelper propertyHelper;
-    public MqttHelper(PropertyHelper propertyHelper, String deviceID, Model model) {
+    public MqttHelper(PropertyHelper propertyHelper, String deviceID, MqttModel model) {
         if(deviceID==null) throw new IllegalArgumentException("deviceID can not be null");
         if(propertyHelper==null) throw new IllegalArgumentException("propertyHelper can not be null");
         if(model==null) throw new IllegalArgumentException("model can not be null");
@@ -37,19 +37,19 @@ public class MqttHelper implements MqttCallback {
             subToken.waitForCompletion();
             logger.info("subscribed to mqtt topic "+deviceID);
             error=false;
-            model.connected();
+            model.mqttConnected();
             return true;
         } catch (MqttException mqtte) {
             logger.error("MqttException when creating MqttClient, connecting and subscribing");
-            logger.debug("Model():"+mqtte);
+            logger.debug("connect():"+mqtte);
         } catch (IllegalArgumentException iae) {
             logger.error("IllegalArgumentException when creating MqttClient, connecting and subscribing");
-            logger.debug("Model():"+iae);
+            logger.debug("connect():"+iae);
         } catch(NullPointerException npe) {
             logger.error("NullPointerException when creating MqttClient, connecting and subscribing");
-            logger.debug("Model():"+npe);
+            logger.debug("connect():"+npe);
         }
-        model.connectionLost();
+        model.mqttConnectionLost();
         error=true;
         return false;
     }
@@ -59,7 +59,7 @@ public class MqttHelper implements MqttCallback {
             mqtt.publish(deviceID, new MqttMessage(message.getBytes()));
         } catch (MqttException e) {
             logger.error("MqttException: "+e);
-            model.connectionLost();
+            model.mqttConnectionLost();
             error=true;
             return false;
         }
@@ -71,7 +71,7 @@ public class MqttHelper implements MqttCallback {
         logger.error("mqtt connection lost");
         logger.debug("connectionLost(): cause: "+cause);
         error=true;
-        model.connectionLost();
+        model.mqttConnectionLost();
     }
     @Override
     public synchronized void deliveryComplete(IMqttDeliveryToken token) {

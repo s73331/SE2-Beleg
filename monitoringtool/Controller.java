@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleStringProperty;
@@ -22,9 +23,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 
-public class Controller implements InvalidationListener, MqttMiniCallback, Runnable, PSQLListener {
+public class Controller implements InvalidationListener, Runnable, View {
     private Model model=Model.getInstance();
-    private  static final Logger logger=LogManager.getRootLogger();
+    private  static final Logger logger=LogManager.getLogger();
     @FXML
     Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation, mqttError, sqlError;
     @FXML
@@ -42,11 +43,12 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
         queries=FXCollections.observableArrayList(model.getQueries());
         queryList.setItems(queries);
         queryList.getSelectionModel().select(0);
+        model.setCurrentQuery(queryList.getSelectionModel().getSelectedItem());
         queryList.getSelectionModel().getSelectedItems().addListener(this);
-        logger.debug("queryList initialized");
-        model.setMqttCallback(this);
-        model.setPSQLListener(this);
-        new Thread(this).start();
+        logger.debug("initialize(): queryList initialized");
+        model.setView(this);
+        new Thread(model).start();
+        logger.debug("initialize(): at end");
     }
     public void showDebug() {
         logger.info("showing debug");
@@ -55,15 +57,14 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
     }
     public void showQuery() {
         logger.info("showing query");
-        updateQuery();
         debugPane.setVisible(false);
         queryPane.setVisible(true);
+        logger.debug("showed query");
+        model.updateQuery();
+        updateQuery();
     }
     public void emergencyShutdown() {
         model.emergencyShutdown();
-    }
-    public void fixMachine() {
-        model.fixMachine();
     }
     public void toggleDebug() {
         model.toggleDebug();
@@ -76,13 +77,18 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
         debugState.setText(debugStateText);
     }
     public void updateQuery() {
-        model.setCurrentQuery(queryList.getSelectionModel().getSelectedItem());
-        ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
-        ResultSet resultSet=model.updateQuery();
+        logger.info("refreshing query");
+        model.updateQuery();
+        ResultSet resultSet=model.getQuery();
         if(resultSet==null) {
             logger.warn("resultSet is null");
             return;
         }
+        if(model.isResultSetClosed()) {
+            logger.info("resultSet is closed, not updating");
+            return;
+        }
+        ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
         queryContent.getColumns().remove(0, queryContent.getColumns().size());
         try {
             for(int i=0 ; i<resultSet.getMetaData().getColumnCount(); i++) {
@@ -113,96 +119,86 @@ public class Controller implements InvalidationListener, MqttMiniCallback, Runna
             logger.error("SQLException on controller"+sqle);
         }
         queryContent.setItems(data);
+        logger.debug("refreshed query");
     }
     public void invalidated(Observable arg0) {
         logger.info("selection of queryList changed to "+queryList.getSelectionModel().getSelectedItem());
         model.setCurrentQuery(queryList.getSelectionModel().getSelectedItem());
         updateQuery();
     }
+    public void fixMachine() {
+        model.fixMachine();
+    }
     @Override
     public void run() {
-        while(true) {
-            logger.info("updating SQL information");
-            String state=model.getMachineState();
-            if("MAINT".equals(state)) {
-                fixButton.setDisable(false);
-            } else {
-                fixButton.setDisable(true);
-            }
-            if("DOWN".equals(state)) {
-                shutdownButton.setDisable(true);
-            } else {
-                shutdownButton.setDisable(false);
-            }
-            String backgroundColor;
-            switch(state) {
-            case "PROC":   backgroundColor="greenyellow";
-                           break;
-            case "IDLE":   backgroundColor="yellow";
-                           break;
-            case "MAINT":  backgroundColor="darksalmon";
-                           break;
-            case "DOWN":   backgroundColor="aqua";
-                           break;
-            default:       backgroundColor="white";
-            }
-            informationPane.setStyle("-fx-background-color: "+backgroundColor+";");
-            buttonPane.setStyle("-fx-background-color: "+backgroundColor+";");
-            String recs=model.getRecipes();
-            if(recs.length()>0) {
-                recipes.setText("Rezepte: "+model.getRecipes());
-            } else {
-                recipes.setText("");
-            }
-            if("DOWN".equals(state)) {
-                currentItem.setText("");
-                onlineTime.setText("");
-            } else {
-                if("PROC".equals(state)) {
-                    currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
-                } else {
-                    currentItem.setText("");
-                }
-                onlineTime.setText("Online seit:"+model.getOnlineTime());
-            }
-            String processed=model.getProcessedItems();
-            if(!"".equals(processed)) {
-                processedItems.setText("Abgearbeitete Teile: "+processed);
-            }
-            String failed=model.getFailedItems();
-            if(!failed.isEmpty()) {
-                failedItems.setText("Fehlgeschlagene Teile: "+failed);
-            }
-            model.mqttFix();
-            if(queryPane.isVisible()&&model.isDispatchActive()) model.updateQuery();
-            try {
-                logger.debug("sleeping for 10s");
-                Thread.sleep(10000);
-                logger.debug("slept for 10s");
-            } catch (InterruptedException e) {
-                logger.info("terminating sql update thread");
-                break;
-            }
+        logger.info("updating view");
+        String state=model.getState();
+        logger.debug("got state: "+state);
+        if("MAINT".equals(state)) {
+            fixButton.setDisable(false);
+        } else {
+            fixButton.setDisable(true);
         }
-    }
-    @Override
-    public void connectionLost() {
-        mqttError.setText("MQTT connection lost");
-    }
-    @Override
-    public void debugArrived() {
+        if("DOWN".equals(state)) {
+            shutdownButton.setDisable(true);
+        } else {
+            shutdownButton.setDisable(false);
+        }
+        String backgroundColor;
+        switch(state) {
+        case "PROC":   backgroundColor="greenyellow";
+                       break;
+        case "IDLE":   backgroundColor="yellow";
+                       break;
+        case "MAINT":  backgroundColor="darksalmon";
+                       break;
+        case "DOWN":   backgroundColor="aqua";
+                       break;
+        default:       backgroundColor="white";
+        }
+        logger.debug("background color:"+backgroundColor);
+        informationPane.setStyle("-fx-background-color: "+backgroundColor+";");
+        buttonPane.setStyle("-fx-background-color: "+backgroundColor+";");
+        String recs=model.getRecipes();
+        if(recs.length()>0) {
+            recipes.setText("Rezepte: "+model.getRecipes());
+        } else {
+            recipes.setText("");
+        }
+        if("DOWN".equals(state)) {
+            currentItem.setText("");
+            onlineTime.setText("");
+        } else {
+            if("PROC".equals(state)) {
+                currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
+            } else {
+                currentItem.setText("");
+            }
+            onlineTime.setText("Online seit:"+model.getOnlineTime());
+        }
+        String processed=model.getProcessedItems();
+        if(!"".equals(processed)) {
+            processedItems.setText("Abgearbeitete Teile: "+processed);
+        }
+        String failed=model.getFailedItems();
+        if(!failed.isEmpty()) {
+            failedItems.setText("Fehlgeschlagene Teile: "+failed);
+        }
         debugInformation.setText(model.getDebugLog());
-    }
-    @Override
-    public void connected() {
-        mqttError.setText("");
-    }
-    @Override
-    public void errorOccured() {
-        sqlError.setText("SQL Error");
-    }
-    @Override
-    public void errorFixed() {
-        sqlError.setText("SQL Error");
+        if(model.hasSQLError()) {
+            sqlError.setText("SQL Error");
+        } else {
+            sqlError.setText("");
+        }
+        if(model.hasMqttError()) {
+            mqttError.setText("MQTT Error");
+        } else {
+            mqttError.setText("");
+        }
+        updateQuery();
+        logger.info("refreshed view");
+    } 
+    public void update() {
+        Platform.runLater(this);
     }
 }

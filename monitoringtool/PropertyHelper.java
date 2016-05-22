@@ -14,7 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class PropertyHelper {
-    private static final Logger logger=LogManager.getRootLogger();
+    private static final Logger logger=LogManager.getLogger();
     private Properties properties;
     Map<String, String> queries=new HashMap<String, String>();
     public PropertyHelper(String file) throws IOException {

@@ -1,6 +1,6 @@
 package monitoringtool;
 
 public interface PSQLListener {
-    public void errorOccured();
-    public void errorFixed();
+    public void psqlErrorOccured();
+    public void psqlErrorFixed();
 }

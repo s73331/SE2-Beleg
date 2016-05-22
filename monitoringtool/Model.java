@@ -16,22 +16,25 @@ import org.apache.logging.log4j.Logger;
  * @author martin
  * 
  */
-public class Model implements MqttMiniCallback, PSQLListener {
-    private static final Logger logger=LogManager.getRootLogger();
+public class Model implements MqttModel, PSQLListener, Runnable {
+    private static final Logger logger=LogManager.getLogger();
     private boolean debugMode=false;                                                //is debug mode enabled?
+    private String recipes;
     private String deviceID;
     private String debugLog="";
     private ResultSet queryResult;
-    private Set<String> queries;
     private String currentQuery;
     private PSQLHelper psql;
     private PropertyHelper propertyHelper;
     private String state="";
     private boolean mqttError=false;
-    private MqttMiniCallback mqttCallback;
     private boolean dispatchActive=false;
     private MqttHelper mqttHelper;
-    private PSQLListener psqlListener;
+    private String currentItem;
+    private String failedItems;
+    private String processedItems;
+    private String onlineTime;
+    private View view;
     private static Model model=new Model();
     private Model() {
         try {
@@ -42,10 +45,6 @@ public class Model implements MqttMiniCallback, PSQLListener {
             System.exit(1);
         }
         deviceID=propertyHelper.getDeviceID();
-        queries=propertyHelper.getQueries();
-        if(!queries.add("Dispatchliste")){
-            logger.warn("ignoring users query \"Dispatchliste\"");
-        }
         psql=new PSQLHelper(propertyHelper.getHost(), propertyHelper.getPort(), propertyHelper.getDb(), propertyHelper.getUser(), propertyHelper.getPass(), this);
         logger.info("PSQLHelper created");
         mqttHelper=new MqttHelper(propertyHelper, deviceID, this);
@@ -54,40 +53,68 @@ public class Model implements MqttMiniCallback, PSQLListener {
     public static Model getInstance() {
         return model;
     }
-    public synchronized boolean isDebugging() {
-        return debugMode;
-    }
-    public synchronized void toggleDebug() {
-        if(mqttError) return;
-        debugMode^=publish("debug "+!debugMode);
-        logger.debug("toggleDebug(): debug mode toggled");
+    public synchronized String getCurrentItem() {
+        return currentItem;
     }
     public synchronized String getDebugLog() {
         return debugLog;
     }
-    public synchronized Collection<String> getQueries() {
-        return queries;
-    }
-    public synchronized ResultSet updateQuery() {
-        try {
-            queryResult=psql.executeQuery(currentQuery);
-            logger.info("updateQuery(): finished");
-            return queryResult;
-        } catch (SQLException sqle) {
-            logger.error("SQLException when updating query, current query: "+currentQuery);
-            logger.debug("updateQuery():\n"+sqle);
-            return null;
-        }
-    }
     public synchronized String getDeviceID() {
         return deviceID;
+        }
+    public synchronized String getFailedItems() {
+        return failedItems;
     }
-    public synchronized void shutdown() {
+    public int getHeight() {
+        return propertyHelper.getHeight();          //won't get changed at any point, so no reason for sync
+    }
+    public String getOnlineTime() {
+        synchronized(onlineTime) {
+            return onlineTime;
+        }
+    }
+    public String getProcessedItems() {
+        synchronized(processedItems) {
+            return processedItems;
+        }
+    }
+    public Collection<String> getQueries() {        //won't get changed at any point, so no reason for sync
+        Set<String> queries = propertyHelper.getQueries();
+        if(!queries.add("Dispatchliste")) logger.warn("ignoring user's query \"Dispatchliste\"");
+        return queries;
+    }
+    public synchronized ResultSet getQuery() {
+        return queryResult;
+    }
+    public synchronized String getRecipes() {
+        return recipes;
+    }
+    public synchronized String getState() {
+        return state;
+    }
+    public int getWidth() {                          //won't get changed at any point, so no reason for sync
+        return propertyHelper.getWidth();
+    }
+    public synchronized boolean hasMqttError() {
+        return mqttError;
+    }
+    public synchronized boolean hasSQLError() {
+        return psql.hasError();
+    }
+    @Override
+    public synchronized boolean isDebugging() {
+        return debugMode;
+    }
+    public synchronized boolean isDispatchActive() {
+        return dispatchActive;
+    }
+    public boolean isResultSetClosed() {
         try {
-            psql.close();
-        } catch (SQLException sqle) {
-            logger.error("SQLException when closing SQLConnection");
-            logger.debug("shutdown():\n"+sqle);
+            return queryResult.isClosed();
+        } catch (SQLException e) {
+            logger.warn("SQLException when checking close status of queryResult");
+            logger.debug("isResultSetClosed(): "+e);
+            return true;
         }
     }
     public synchronized void setCurrentQuery(String name) {
@@ -102,42 +129,77 @@ public class Model implements MqttMiniCallback, PSQLListener {
         }
         logger.info("new currentQuery: "+name);
     }
-    public synchronized int getHeight() {
-        return propertyHelper.getHeight();
+    public void setView(View view) {
+        this.view=view;
     }
-    public synchronized int getWidth() {
-        return propertyHelper.getWidth();
+    public synchronized void toggleDebug() {
+        if(mqttError) return;
+        debugMode^=publish("debug "+!debugMode);
+        logger.debug("toggleDebug(): debug mode toggled");
     }
-    public synchronized boolean hasMqttError() {
-        return mqttError;
+    public synchronized String updateCurrentItem() {
+        if("PROC".equals(state)) {
+            currentItem=psql.getCurrentItem(deviceID);
+        } else {
+            logger.debug("not looking in db for current item, as machine is not in proc");
+            currentItem="";
+        }
+        return currentItem;
     }
+    public synchronized String updateFailedItems() {
+        failedItems=psql.getFailedItems(deviceID);
+        return failedItems;
+    }
+    public synchronized String updateOnlineTime() {
+        if("DOWN".equals(state)) {
+            logger.debug("getOnlineTime(): not looking for online time in db, as machine is down");
+            onlineTime="";
+        } else {
+            onlineTime=psql.getOnlineTime(deviceID);
+        }
+        return onlineTime;
+    }
+    public synchronized String updateProcessedItems() {
+        processedItems=psql.getProcessedItems(deviceID);
+        return processedItems;
+    }
+    public synchronized ResultSet updateQuery() {
+        try {
+            queryResult=psql.executeQuery(currentQuery);
+            logger.info("updateQuery(): finished");
+            return queryResult;
+        } catch (SQLException sqle) {
+            logger.error("SQLException when updating query, current query: "+currentQuery);
+            logger.debug("updateQuery():\n"+sqle);
+            return null;
+        }
+    }
+    public synchronized String updateRecipes() {
+        recipes=psql.getRecipes(deviceID);
+        return recipes;
+    }
+    public synchronized String updateState() {
+        state=psql.getMachineState(deviceID);
+        logger.info("new machine state: "+state);
+        if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state)||"DOWN".equals(state)) {
+            //we are fine :)
+        } else {
+            if("".equals(state)) {
+                logger.error("no machine state string");
+            } else {
+                logger.warn("illegal state string: "+state+", default-correcting to <empty>");
+                state="";
+            }
+        }
+        return state;
+    }
+    @Override
     public synchronized void addDebug(String debug) {
         debugLog+=debug+"\n";
         logger.debug("addDebug(): "+debug);
     }
-    public synchronized String getMachineState() {
-        state=psql.getMachineState(deviceID);
-        logger.info("new machine state: "+state);
-        if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state)||"DOWN".equals(state)) {
-            return state;
-        } else {
-            if("".equals(state)) {
-                logger.error("no machine state string");
-                return state;
-            } else {
-                logger.warn("illegal state string: "+state+", default-correcting to <empty>");
-                state="";
-                return "";
-            }
-        }
-    }
-    public synchronized String getRecipes() {
-        return psql.getRecipes(deviceID);
-    }
-
-    public synchronized void setMqttCallback(MqttMiniCallback callback) {
-        this.mqttCallback=callback;
-        logger.debug("setMqttCallback(): "+callback);
+    public void debugArrived() {
+        if(view!=null) view.update();
     }
     public synchronized void emergencyShutdown() {
         if(mqttError) {
@@ -151,60 +213,58 @@ public class Model implements MqttMiniCallback, PSQLListener {
         publish("emergency shutdown");
     }
     public synchronized void fixMachine() {
-        if("MAINT".equals(model.getMachineState())) {
+        if("MAINT".equals(getState())) {
             publish("manual fix");
         } else {
             logger.warn("not in maint, not sending manual fix");
         }
     }
-    public synchronized String getOnlineTime() {
-        if("DOWN".equals(psql.getMachineState(deviceID))) {
-            logger.debug("getOnlineTime(): not looking for online time in db, as machine is down");
-            return "DOWN";
-        }
-        return psql.getOnlineTime(deviceID);
+    @Override
+    public void mqttConnectionLost() {
+        if(view!=null) view.update();
     }
-    public synchronized String getCurrentItem() {
-        if("PROC".equals(psql.getMachineState(deviceID))) {
-        return psql.getCurrentItem(deviceID);
-        } else {
-            logger.debug("not looking in db for current item, as machine is not in proc");
-            return "";
-        }
+    @Override
+    public synchronized void mqttConnected() {
+        if(view!=null) view.update();
     }
-    public synchronized String getFailedItems() {
-        return psql.getFailedItems(deviceID);
+    @Override
+    public synchronized void psqlErrorFixed() {
+        if(view!=null) view.update();
     }
-    public synchronized String getProcessedItems() {
-        return psql.getProcessedItems(deviceID);
+    @Override
+    public synchronized void psqlErrorOccured() {
+        if(view!=null) view.update();
     }
-    public synchronized boolean isDispatchActive() {
-        return dispatchActive;
-    }
-    public boolean publish(String message) {
+    public synchronized boolean publish(String message) {
         return mqttHelper.publish(message);
     }
-    public void connectionLost() {
-        if(mqttCallback!=null) mqttCallback.connectionLost();
-    }
-    public void debugArrived() {
-        if(mqttCallback!=null) mqttCallback.debugArrived();
-    }
-    public void connected() {
-        if(mqttCallback!=null) mqttCallback.connected();
-    }
-    public void mqttFix() {
-        mqttHelper.fix();
-    }
     @Override
-    public void errorOccured() {
-        if(psqlListener!=null) psqlListener.errorOccured();
+    public void run() {
+        while(true) {
+            updateState();
+            updateCurrentItem();
+            updateFailedItems();
+            updateOnlineTime();
+            updateProcessedItems();
+            updateQuery();
+            updateRecipes();
+            mqttHelper.fix();
+            if(view!=null) view.update();
+            try {
+                logger.info("10000 sleep");
+                Thread.sleep(10000);
+                logger.info("10000 slept");
+            } catch (InterruptedException ie) {
+                logger.error("run(): InterruptedException: "+ie);
+            }
+        }
     }
-    @Override
-    public void errorFixed() {
-        if(psqlListener!=null) psqlListener.errorFixed();
-    }
-    public void setPSQLListener(PSQLListener listener) {
-        psqlListener=listener;
+    public synchronized void shutdown() {
+        try {
+            psql.close();
+        } catch (SQLException sqle) {
+            logger.error("SQLException when closing SQLConnection");
+            logger.debug("shutdown():\n"+sqle);
+        }
     }
 }
