@@ -25,12 +25,14 @@ public class PSQLHelper {
         connect();
     }
     private void reportError() {
+        boolean oldError=error;
         error=true;
-        if(listener!=null) listener.psqlErrorOccured();
+        if(listener!=null&&!oldError) listener.psqlErrorOccured();
     }
     private void reportFix() {
+        boolean oldError=error;
         error=false;
-        if(listener!=null) listener.psqlErrorFixed();
+        if(listener!=null&&oldError) listener.psqlErrorFixed();
     }
     private boolean connect() {
         try {

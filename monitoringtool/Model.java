@@ -27,9 +27,8 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     private PSQLHelper psql;
     private PropertyHelper propertyHelper;
     private String state="";
-    private boolean mqttError=false;
     private boolean dispatchActive=false;
-    private MqttHelper mqttHelper;
+    private MqttHelper mqtt;
     private String currentItem;
     private String failedItems;
     private String processedItems;
@@ -47,7 +46,7 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         deviceID=propertyHelper.getDeviceID();
         psql=new PSQLHelper(propertyHelper.getHost(), propertyHelper.getPort(), propertyHelper.getDb(), propertyHelper.getUser(), propertyHelper.getPass(), this);
         logger.info("PSQLHelper created");
-        mqttHelper=new MqttHelper(propertyHelper, deviceID, this);
+        mqtt=new MqttHelper(propertyHelper, deviceID, this);
         logger.debug("initialized Model");
     }
     public static Model getInstance() {
@@ -96,7 +95,7 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         return propertyHelper.getWidth();
     }
     public synchronized boolean hasMqttError() {
-        return mqttError;
+        return mqtt.hasError();
     }
     public synchronized boolean hasSQLError() {
         return psql.hasError();
@@ -133,8 +132,7 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         this.view=view;
     }
     public synchronized void toggleDebug() {
-        if(mqttError) return;
-        debugMode^=publish("debug "+!debugMode);
+        debugMode^=mqtt.publish("debug "+!debugMode);
         logger.debug("toggleDebug(): debug mode toggled");
     }
     public synchronized String updateCurrentItem() {
@@ -202,19 +200,15 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         if(view!=null) view.update();
     }
     public synchronized void emergencyShutdown() {
-        if(mqttError) {
-            logger.warn("mqttError, not publishing emergency shutdown");
-            return;
-        }
         if("DOWN".equals(state)) {
             logger.warn("machine down, not publishing emergency shutdown");
             return;
         }
-        publish("emergency shutdown");
+        mqtt.publish("emergency shutdown");
     }
     public synchronized void fixMachine() {
-        if("MAINT".equals(getState())) {
-            publish("manual fix");
+        if("MAINT".equals(state)||"".equals(state)) {
+            mqtt.publish("manual fix");
         } else {
             logger.warn("not in maint, not sending manual fix");
         }
@@ -235,9 +229,6 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     public synchronized void psqlErrorOccured() {
         if(view!=null) view.update();
     }
-    public synchronized boolean publish(String message) {
-        return mqttHelper.publish(message);
-    }
     @Override
     public void run() {
         while(true) {
@@ -248,7 +239,7 @@ public class Model implements MqttModel, PSQLListener, Runnable {
             updateProcessedItems();
             updateQuery();
             updateRecipes();
-            mqttHelper.fix();
+            mqtt.fix();
             if(view!=null) view.update();
             try {
                 logger.info("10000 sleep");

@@ -131,10 +131,10 @@ public class Controller implements InvalidationListener, Runnable, View {
     }
     @Override
     public void run() {
-        logger.info("updating view");
+        logger.info("refreshing view");
         String state=model.getState();
         logger.debug("got state: "+state);
-        if("MAINT".equals(state)) {
+        if("MAINT".equals(state)||"".equals(state)) {
             fixButton.setDisable(false);
         } else {
             fixButton.setDisable(true);
@@ -168,12 +168,15 @@ public class Controller implements InvalidationListener, Runnable, View {
         if("DOWN".equals(state)) {
             currentItem.setText("");
             onlineTime.setText("");
-        } else {
-            if("PROC".equals(state)) {
+        } 
+        if("PROC".equals(state)) {
                 currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
-            } else {
+        } else {
                 currentItem.setText("");
-            }
+        }
+        if("".equals(state)||"DOWN".equals(state)) {
+            onlineTime.setText("");
+        } else {
             onlineTime.setText("Online seit:"+model.getOnlineTime());
         }
         String processed=model.getProcessedItems();

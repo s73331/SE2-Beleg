@@ -54,17 +54,21 @@ public class MqttHelper implements MqttCallback {
         return false;
     }
     public synchronized boolean publish(String message) {
-        if(error&&!connect()) return false;
+        if(error&&!connect()) {
+            logger.warn("mqtt error not resolved, not publishing "+message);
+            return false;
+        }
         try {
             mqtt.publish(deviceID, new MqttMessage(message.getBytes()));
+            logger.info("published message to "+deviceID+": "+message);
+            return true;
         } catch (MqttException e) {
-            logger.error("MqttException: "+e);
+            logger.error("MqttException when publishing message");
+            logger.debug("publish(): "+e);
             model.mqttConnectionLost();
             error=true;
             return false;
         }
-        logger.info("published message to "+deviceID+": "+message);
-        return true;
     }
     @Override
     public synchronized void connectionLost(Throwable cause) {
@@ -118,5 +122,8 @@ public class MqttHelper implements MqttCallback {
     }
     public void fix() {
         if(error) error=!connect();
+    }
+    public boolean hasError() {
+        return error;
     }
 }
