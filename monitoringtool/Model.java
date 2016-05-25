@@ -251,7 +251,7 @@ public class Model implements MqttModel, PSQLListener, Runnable {
             if(view!=null) view.update();
             try {
                 logger.info("60s sleep");
-                Thread.sleep(10000);
+                Thread.sleep(60000);
                 logger.info("60s slept");
             } catch (InterruptedException ie) {
                 logger.error("run(): InterruptedException: "+ie);
