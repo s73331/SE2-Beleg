@@ -156,7 +156,7 @@ public class MqttHelper implements MqttCallback {
         String[] directories=Paths.get("").toAbsolutePath().toFile().list(new FilenameFilter(){
             @Override
             public boolean accept(File dir, String name) {
-                if(name.contains("paho")&&name.contains("tcplocalhost")) return true;
+                if(name.startsWith("paho")) return true;
                 return false;
             } 
         });
