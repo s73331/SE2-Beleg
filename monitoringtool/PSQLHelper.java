@@ -149,15 +149,15 @@ public class PSQLHelper {
     }
     public String getFailedItems(String deviceID) {
         try {
-            ResultSet rs=executeQuery("SELECT COUNT(*) FROM events WHERE event='->MAINT' AND entity='"+deviceID+"' AND note LIKE '' GROUP BY event;");
+            ResultSet rs=executeQuery("SELECT COUNT(*) FROM events24 WHERE event='->MAINT' AND entity='"+deviceID+"' AND note LIKE '' GROUP BY event;");
             if(rs==null) return "";
             if(rs.next()) {
                 logger.info("failed items from psql: "+rs.getString("count"));
                 return rs.getString("count");
             } else {
-                logger.warn("no failed items");
+                logger.info("failed items from psql: 0");
                 logger.debug("getFailedItems(): ResultSet: "+rs);
-                return "";
+                return "0";
             }
         } catch(SQLException sqle) {
             logger.error("SQLException when getting failed items");
@@ -168,15 +168,15 @@ public class PSQLHelper {
     }
     public String getProcessedItems(String deviceID) {
         try {
-            ResultSet rs=executeQuery("SELECT COUNT(*) FROM events WHERE entity='"+deviceID+"' AND note='Processing finished' GROUP BY note;");
+            ResultSet rs=executeQuery("SELECT COUNT(*) FROM events24 WHERE entity='"+deviceID+"' AND note='Processing finished' GROUP BY note;");
             if(rs==null) return "";
             if(rs.next()) {
             logger.info("processed items from psql: "+rs.getString("count"));
             return rs.getString("count");
             } else {
-                logger.warn("no processed items");
+                logger.info("processed items from psql: 0");
                 logger.debug("getProcessedItems(): ResultSet: "+rs);
-                return "";
+                return "0";
             }
         } catch (SQLException sqle) {
             logger.error("SQLException when getting processed items");

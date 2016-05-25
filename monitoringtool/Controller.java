@@ -27,7 +27,7 @@ public class Controller implements InvalidationListener, Runnable, View {
     private Model model=Model.getInstance();
     private  static final Logger logger=LogManager.getLogger();
     @FXML
-    Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation, mqttError, sqlError, mqttStatus;
+    Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation, mqttError, sqlError, mqttStatus, extraStatus;
     @FXML
     Pane debugPane, queryPane, informationPane, buttonPane;
     @FXML
@@ -35,8 +35,9 @@ public class Controller implements InvalidationListener, Runnable, View {
     @FXML
     TableView<ObservableList<String>> queryContent;
     @FXML
-    Button fixButton, shutdownButton, debugButton, queryButton;
+    Button machineFixButton, shutdownButton, debugButton, queryButton, mqttFixButton;
     private ObservableList<String> queries;
+    private ObservableList<ObservableList<String>> data;
     public void initialize() {
         logger.debug("initialize(): entered");
         showDebug();
@@ -44,6 +45,8 @@ public class Controller implements InvalidationListener, Runnable, View {
         queryList.setItems(queries);
         queryList.getSelectionModel().select(0);
         model.setCurrentQuery(queryList.getSelectionModel().getSelectedItem());
+        model.updateQuery();
+        updateQuery(true);
         queryList.getSelectionModel().getSelectedItems().addListener(this);
         logger.debug("initialize(): queryList initialized");
         model.setView(this);
@@ -61,7 +64,7 @@ public class Controller implements InvalidationListener, Runnable, View {
         queryPane.setVisible(true);
         logger.debug("showed query");
         model.updateQuery();
-        updateQuery();
+        updateQuery(true);
     }
     public void emergencyShutdown() {
         model.emergencyShutdown();
@@ -76,10 +79,15 @@ public class Controller implements InvalidationListener, Runnable, View {
         }
         debugState.setText(debugStateText);
     }
+    /*
+     * necessary for FXML
+     */
     public void updateQuery() {
-        logger.info("refreshing query");
-        model.updateQuery();
-        ResultSet resultSet=model.getQuery();
+        updateQuery(false);
+    }
+    public void updateQuery(boolean changeColumns) {
+        logger.info("refreshing query with changeColumns: "+changeColumns);
+        ResultSet resultSet=model.updateQuery();
         if(resultSet==null) {
             logger.warn("resultSet is null");
             return;
@@ -88,32 +96,43 @@ public class Controller implements InvalidationListener, Runnable, View {
             logger.info("resultSet is closed, not updating");
             return;
         }
-        ObservableList<ObservableList<String>> data = FXCollections.observableArrayList();
-        queryContent.getColumns().remove(0, queryContent.getColumns().size());
         try {
-            for(int i=0 ; i<resultSet.getMetaData().getColumnCount(); i++) {
-                final int j=i;
-                TableColumn<ObservableList<String>, String> col = new TableColumn<ObservableList<String>,String>(resultSet.getMetaData().getColumnName(i+1));
-                col.setCellValueFactory(new Callback<CellDataFeatures<ObservableList<String>, String>, ObservableValue<String>>() {
-                    public ObservableValue<String> call(CellDataFeatures<ObservableList<String>, String> p) {
-                        try {
-                        return new SimpleStringProperty(p.getValue().get(j));
-                        } catch(NullPointerException npe) {
-                            logger.info("NullPointerException column: "+j);
-                            return new SimpleStringProperty("");
+            if(changeColumns) {
+                data = FXCollections.observableArrayList();
+                queryContent.getColumns().remove(0, queryContent.getColumns().size());
+                for(int i=0 ; i<resultSet.getMetaData().getColumnCount(); i++) {
+                    final int j=i;
+                    TableColumn<ObservableList<String>, String> col = new TableColumn<ObservableList<String>,String>(resultSet.getMetaData().getColumnName(i+1));
+                    col.setCellValueFactory(new Callback<CellDataFeatures<ObservableList<String>, String>, ObservableValue<String>>() {
+                        public ObservableValue<String> call(CellDataFeatures<ObservableList<String>, String> p) {
+                            try {
+                            return new SimpleStringProperty(p.getValue().get(j));
+                            } catch(NullPointerException npe) {
+                                logger.info("NullPointerException column: "+j);
+                                return new SimpleStringProperty("");
+                            }
                         }
-                    }
-                 });
-                queryContent.getColumns().add(col); 
-            }
-            while(resultSet.next()){
-                //Iterate Row
-                ObservableList<String> row = FXCollections.observableArrayList();
-                for(int i=1 ; i<=resultSet.getMetaData().getColumnCount(); i++){
-                    //Iterate Column
-                    row.add(resultSet.getString(i));
+                     });
+                    queryContent.getColumns().add(col); 
                 }
-                data.add(row);
+                while(resultSet.next()){
+                    //Iterate Row
+                    ObservableList<String> row = FXCollections.observableArrayList();
+                    for(int i=1 ; i<=resultSet.getMetaData().getColumnCount(); i++){
+                        //Iterate Column
+                        row.add(resultSet.getString(i));
+                    }
+                    data.add(row);
+                }
+            } else {
+                for(int j=0; resultSet.next(); j++){
+                    //Iterate Row
+                    ObservableList<String> row = data.get(j);
+                    for(int i=1 ; i<=resultSet.getMetaData().getColumnCount(); i++){
+                        //Iterate Column
+                        row.add(resultSet.getString(i));
+                    }
+                }
             }
         } catch(SQLException sqle) {
             logger.error("SQLException on controller"+sqle);
@@ -124,7 +143,7 @@ public class Controller implements InvalidationListener, Runnable, View {
     public void invalidated(Observable arg0) {
         logger.info("selection of queryList changed to "+queryList.getSelectionModel().getSelectedItem());
         model.setCurrentQuery(queryList.getSelectionModel().getSelectedItem());
-        updateQuery();
+        updateQuery(true);
     }
     public void fixMachine() {
         model.fixMachine();
@@ -145,6 +164,7 @@ public class Controller implements InvalidationListener, Runnable, View {
         case "DOWN":   backgroundColor="aqua";
                        break;
         default:       backgroundColor="white";
+                       extraStatus.setText("illegal state: "+state);
         }
         logger.debug("background color:"+backgroundColor);
         informationPane.setStyle("-fx-background-color: "+backgroundColor+";");
@@ -157,10 +177,11 @@ public class Controller implements InvalidationListener, Runnable, View {
             recipes.setText("");
         }
         currentItem.setText("");
-        onlineTime.setText("Online seit:"+model.getOnlineTime());
+        if("".equals(model.getOnlineTime())) onlineTime.setText("");
+        else onlineTime.setText("Online seit:"+model.getOnlineTime());
         debugButton.setDisable(false);
         shutdownButton.setDisable(false);
-        fixButton.setDisable(true);
+        machineFixButton.setDisable(true);
         switch(state) {
         case "":
         case "DOWN":
@@ -172,19 +193,14 @@ public class Controller implements InvalidationListener, Runnable, View {
             currentItem.setText("Zurzeit bearbeitetes Teil: "+model.getCurrentItem());
             break;
         case "MAINT":
-            fixButton.setDisable(false);
+            machineFixButton.setDisable(false);
             break;
         case "IDLE":
         default:
         }
         if(model.hasSQLError()) {               //sql error as 3nd last, medium priority
-            queryButton.setDisable(true);
-            debugButton.setDisable(false);
-            fixButton.setDisable(false);
-            shutdownButton.setDisable(false);
             sqlError.setText("SQL Error");
         } else {
-            queryButton.setDisable(false);
             sqlError.setText("");
         }
         if(model.isMqttOnline()) {              // mqtt status as 2nd last, high priority
@@ -194,17 +210,19 @@ public class Controller implements InvalidationListener, Runnable, View {
         } else {
             mqttStatus.setText("device is offline via MQTT");
             debugButton.setDisable(true);
-            fixButton.setDisable(true);
+            machineFixButton.setDisable(true);
             shutdownButton.setDisable(true);
         }
         if(model.hasMqttError()) {              //Mqtt Error last, highest priority
             debugButton.setDisable(true);
-            fixButton.setDisable(true);
+            machineFixButton.setDisable(true);
             shutdownButton.setDisable(true);
             mqttError.setText("MQTT Error");
             mqttStatus.setText("");
+            mqttFixButton.setVisible(true);
         } else {
             mqttError.setText("");
+            mqttFixButton.setVisible(false);
         }
         String processed=model.getProcessedItems();
         if(!"".equals(processed)) {
@@ -214,11 +232,13 @@ public class Controller implements InvalidationListener, Runnable, View {
         if(!"".equals(failed)) {
             failedItems.setText("Fehlgeschlagene Teile: "+failed);
         }
-
-        updateQuery();
+        updateQuery(false);
         logger.info("refreshed view");
     } 
     public void update() {
         Platform.runLater(this);
+    }
+    public void fixMqtt() {
+        model.fixMqtt();
     }
 }

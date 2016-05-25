@@ -1,5 +1,9 @@
 package monitoringtool;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.nio.file.Paths;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -28,7 +32,7 @@ public class MqttHelper implements MqttCallback {
     }
     private boolean connect() {
         try {
-            mqtt=new MqttAsyncClient(propertyHelper.getMqttServerURI(), MqttAsyncClient.generateClientId()); //todo: ClientID
+            mqtt=new MqttAsyncClient(propertyHelper.getMqttServerURI(), MqttAsyncClient.generateClientId());
             logger.info("MqttClient constructed");
             mqtt.setCallback(this);
             IMqttToken conToken = mqtt.connect();
@@ -102,17 +106,12 @@ public class MqttHelper implements MqttCallback {
             }
         }
         if(information.length==1) {
-            if("online".equals(information[0])) {
-                logger.info("device is now online");
-                status=true;
+            if("DOWN".equals(information[0])||"IDLE".equals(information[0])||"PROC".equals(information[0])||"MAINT".equals(information[0])) {
+                logger.info("device reported state: "+information[0]);
+                if("DOWN".equals(information[0])) status=false;
+                else status=true;
                 publish("debug "+model.isDebugging());
-                model.reportedOnline();
-                return;
-            }
-            if("offline".equals(information[0])) {
-                logger.info("device is now offline");
-                status=false;
-                model.reportedOffline();
+                model.newState(information[0]);
                 return;
             }
             if("hello".equals(information[0])) {
@@ -143,5 +142,28 @@ public class MqttHelper implements MqttCallback {
     }
     public boolean isOnline() {
         return status;
+    }
+    public void close() {
+        try {
+            mqtt.disconnect();
+            mqtt.close();
+            logger.info("mqtt connection closed");
+        } catch (MqttException e) {
+            logger.error("MqttException when disconnecting and closing MqttClient");
+        } catch (NullPointerException e) {
+            logger.error("NullPointerException when disconnecting and closing MqttClient");
+        }
+        String[] directories=Paths.get("").toAbsolutePath().toFile().list(new FilenameFilter(){
+            @Override
+            public boolean accept(File dir, String name) {
+                if(name.contains("paho")&&name.contains("tcplocalhost")) return true;
+                return false;
+            } 
+        });
+        for(String directory:directories) {
+            logger.info("removing directory "+directory);
+            new File(directory+"/.lck").delete();
+            new File(directory).delete();
+        }
     }
 }

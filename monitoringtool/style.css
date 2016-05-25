@@ -15,6 +15,6 @@
     -fx-alignment: center;
     -fx-padding: 10px;
 }
-error {
-    -fx-padding:10px;
+#mqttStatus, #mqttError, #sqlError {
+    -fx-padding: 10px;
 }

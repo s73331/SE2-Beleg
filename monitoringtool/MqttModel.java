@@ -6,6 +6,5 @@ public interface MqttModel {
     public boolean isDebugging();
     public void debugArrived();
     public void addDebug(String string);
-    public void reportedOnline();
-    public void reportedOffline();
+    public void newState(String state);
 }

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +22,7 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     private String deviceID;
     private String debugLog="";
     private ResultSet queryResult;
-    private String currentQuery;
+    private String currentQuery;                // IMPORTANT: currentQuery is saved as the statement, e.g. "SELECT * FROM ptime", not as "ptime-list"
     private PSQLHelper psql;
     private PropertyHelper propertyHelper;
     private String state="";
@@ -31,7 +30,7 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     private MqttHelper mqtt;
     private String currentItem;
     private String failedItems;
-    private String processedItems;
+    private String processedItems="";
     private String onlineTime="";
     private View view;
     private static Model model=new Model();
@@ -67,20 +66,14 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     public int getHeight() {
         return propertyHelper.getHeight();          //won't get changed at any point, so no reason for sync
     }
-    public String getOnlineTime() {
-        synchronized(onlineTime) {
-            return onlineTime;
-        }
+    public synchronized String getOnlineTime() {
+        return onlineTime;
     }
-    public String getProcessedItems() {
-        synchronized(processedItems) {
-            return processedItems;
-        }
+    public synchronized String getProcessedItems() {
+        return processedItems;
     }
     public Collection<String> getQueries() {        //won't get changed at any point, so no reason for sync
-        Set<String> queries = propertyHelper.getQueries();
-        if(!queries.add("Dispatchliste")) logger.warn("ignoring user's query \"Dispatchliste\"");
-        return queries;
+        return propertyHelper.getQueries();
     }
     public synchronized ResultSet getQuery() {
         return queryResult;
@@ -120,15 +113,9 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         }
     }
     public synchronized void setCurrentQuery(String name) {
-        if("Dispatchliste".equals(name)) {
-            currentQuery="SELECT * FROM lot WHERE disptool='"+deviceID+"';";
-            dispatchActive=true;
-            logger.debug("setCurrentQuery(): showing dispatch list");
-        } else {
-            currentQuery=propertyHelper.getQuery(name);
-            dispatchActive=false;
-            logger.debug("setCurrentQuery(): not showing dispatch list");
-        }
+        currentQuery=propertyHelper.getQuery(name);
+        dispatchActive=false;
+        logger.debug("setCurrentQuery(): not showing dispatch list");
         logger.info("new currentQuery: "+name);
     }
     public void setView(View view) {
@@ -161,17 +148,26 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         return onlineTime;
     }
     public synchronized String updateProcessedItems() {
-        processedItems=psql.getProcessedItems(deviceID);
+        processedItems = psql.getProcessedItems(deviceID);
         return processedItems;
+    }
+    public synchronized ResultSet updateAutoQuery() {
+        if(propertyHelper.shouldAutoUpdate(currentQuery)) return updateQuery();
+        else {
+            logger.info("not updating query, as it is not marked as autoupdate");
+            return null;
+        }
     }
     public synchronized ResultSet updateQuery() {
         try {
+            logger.info("executing query: "+currentQuery);
             queryResult=psql.executeQuery(currentQuery);
             logger.info("updateQuery(): finished");
             return queryResult;
         } catch (SQLException sqle) {
             logger.error("SQLException when updating query, current query: "+currentQuery);
-            logger.debug("updateQuery():\n"+sqle);
+            logger.debug("updateQuery(): "+sqle);
+            sqle.printStackTrace();
             return null;
         }
     }
@@ -180,16 +176,18 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         return recipes;
     }
     public synchronized String updateState() {
-        state=psql.getMachineState(deviceID);
-        logger.info("new machine state: "+state);
-        if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state)||"DOWN".equals(state)) {
-            //we are fine :)
-        } else {
-            if("".equals(state)) {
-                logger.error("no machine state string");
+        if(mqtt.hasError()||!mqtt.isOnline()) {
+            state=psql.getMachineState(deviceID);
+            logger.info("new machine state: "+state);
+            if("PROC".equals(state)||"MAINT".equals(state)||"IDLE".equals(state)||"DOWN".equals(state)||"UKN".equals(state)||"0".equals(state)) {
+                //we are fine :)
             } else {
-                logger.warn("illegal state string: "+state+", default-correcting to <empty>");
-                state="";
+                if("".equals(state)) {
+                    logger.error("no machine state string");
+                } else {
+                    logger.warn("illegal state string: "+state+", default-correcting to <empty>");
+                    state="";
+                }
             }
         }
         return state;
@@ -220,7 +218,7 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         }
     }
     @Override
-    public void mqttConnectionLost() {
+    public synchronized void mqttConnectionLost() {
         if(view!=null) view.update();
     }
     @Override
@@ -228,11 +226,8 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         if(view!=null) view.update();
     }
     @Override
-    public synchronized void reportedOffline() {
-        if(view!=null) view.update();
-    }
-    @Override
-    public synchronized void reportedOnline() {
+    public synchronized void newState(String state) {
+        this.state=state;
         if(view!=null) view.update();
     }
     @Override
@@ -251,14 +246,13 @@ public class Model implements MqttModel, PSQLListener, Runnable {
             updateFailedItems();
             updateOnlineTime();
             updateProcessedItems();
-            updateQuery();
+            updateAutoQuery();
             updateRecipes();
-            mqtt.fix();
             if(view!=null) view.update();
             try {
-                logger.info("10000 sleep");
+                logger.info("60s sleep");
                 Thread.sleep(10000);
-                logger.info("10000 slept");
+                logger.info("60s slept");
             } catch (InterruptedException ie) {
                 logger.error("run(): InterruptedException: "+ie);
             }
@@ -267,9 +261,13 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     public synchronized void shutdown() {
         try {
             psql.close();
+            mqtt.close();
         } catch (SQLException sqle) {
             logger.error("SQLException when closing SQLConnection");
             logger.debug("shutdown():\n"+sqle);
         }
+    }
+    public synchronized void fixMqtt() {
+        mqtt.fix();
     }
 }

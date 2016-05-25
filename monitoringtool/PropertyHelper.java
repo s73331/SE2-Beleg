@@ -17,6 +17,7 @@ public class PropertyHelper {
     private static final Logger logger=LogManager.getLogger();
     private Properties properties;
     Map<String, String> queries=new HashMap<String, String>();
+    Set<String> autoUpdateQueries=new HashSet<String>();
     public PropertyHelper(String file) throws IOException {
         InputStream fileStream=new FileInputStream(file);
         properties=new Properties();
@@ -38,8 +39,12 @@ public class PropertyHelper {
         Iterator<String> queryIterator=allProperties.iterator();
         while(queryIterator.hasNext()) {
             String s=queryIterator.next();
-            if(s.startsWith("query_")) {
-                queries.put(s.substring(6).replace('_',' '), properties.getProperty(s));
+            if(s.contains("query")) {
+                String query=properties.getProperty(s).replace("<tool>", getDeviceID());
+                if(s.contains("autoupdate")) {
+                    autoUpdateQueries.add(query);
+                }
+                queries.put(s.replace("query", "").replace('_',' ').replace("autoupdate", ""), query);
             }
         }
     }
@@ -85,5 +90,8 @@ public class PropertyHelper {
     }
     public String getQuery(String name) {
         return queries.get(name);
+    }
+    public boolean shouldAutoUpdate(String name) {
+        return autoUpdateQueries.contains(name);
     }
 }
