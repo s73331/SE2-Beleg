@@ -11,6 +11,8 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+
+
 public class MqttHelper implements MqttCallback {
     private MqttAsyncClient mqtt;
     private boolean error=false;
@@ -128,24 +130,5 @@ public class MqttHelper implements MqttCallback {
             new File(directory+"/.lck").delete();
             new File(directory).delete();
         }
-    }
-    public static void main(String[] args) throws InterruptedException {
-        MqttHelper mqttHelper=new MqttHelper(new MqttBrick(){
-            @Override
-            public String getState() {
-                return "IDLE";
-            }
-            @Override
-            public void manualFix() {
-                System.out.println("manual fix");
-            }
-
-            @Override
-            public void emergencyShutdown() {
-                System.out.println("emergency shutdown");
-            }
-        },"STP1001", "tcp://localhost");
-        Thread.sleep(1000000);
-        mqttHelper.close();
     }
 }
