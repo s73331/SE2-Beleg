@@ -163,7 +163,11 @@ public class EV3_Brick {
             public void emergencyShutdown() {
                 System.out.println("emergency shutdown");
             }
-        },"STP1001", "tcp://localhost");
+            @Override
+            public void messageArrived(String message) {
+                // TODO Auto-generated method stub
+            }
+        },"STP1001", "tcp://localhost", "192.168.1.1");
     }
     
     protected void stopMqtt() {
