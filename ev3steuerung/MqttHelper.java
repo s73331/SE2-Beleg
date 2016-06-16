@@ -5,14 +5,14 @@ import java.io.FilenameFilter;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 
-/* only 4 Eclipse
+
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-*/
+
 
 
 public class MqttHelper implements MqttCallback, Runnable {
@@ -45,7 +45,7 @@ public class MqttHelper implements MqttCallback, Runnable {
             subToken.waitForCompletion();
             error=false;
             while(failedMessages.size()>0&&publishToMES(failedMessages.remove())); //care: while has no body
-            if(failedMessages.size()==0) return publishToDeviceID(mqttBrick.getState());
+            if(failedMessages.size()==0) return publishToDeviceID(mqttBrick.getState().getName());
             return false;
         } catch (MqttException mqtte) {
             error=true;
@@ -86,7 +86,7 @@ public class MqttHelper implements MqttCallback, Runnable {
         return publishToMES(deviceID+":StateIND:"+message);
     }
     public synchronized void publishState() {
-        publishToDeviceID(mqttBrick.getState());
+        publishToDeviceID(mqttBrick.getState().getName());
     }
     public synchronized void debug(String message) {
         if(debugMode) publishToDeviceID("debug "+message);
@@ -110,7 +110,7 @@ public class MqttHelper implements MqttCallback, Runnable {
             case 1:
                 switch(information[0]) {
                 case "hello":
-                    publishToDeviceID(mqttBrick.getState());
+                    publishToDeviceID(mqttBrick.getState().getName());
                     break;
                 case "IDLE":
                 case "PROC":
@@ -141,9 +141,9 @@ public class MqttHelper implements MqttCallback, Runnable {
                 System.out.println("unrecognized message "+new String(message.getPayload()));
             }
         }
-    }
+    } 
     private synchronized void fix() {
-        if(error) connect();
+        if(error) connect(); 
     }
     public synchronized void close() {
         try {
