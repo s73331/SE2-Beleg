@@ -16,21 +16,48 @@ public class Idle implements State
     }
     
     public String getName() {
-        return "Idle";
+        return "IDLE";
     }
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
         
-        // MQTT STATE INDICATION
-        
-        ev3.led.setPattern(3);
         System.out.println("State: "+getName());
-        // ev3.audio.systemSound(0);
-        ev3.wait(4000);
-        System.out.println("I leave");
         
-        // TODO: RECIPE-STRUCTURE TO BE NOTED HERE
-        ev3.setState(new Proc(new Object[]{"Recipe-1"}));
+        // MQTT STATE INDICATION
+        ev3.mqttHelper.indicateState(this.getName());
+        
+        //ev3.led.setPattern(3);
+        // //ev3.audio.systemSound(0);
+        //ev3.wait(4000);
+        
+        System.out.println("I need work");
+        
+        // MQTT Request Task
+        boolean produce = false;
+        // WAIT FOR NON-CONFIRM
+        
+        for (int i = 0; i < 5 && !produce; i++) {
+            ev3.mqttHelper.requestTask();
+            if (ev3.isSleep())
+                i = 0;
+            if (ev3.isProduce()) {
+                produce = true;
+                ev3.setState(new Proc(new Object[]{ev3.nextRecipe()})); //TODO: RECIPE STRUCTURES
+            }
+            else {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                }
+            }  
+        }
+        
+        // If There was neither a Sleep, nor a produce or the TIme as run out
+        if (!produce)
+            ev3.setState(new ShuttingDown());
+            
+        System.out.println("I leave");
     }
 }

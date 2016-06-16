@@ -4,16 +4,16 @@ public class Steuerung {
     
     protected static boolean running;
     
-    protected Steuerung() {
+    private Steuerung() {
        running = true;
-       start();
     }
     
     private void start() {
+        EV3_Brick ev3 = EV3_Brick.getInstance();
         while (running) {
-            if (EV3_Brick.getInstance().getState() instanceof ShuttingDown)
+            if (ev3.getState() instanceof ShuttingDown)
                 running = false;
-            EV3_Brick.getInstance().getState().doAction();
+            ev3.getState().doAction();
         }
     }
     
@@ -23,13 +23,15 @@ public class Steuerung {
         else
             running = true;
         System.out.println("Running has been changed to "+running); //MQTT Message
-    }
+    } 
     
     public static void main(String[] args) {
-        System.out.println("The Brick has shut down");  //MQTT MESSAGE
+        System.out.println("The Brick has started to work");  //MQTT MESSAGE
         
         Steuerung m = new Steuerung();
+        m.start();
         
         System.out.println("The Brick has shut down");  //MQTT MESSAGE
+        System.exit(0);
     }
 }

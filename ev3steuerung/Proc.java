@@ -19,21 +19,38 @@ public class Proc implements State
     }
     
     public String getName() {
-        return "Proc";
+        return "PROC";
     }
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
         
         // MQTT STATE INDICATION
+        ev3.mqttHelper.indicateState(this.getName());
         
         
-        ev3.led.setPattern(1);
-        System.out.println("State: "+getName());
-        System.out.println("Working: "+recipe[0]);
-        ev3.wait(4000);
-        //ev3.audio.systemSound(0);
-        System.out.println("I leave - failed");
-        ev3.setState(new Maint());
+        //ev3.led.setPattern(1);
+        //System.out.println("State: "+getName());
+        
+        try {
+            
+            // Working and Shit
+            boolean workOK = false;
+            System.out.println("Working: "+recipe[0]);
+            
+            if (workOK) {
+                ev3.setState(new Idle());
+                ev3.mqttHelper.indicateTask(recipe[0].toString(), "done");
+            } else {
+                ev3.setState(new Maint());
+                ev3.mqttHelper.indicateTask(recipe[0].toString(), "abort");
+            }
+        } catch (Exception e) {
+            ev3.setState(new Idle());
+            ev3.mqttHelper.indicateTask(recipe[0].toString(), "terminated");
+        }
+        
+        //ev3.wait(4000);
+        ////ev3.audio.systemSound(0);
     }
 }

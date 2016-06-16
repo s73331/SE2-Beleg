@@ -24,6 +24,11 @@ public class EV3_Brick {
     
     // State of the current Machine
     private State currentState;
+    private boolean fix;
+    private boolean confirmed;
+    private boolean produce;
+    private boolean sleep;
+    private String nextRecipe;
     
     // Data Structures to save the needed Resources in
     protected String id;
@@ -43,7 +48,9 @@ public class EV3_Brick {
      */
     private EV3_Brick() {
         System.out.println("Hardware is being initialized"); //MQTT Message
-        initializeHardware();
+        //initializeHardware();
+        this.confirmed = false;
+        this.fix = false;
         this.currentState = new TurningOn();
     }
     
@@ -77,7 +84,56 @@ public class EV3_Brick {
     protected void setState(State s) {
         this.currentState = s;
     }
-   
+    
+    /**
+     * Check for a Manual Fix or other Fix for going out of MAINT
+     * 
+     * @return  boolean
+     */
+    protected boolean isFixed() {
+        boolean result = this.fix;
+        this.fix = false;
+        return result;
+    }
+    /**
+     * Check for a confirmed Message from MES
+     * 
+     * @return  boolean
+     */
+    protected boolean isConfirmed() {
+        boolean result = this.confirmed;
+        this.confirmed = false;
+        return result;
+    }
+    /**
+     * Check for a Produce Message from MES
+     * 
+     * @return  boolean
+     */
+    protected boolean isProduce() {
+        boolean result = this.produce;
+        this.produce = false;
+        return result;
+    }
+    /**
+     * Check for a Sleep Message from MES
+     * 
+     * @return  boolean
+     */
+    protected boolean isSleep() {
+        boolean result = this.sleep;
+        this.sleep = false;
+        return result;
+    }
+    /**
+     * Check for next Recipe (only after produce Indication from MES)
+     * 
+     * @return  String  Name of the Recipe to load up
+     */
+    protected String nextRecipe() {
+        return this.nextRecipe;
+    }
+    
     /**
      * Initializes the Hardware
      */
@@ -116,7 +172,7 @@ public class EV3_Brick {
     protected boolean loadRecipes() {
         // MQTT DEBUG
         // Insert Recipe-Loading Code here
-        return false;
+        return true;
     }
     
     /**
@@ -159,36 +215,66 @@ public class EV3_Brick {
         Delay.msDelay(time);
     }
     
-	/*
-	*	MQTT Functions
-	*/
+    /*
+    *   MQTT Functions
+    */
+    /**
+     * Starts Mqtt Handling
+     */
     protected void startMqtt() throws InterruptedException {
         this.mqttHelper = new MqttHelper(this,"STP1001", "tcp://localhost", "192.168.1.1");
     }
     /**
-     *	User pressed fix button in gui
-	 *	or this message arrived because of something else
+     *  User pressed fix button in gui
+     *  or this message arrived because of something else
      */
     protected void manualFix() {
-        System.out.println("manual fix");
+        if (currentState instanceof Maint)
+            this.fix = true;
     }
-	/**
-     *	User pressed shutdown button in gui
-	 *	or this message arrived because of something else
+    /**
+     *  User pressed shutdown button in gui
+     *  or this message arrived because of something else
      */
     protected void emergencyShutdown() {
         System.out.println("emergency shutdown");
     }
-	/**
-     *	This always comes from topic vwp/toolid ???as mqtthelper handles everything else
-     *	the messages are directly forwarded to this function, no checks are done
+    /**
+     *  This always comes from topic vwp/toolid ???as mqtthelper handles everything else
+     *  the messages are directly forwarded to this function, no checks are done
      * 
-	 *	@param message
+     *  @param message
      */
-	protected void messageArrived(String message) {
-		// TODO Auto-generated method stub
-	}
+    protected void messageArrived(String message) {
+        if (message.contains("produce") && currentState instanceof Idle) {
+            this.produce = true;
+            
+            String recString = message.replaceAll("produce:", "");
+            System.out.println("New Recipe = "+recString);
+            
+            this.nextRecipe = recString;
+        } else {
+            switch (message) {
+                case "confirm":
+                    this.confirmed = true;
+                    break;
+                case "sleep":
+                    this.sleep = true;
+                default:
+                    System.out.println(message);
+                    break;
+            }
+        }
+    }
+     /**
+     * Stops Mqtt-Handling
+     */
     protected void stopMqtt() {
+        try {
+            mqttHelper.discMqtt();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         mqttHelper.close();
     }
     

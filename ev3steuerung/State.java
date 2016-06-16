@@ -9,15 +9,7 @@ package ev3steuerung;
 
 public interface State {
    
-    /**
-     * Ein Beispiel eines Methodenkops - ersetzen Sie diesen Kommentar mit Ihrem eigenen
-     * 
-     * @param  y    ein Beispielparameter für eine Methode
-     * @return        das Ergebnis von beispMethode
-     */
     String getName();
-    
     void doAction();
-    
     int getColor();
 }

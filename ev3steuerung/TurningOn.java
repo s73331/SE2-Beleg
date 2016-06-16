@@ -15,15 +15,15 @@ public class TurningOn implements State
     }
     
     public String getName() {
-        return "TurningOn";
+        return "TURNING_ON";
     }
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
         
         // Set Brick-Colors
-        ev3.led.setPattern(4);
-        //ev3.audio.systemSound(3);
+        //ev3.led.setPattern(4);
+        ////ev3.audio.systemSound(3);
         
         // Tell where you at
         System.out.println("State: "+getName());    //MQTT Message DEBUG
@@ -31,27 +31,39 @@ public class TurningOn implements State
         
         // FUN STUFF
         System.out.println("Press 2 Continue");
-        ev3.waitForButtonPress("any");
+        //ev3.waitForButtonPress("any");
         
         // Get the Boolean Value if the Recipes are loaded or not
         boolean recLoaded = ev3.loadRecipes();
-        boolean mqttWorking;
-        
-        //MQTT-Connection can be established or not
-        try {
-            ev3.startMqtt();
-            mqttWorking = true;
-        }
-        catch (InterruptedException ie) {
-            mqttWorking = false;
-        }
         
         // If the Recipes are loaded and MQTT Connection is established, we continue as usual
-        if (!recLoaded || !mqttWorking)
+        if (!recLoaded)
             ev3.setState(new ShuttingDown());
         else {
             ev3.setState(new Idle());
-            // MQTT REGISTER AT MES WITH REGISTER MESSAGE
+            
+            try {
+                ev3.startMqtt();
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
+            ev3.mqttHelper.register();
+            
+            boolean mqttConfirm = false;
+            // WAIT FOR NON-CONFIRM
+            for (int i = 0; i < 3 && !mqttConfirm; i++) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                }
+                if (ev3.isConfirmed())
+                    mqttConfirm = true;
+            }
+            
+            if (!mqttConfirm) {
+                ev3.setState(new ShuttingDown());
+            }
         }
     }
 }

@@ -16,21 +16,21 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 
 public class MqttHelper implements MqttCallback, Runnable {
-	private MqttAsyncClient mqtt;
-    private boolean error=false;
-    private boolean debugMode=false;
+    private MqttAsyncClient mqtt;
+    private boolean error = false;
+    private boolean debugMode = false;
     private String serverURI;
     private String deviceID;
     private EV3_Brick mqttBrick;
-	private LinkedList<String> failedMessages;
+    private LinkedList<String> failedMessages;
     private String ip;
     
     public MqttHelper(EV3_Brick mqttBrick, String deviceID, String serverURI, String ip) {
-        this.deviceID 		= 	deviceID;
-        this.mqttBrick 		= 	mqttBrick;
-        this.serverURI		= 	serverURI;
-		this.failedMessages = 	new LinkedList<String>();
-        this.ip				=	ip;
+        this.deviceID       =   deviceID;
+        this.mqttBrick      =   mqttBrick;
+        this.serverURI      =   serverURI;
+        this.failedMessages =   new LinkedList<String>();
+        this.ip             =   ip;
         connect();
     }
     private synchronized boolean connect() {
@@ -44,8 +44,11 @@ public class MqttHelper implements MqttCallback, Runnable {
             subToken=mqtt.subscribe("vwp/"+deviceID,0);
             subToken.waitForCompletion();
             error=false;
-            while(failedMessages.size()>0&&publishToMES(failedMessages.remove())); //care: while has no body
-            if(failedMessages.size()==0) return publishToDeviceID(mqttBrick.getState().getName());
+            while(failedMessages.size() > 0 && publishToMES(failedMessages.remove()) ) {
+                ;
+            }
+            if(failedMessages.size() == 0)
+                return true;
             return false;
         } catch (MqttException mqtte) {
             error=true;
@@ -71,10 +74,10 @@ public class MqttHelper implements MqttCallback, Runnable {
             failedMessages.add(message);
             new Thread(this).start();   // if we fail delivering a message to MES, start a thread to try to fix the situation and deliver the message
         }
-        return false;
+        return true;
     }
     public synchronized boolean register() {
-        return publishToMES(deviceID+":register:{\"ip\":\""+ip+"\",\"name\":\""+deviceID+"\",\"status\":\""+mqttBrick.getState()+"\"}");
+        return publishToMES(deviceID+":register:{\"ip\":\""+ip+"\",\"name\":\""+deviceID+"\",\"status\":\""+mqttBrick.getState().getName()+"\"}");
     }
     public synchronized boolean requestTask() {
         return publishToMES(deviceID+":TaskREQ");
@@ -83,7 +86,7 @@ public class MqttHelper implements MqttCallback, Runnable {
         return publishToMES(deviceID+":TaskIND:"+task+":"+result);
     }
     public synchronized boolean indicateState(String message) {
-        return publishToMES(deviceID+":StateIND:"+message);
+        return publishToMES(deviceID+":StateIND:State:->"+message);
     }
     public synchronized void publishState() {
         publishToDeviceID(mqttBrick.getState().getName());
@@ -103,15 +106,19 @@ public class MqttHelper implements MqttCallback, Runnable {
     @Override
     public synchronized void messageArrived(String topic, MqttMessage message) throws Exception {
         if(("vwp/"+deviceID).equals(topic)) {
+            // EV3STEUERUNG - MES COMMUNICATION
             mqttBrick.messageArrived(new String(message.getPayload()));
         } else {
-            String[] information=new String(message.getPayload()).split(" ");
+            // GUI - EV3STEUERUNG COMMUNICATION
+            String[] information = new String(message.getPayload()).split(" ");
             switch(information.length) {
             case 1:
                 switch(information[0]) {
                 case "hello":
                     publishToDeviceID(mqttBrick.getState().getName());
                     break;
+                case "SHUTTING_DOWN":
+                case "TURNING_ON":
                 case "IDLE":
                 case "PROC":
                 case "MAINT":
@@ -124,8 +131,10 @@ public class MqttHelper implements MqttCallback, Runnable {
             case 2:
                 switch(information[0]) {
                 case "debug":
-                    if("true".equals(information[1])||"false".equals(information[1])) debugMode=Boolean.parseBoolean(information[1]);
-                    else System.out.println("unrecognized message "+new String(message.getPayload()));
+                    if("true".equals(information[1]) || "false".equals(information[1]))
+                        debugMode = Boolean.parseBoolean(information[1]);
+                    else
+                        System.out.println("unrecognized message "+new String(message.getPayload()));
                     break;
                 case "manual":
                     mqttBrick.manualFix();
@@ -143,11 +152,11 @@ public class MqttHelper implements MqttCallback, Runnable {
         }
     } 
     private synchronized void fix() {
-        if(error) connect(); 
+        if(error) connect();
     }
     public synchronized void close() {
         try {
-            publishToMES(deviceID+"shutting down");
+            publishToMES(deviceID+":shutting down");
             mqtt.disconnect();
             mqtt.close();
         } catch (MqttException e) {
@@ -165,6 +174,9 @@ public class MqttHelper implements MqttCallback, Runnable {
             new File(directory+"/.lck").delete();
             new File(directory).delete();
         }
+    }
+    protected void discMqtt() throws MqttException {
+        this.mqtt.disconnect();
     }
     public void run() {
         try {
