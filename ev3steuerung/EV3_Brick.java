@@ -29,8 +29,8 @@ public class EV3_Brick {
     protected String id;
     protected Map<Character,BaseRegulatedMotor> motorMap;
     protected Map<Integer,AnalogSensor> sensorMap;
-    // Insert protected Recipe Datastructure here
     protected MqttHelper mqttHelper;
+    // TODO: Insert protected Recipe Datastructure here
     
     // Internal EV3-Hardware
     private EV3 ev3;
@@ -86,22 +86,33 @@ public class EV3_Brick {
         audio = ev3.getAudio();
         led = ev3.getLED();
         
-        
         identifyPorts();
+        
+        loadRecipes();
     }
     
     /**
-     * Initialize Port-Settings and write them into the Instance Variables motor/sensor-Map
+     * Initialize Port-Settings (From Properties?)
+     * and write them into the Instance Variables motor/sensor-Map
+     * 
+     * @return  boolean If this was successfuly or not
      */
-    private void identifyPorts() {
+    private boolean identifyPorts() {
+        // MQTT DEBUG
         
         motorMap = new HashMap<Character,BaseRegulatedMotor>();
         sensorMap = new HashMap<Integer,AnalogSensor>();
         
         // Insert Identification Code from Sepp here
         
+        return false;
     }
     
+    /**
+     * Loads up the nessecary Recipes
+     * 
+     * @return  boolean If this was successfuly or not
+     */
     protected boolean loadRecipes() {
         // MQTT DEBUG
         // Insert Recipe-Loading Code here
@@ -119,6 +130,7 @@ public class EV3_Brick {
             case "any":
                 Button.waitForAnyPress();
                 break;
+            //TODO: More Cases with other buttons
         }
     }
     
@@ -147,26 +159,41 @@ public class EV3_Brick {
         Delay.msDelay(time);
     }
     
+	/*
+	*	MQTT Functions
+	*/
     protected void startMqtt() throws InterruptedException {
-        this.mqttHelper = new MqttHelper(
-        new MqttBrick(){
-            @Override
-            public String getState() {
-                return "IDLE";
-            }
-            @Override
-            public void manualFix() {
-                System.out.println("manual fix");
-            }
-        
-            @Override
-            public void emergencyShutdown() {
-                System.out.println("emergency shutdown");
-            }
-        },"STP1001", "tcp://localhost");
+        this.mqttHelper = new MqttHelper(this,"STP1001", "tcp://localhost", "192.168.1.1");
     }
-    
+    /**
+     *	User pressed fix button in gui
+	 *	or this message arrived because of something else
+     */
+    protected void manualFix() {
+        System.out.println("manual fix");
+    }
+	/**
+     *	User pressed shutdown button in gui
+	 *	or this message arrived because of something else
+     */
+    protected void emergencyShutdown() {
+        System.out.println("emergency shutdown");
+    }
+	/**
+     *	This always comes from topic vwp/toolid ???as mqtthelper handles everything else
+     *	the messages are directly forwarded to this function, no checks are done
+     * 
+	 *	@param message
+     */
+	protected void messageArrived(String message) {
+		// TODO Auto-generated method stub
+	}
     protected void stopMqtt() {
         mqttHelper.close();
+    }
+    
+    protected void spinMotor(/*TODO: Insert Parameters here*/) {
+        //TODO: new Spin(...);
+        //TODO: OR Spin Logik hier rein ?
     }
 }
