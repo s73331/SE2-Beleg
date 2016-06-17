@@ -50,6 +50,22 @@ public class Proc implements State
             ev3.mqttHelper.indicateTask(recipe[0].toString(), "terminated");
         }
         
+        boolean mqttConfirm = false;
+        // WAIT FOR NON-CONFIRM
+        for (int i = 0; i < 3 && !mqttConfirm; i++) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
+            if (ev3.isConfirmed())
+                mqttConfirm = true;
+        }
+        
+        if (!mqttConfirm) {
+            ev3.setState(new ShuttingDown());
+        }
+        
         //ev3.wait(4000);
         ////ev3.audio.systemSound(0);
     }
