@@ -270,11 +270,6 @@ public class EV3_Brick {
      * Stops Mqtt-Handling
      */
     protected void stopMqtt() {
-        try {
-            mqttHelper.discMqtt();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         mqttHelper.close();
     }
     

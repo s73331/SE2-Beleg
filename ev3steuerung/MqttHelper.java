@@ -48,7 +48,7 @@ public class MqttHelper implements MqttCallback, Runnable {
                 ;
             }
             if(failedMessages.size() == 0)
-                return true;
+                return publishToDeviceID(mqttBrick.getState().getName());;
             return false;
         } catch (MqttException mqtte) {
             error=true;
@@ -161,6 +161,7 @@ public class MqttHelper implements MqttCallback, Runnable {
             mqtt.close();
         } catch (MqttException e) {
             //TODO
+            System.out.println("Something happened in mqttHelper.close()");
         }
         String[] directories=Paths.get("").toAbsolutePath().toFile().list(new FilenameFilter(){
             @Override
@@ -174,9 +175,6 @@ public class MqttHelper implements MqttCallback, Runnable {
             new File(directory+"/.lck").delete();
             new File(directory).delete();
         }
-    }
-    protected void discMqtt() throws MqttException {
-        this.mqtt.disconnect();
     }
     public void run() {
         try {

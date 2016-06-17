@@ -29,7 +29,7 @@ public class ShuttingDown implements State
         System.out.println("I shut down");
         //ev3.wait(2000);
         
-        
+        ev3.stopMqtt();
         
         //EV3_Brick.getInstance().audio.systemSound(2);
         System.out.println("I end this now");
