@@ -28,8 +28,6 @@ public class ShuttingDown implements State
         //ev3.led.setPattern(9);
         ev3.mqttHelper.debug("State: "+getName());
         
-        ev3.stopMqtt();
-        
         //EV3_Brick.getInstance().audio.systemSound(2);
         ev3.mqttHelper.debug("End of ShuttingDown");
         //ev3.wait(1000);

@@ -20,12 +20,12 @@ public class Steuerung {
         ev3.stopMqtt();
     }
     
-    protected static void changeRunning() {
+    protected static void changeRunning(String reason) {
         if (running)
             running = false;
         else
             running = true;
-        System.out.println("Running has been changed to "+running); //MQTT Message
+        EV3_Brick.getInstance().mqttHelper.debug("Running has been changed to "+running);
     } 
     
     public static void main(String[] args) {

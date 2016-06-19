@@ -27,12 +27,20 @@ public class Proc implements State
         
         // Rezept übeprüfen
         ev3.mqttHelper.debug("Getting the next Recipe");
-        Recipe recipe = ev3.getNextRecipe();
-        if (recipe == null) {
+        Recipe recipe;
+        if (ev3.recName.isEmpty()) {
             ev3.setState(new Maint());
-            ev3.mqttHelper.debug("Recipe failed to load");
+            ev3.mqttHelper.debug("Recipe name is not set");
             return;
+        } else{
+            recipe = ev3.loadRecipe(ev3.recName);
+            if (recipe == null) {
+                ev3.setState(new Maint());
+                ev3.mqttHelper.debug("Recipe failed to load");
+                return;
+            }
         }
+        
         ev3.mqttHelper.debug("Recipe loaded");
         
         // MQTT STATE INDICATION
@@ -64,6 +72,7 @@ public class Proc implements State
         boolean mqttConfirm = false;
         // WAIT FOR NON-CONFIRM
         ev3.mqttHelper.debug("Waiting for confirm");
+        ev3.waiting = true;
         for (int i = 0; i < 3 && !mqttConfirm; i++) {
             if (ev3.isConfirmed()) {
                 mqttConfirm = true;
@@ -79,6 +88,7 @@ public class Proc implements State
                 }
             }
         }
+        ev3.waiting = false;
         
         if (!mqttConfirm) {
             ev3.setState(new ShuttingDown());

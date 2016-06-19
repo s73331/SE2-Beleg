@@ -1,4 +1,4 @@
-package ev3steuerung;
+package ev3steuerung; 
 
 import java.util.Map;
 import java.util.HashMap;
@@ -29,19 +29,24 @@ public class EV3_Brick {
     private boolean confirmed;
     private boolean produce;
     private boolean sleep;
-    private Recipe nextRecipe;
     
     // Data Structures to save the needed Resources in
     protected String id;
     //protected Map<Character,BaseRegulatedMotor> motorMap;
     //protected Map<Integer,AnalogSensor> sensorMap;
     public MqttHelper mqttHelper;
+    protected String recName;
+    protected boolean waiting;
     // TODO: Insert protected Recipe Datastructure here
     
     // Internal EV3-Hardware
     private EV3 ev3;
     protected LED led;
     protected Audio audio;
+    
+    
+    
+    /* MAIN FUNCTIONS START */
     
     /**
      * Private Class Constructor that initializes the Hardware and sets
@@ -73,7 +78,36 @@ public class EV3_Brick {
             instance = new EV3_Brick();
         return instance;
     }
-
+    
+    /**
+     * Initializes the Hardware components
+     */
+    protected void initializeHardware() {
+        mqttHelper.debug("Hardware is being initialized");
+        this.ev3 = (EV3)BrickFinder.getDefault();
+        audio = ev3.getAudio();
+        led = ev3.getLED();
+        
+        identifyPorts();
+    }
+    
+    /**
+     * Initialize Port-Settings (From Properties?)
+     * and write them into the Instance Variables motor/sensor-Map
+     * 
+     * @return  boolean If this was successfuly or not
+     */
+    private boolean identifyPorts() {
+        mqttHelper.debug("Identify Ports");
+        
+        //motorMap = new HashMap<Character,BaseRegulatedMotor>();
+        //sensorMap = new HashMap<Integer,AnalogSensor>();
+        
+        // Insert Identification Code from Sepp here
+        
+        return false;
+    }
+    
     /**
      * Returns the current State of the Machine
      * 
@@ -92,6 +126,10 @@ public class EV3_Brick {
         mqttHelper.debug("Setting the State to: "+s.getName());
         this.currentState = s;
     }
+    
+    /* MAIN FUNCTIONS END */
+    
+    
     
     /**
      * Check for a Manual Fix or other Fix for going out of MAINT
@@ -141,69 +179,21 @@ public class EV3_Brick {
             this.sleep = false;
         return result;
     }
-    /**
-     * Check for next Recipe (only after produce Indication from MES)
-     * 
-     * @return  String  Name of the Recipe to load up
-     */
-    protected Recipe nextRecipe() {
-        mqttHelper.debug("Getting the next Recipe: "+this.nextRecipe.toString());
-        return this.nextRecipe;
-    }
-    
-    /**
-     * Initializes the Hardware
-     */
-    protected void initializeHardware() {
-        mqttHelper.debug("Hardware is being initialized");
-        this.ev3 = (EV3)BrickFinder.getDefault();
-        audio = ev3.getAudio();
-        led = ev3.getLED();
-        
-        identifyPorts();
-    }
-    
-    /**
-     * Initialize Port-Settings (From Properties?)
-     * and write them into the Instance Variables motor/sensor-Map
-     * 
-     * @return  boolean If this was successfuly or not
-     */
-    private boolean identifyPorts() {
-        mqttHelper.debug("Identify Ports");
-        
-        //motorMap = new HashMap<Character,BaseRegulatedMotor>();
-        //sensorMap = new HashMap<Integer,AnalogSensor>();
-        
-        // Insert Identification Code from Sepp here
-        
-        return false;
-    }
     
     /**
      * Loads up the nessecary Recipe
      * 
      * @return  boolean If this was successfuly or not
      */
-    protected boolean loadRecipe(String recName) {
-        mqttHelper.debug("Load Recipe "+recName);
-        this.nextRecipe = Recipe.load(recName);
+    protected Recipe loadRecipe(String recName) {
+        mqttHelper.debug("loadRecipe( "+recName+" )");
         
         /* Check if this works out with the ports , if not null*/
         
         /* Returns true if its ok, false if its not */
-        return true;
+        return Recipe.load(recName);
     }
     
-    /**
-     * Gets the next Recipe
-     * 
-     * @return  Recipe
-     */
-    protected Recipe getNextRecipe() {
-        mqttHelper.debug("Get the next Recipe");
-        return this.nextRecipe;
-    }
     /**
      * Waits for specific Button Press (default any)
      * 
@@ -278,24 +268,24 @@ public class EV3_Brick {
      *  @param message
      */
     protected void messageArrived(String message) {
-        mqttHelper.debug("A Message Arrived");
+        mqttHelper.debug("A Message Arrived: "+message);
         if (message.contains("produce") && currentState instanceof Idle) {
             this.produce = true;
             
             String recString = message.replaceAll("produce:", "");
-            System.out.println("New Recipe = "+recString);
+            mqttHelper.debug("Recipe: "+recString+" setting recName");
+            this.recName = recString;
             
-            loadRecipe(recString);
-            
-        } else {
+        } else if (waiting) {
             switch (message) {
                 case "confirm":
                     this.confirmed = true;
                     break;
                 case "sleep":
                     this.sleep = true;
+                    break;
                 default:
-                    System.out.println(message);
+                    mqttHelper.debug("unknown message arrived: "+message);
                     break;
             }
         }

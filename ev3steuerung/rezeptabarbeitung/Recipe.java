@@ -19,10 +19,10 @@ public class Recipe {
     EV3_Brick ev3;
     
     public Recipe(String recName, Deque<Object[]> rezept) {
-        System.out.println("Recipe: "+this+" Creating Recipe");
         this.name = recName;
         this.rezept = rezept;
         this.ev3 = EV3_Brick.getInstance();
+        ev3.mqttHelper.debug("Creating Recipe");
        }
     
     public void register() {
@@ -67,36 +67,6 @@ public class Recipe {
                 devices[s.getDevice()].rotate(mode, s.getSpeed(), s.getAngle());
             }
             
-            /*
-            switch (s.getDevice()) {
-            
-            case 0:
-                devices[0].rotate(mode, s.getSpeed(), s.getAngle());
-                break;
-            case 1:
-                devices[1].rotate(mode, s.getSpeed(), s.getAngle());
-                break;
-            case 2:
-                devices[2].rotate(mode, s.getSpeed(), s.getAngle());
-                break;
-            case 3:
-                devices[3].rotate(mode, s.getSpeed(), s.getAngle());
-                break;
-            case 4:
-                devices[4].rotate(mode, s.getSpeed(), s.getAngle());
-                break;
-            case 5:
-                devices[5].rotate(mode, s.getSpeed(), s.getAngle());
-                break;
-            case 6:
-                devices[6].rotate(mode, s.getSpeed(), s.getAngle());
-                break;
-            case 7:
-                devices[7].rotate(mode, s.getSpeed(), s.getAngle());
-                break;
-            }
-            */
-        
         }
         rezept.removeFirst(); /* Zuletzt ausgeführter Rezeptbefehl löschen*/
         }
@@ -117,7 +87,7 @@ public class Recipe {
     }
     
     public static Recipe load(String recName) {
-        EV3_Brick.getInstance().mqttHelper.debug("Loading Recipe: "+recName);
+        EV3_Brick.getInstance().mqttHelper.debug("Recipe.load( "+recName+" )");
         // GET ALL NAMES OF SUBDIRECTORY ./RECIPES
         
         /* Insert Code here */
@@ -152,7 +122,6 @@ public class Recipe {
         rezept.addLast(befehl4);
         
         /* Bis hier bekommen wir von Sepp übergeben */
-        
         return new Recipe(recName, rezept);
     }
 }

@@ -36,8 +36,8 @@ public class Idle implements State
         
         // WAIT FOR NON-CONFIRM
         ev3.mqttHelper.debug("Waiting for produce-task or sleep");
+        ev3.waiting = true;
         for (int i = 0; i < 5 && !produce; i++) {
-            ev3.mqttHelper.requestTask();
             if (ev3.isSleep()) {
                 i = 0;
                 ev3.mqttHelper.debug("Sleep acknowlegded, Resetting Wait time");
@@ -48,6 +48,7 @@ public class Idle implements State
                 ev3.mqttHelper.debug("Produce acknowlegded");
             }
             else {
+                ev3.mqttHelper.requestTask();
                 try {
                     ev3.mqttHelper.debug("Waiting longer for produce or sleep");
                     Thread.sleep(1000);
@@ -57,6 +58,7 @@ public class Idle implements State
                 }
             }
         }
+        ev3.waiting = false;
         
         // If There was neither a Sleep, nor a produce or the TIme as run out
         if (!produce) {

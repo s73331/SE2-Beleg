@@ -37,8 +37,10 @@ public class TurningOn implements State
         ev3.mqttHelper.register();
         
         boolean mqttConfirm = false;
+        
         // WAIT FOR NON-CONFIRM
         ev3.mqttHelper.debug("Waiting for confirmation of register");
+        ev3.waiting = true;
         for (int i = 0; i < 3 && !mqttConfirm; i++) {
             if (ev3.isConfirmed()) {
                 mqttConfirm = true;
@@ -53,12 +55,13 @@ public class TurningOn implements State
                 }
             }
         }
+        ev3.waiting = false;
         
         if (!mqttConfirm) {
             ev3.setState(new ShuttingDown());
             ev3.mqttHelper.debug("Maximum Confirm waiting time passed");
         }
         
-        ev3.mqttHelper.debug("End of Idle");
+        ev3.mqttHelper.debug("End of TurningOn");
     }
 }

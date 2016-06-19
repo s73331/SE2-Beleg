@@ -116,7 +116,7 @@ public class MqttHelper implements MqttCallback, Runnable {
             case 1:
                 switch(information[0]) {
                 case "hello":
-                    publishToDeviceID(mqttBrick.getState().getName());
+                    publishState();
                     break;
                 case "SHUTTING_DOWN":
                 case "TURNING_ON":
