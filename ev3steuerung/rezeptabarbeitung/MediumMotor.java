@@ -1,4 +1,4 @@
-package Maschinensteuerung;
+package ev3steuerung.rezeptabarbeitung;
 
 import lejos.hardware.Brick;
 import lejos.hardware.BrickFinder;

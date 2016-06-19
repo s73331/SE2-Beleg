@@ -1,4 +1,4 @@
-package Maschinensteuerung;
+package ev3steuerung.rezeptabarbeitung;
 
 import lejos.robotics.SampleProvider;
 import lejos.robotics.filter.AbstractFilter;

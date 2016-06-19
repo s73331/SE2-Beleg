@@ -1,4 +1,4 @@
-package Maschinensteuerung;
+package ev3steuerung.rezeptabarbeitung;
 
 
 public class Spin {
