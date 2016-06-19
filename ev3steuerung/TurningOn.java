@@ -20,50 +20,45 @@ public class TurningOn implements State
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
+        ev3.mqttHelper.debug("Start of TurningOn");
         
         // Set Brick-Colors
         //ev3.led.setPattern(4);
         ////ev3.audio.systemSound(3);
         
         // Tell where you at
-        System.out.println("State: "+getName());    //MQTT Message DEBUG
-        System.out.println("I work");
+        ev3.mqttHelper.debug("State: "+getName());
         
         // FUN STUFF
-        System.out.println("Press 2 Continue");
         //ev3.waitForButtonPress("any");
         
-        // Get the Boolean Value if the Recipes are loaded or not
-        boolean recLoaded = ev3.loadRecipes();
+        ev3.setState(new Idle());
+        ev3.mqttHelper.debug("Send Register to MES");
+        ev3.mqttHelper.register();
         
-        // If the Recipes are loaded and MQTT Connection is established, we continue as usual
-        if (!recLoaded)
-            ev3.setState(new ShuttingDown());
-        else {
-            ev3.setState(new Idle());
-            
-            try {
-                ev3.startMqtt();
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
-            }
-            ev3.mqttHelper.register();
-            
-            boolean mqttConfirm = false;
-            // WAIT FOR NON-CONFIRM
-            for (int i = 0; i < 3 && !mqttConfirm; i++) {
+        boolean mqttConfirm = false;
+        // WAIT FOR NON-CONFIRM
+        ev3.mqttHelper.debug("Waiting for confirmation of register");
+        for (int i = 0; i < 3 && !mqttConfirm; i++) {
+            if (ev3.isConfirmed()) {
+                mqttConfirm = true;
+                ev3.mqttHelper.debug("Confirm acknowleged");
+            } else {
                 try {
+                    ev3.mqttHelper.debug("Waiting longer for confirm");
                     Thread.sleep(1000);
                 } catch (InterruptedException ie) {
+                    ev3.mqttHelper.debug("Confirm Wait InterruptedException recieved");
                     ie.printStackTrace();
                 }
-                if (ev3.isConfirmed())
-                    mqttConfirm = true;
-            }
-            
-            if (!mqttConfirm) {
-                ev3.setState(new ShuttingDown());
             }
         }
+        
+        if (!mqttConfirm) {
+            ev3.setState(new ShuttingDown());
+            ev3.mqttHelper.debug("Maximum Confirm waiting time passed");
+        }
+        
+        ev3.mqttHelper.debug("End of Idle");
     }
 }

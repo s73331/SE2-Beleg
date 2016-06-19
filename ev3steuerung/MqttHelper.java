@@ -91,6 +91,7 @@ public class MqttHelper implements MqttCallback, Runnable {
     public synchronized void publishState() {
         publishToDeviceID(mqttBrick.getState().getName());
     }
+    /* MUST BE LONGER THAN 2 WORDS ! */
     public synchronized void debug(String message) {
         if(debugMode) publishToDeviceID("debug "+message);
     }
@@ -147,7 +148,12 @@ public class MqttHelper implements MqttCallback, Runnable {
                 }
                 break;
             default:
-                System.out.println("unrecognized message "+new String(message.getPayload()));
+                switch(information[0]) {
+                    case "debug":
+                        break;
+                    default:
+                        System.out.println("unrecognized message "+new String(message.getPayload()));
+                }
             }
         }
     } 

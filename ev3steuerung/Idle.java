@@ -21,8 +21,9 @@ public class Idle implements State
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
+        ev3.mqttHelper.debug("Start of Idle");
         
-        System.out.println("State: "+getName());
+        ev3.mqttHelper.debug("State: "+getName());
         
         // MQTT STATE INDICATION
         ev3.mqttHelper.indicateState(this.getName());
@@ -31,33 +32,38 @@ public class Idle implements State
         // //ev3.audio.systemSound(0);
         //ev3.wait(4000);
         
-        System.out.println("I need work");
-        
-        // MQTT Request Task
         boolean produce = false;
-        // WAIT FOR NON-CONFIRM
         
+        // WAIT FOR NON-CONFIRM
+        ev3.mqttHelper.debug("Waiting for produce-task or sleep");
         for (int i = 0; i < 5 && !produce; i++) {
             ev3.mqttHelper.requestTask();
-            if (ev3.isSleep())
+            if (ev3.isSleep()) {
                 i = 0;
+                ev3.mqttHelper.debug("Sleep acknowlegded, Resetting Wait time");
+            }
             if (ev3.isProduce()) {
                 produce = true;
-                ev3.setState(new Proc(new Object[]{ev3.nextRecipe()})); //TODO: RECIPE STRUCTURES
+                ev3.setState(new Proc()); //TODO: RECIPE STRUCTURES
+                ev3.mqttHelper.debug("Produce acknowlegded");
             }
             else {
                 try {
-                    Thread.sleep(5000);
+                    ev3.mqttHelper.debug("Waiting longer for produce or sleep");
+                    Thread.sleep(1000);
                 } catch (InterruptedException ie) {
+                    ev3.mqttHelper.debug("sleep/produce Wait InterruptedException recieved");
                     ie.printStackTrace();
                 }
-            }  
+            }
         }
         
         // If There was neither a Sleep, nor a produce or the TIme as run out
-        if (!produce)
+        if (!produce) {
             ev3.setState(new ShuttingDown());
-            
-        System.out.println("I leave");
+            ev3.mqttHelper.debug("Maximum produce or sleep wait time has passed");
+        }
+        
+        ev3.mqttHelper.debug("End of Idle");
     }
 }

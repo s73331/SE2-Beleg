@@ -10,11 +10,14 @@ public class Steuerung {
     
     private void start() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
+        ev3.mqttHelper.debug("STRG: Start of the Machine");
         while (running) {
             if (ev3.getState() instanceof ShuttingDown)
                 running = false;
             ev3.getState().doAction();
         }
+        ev3.mqttHelper.debug("STRG: End of the Machine");
+        ev3.stopMqtt();
     }
     
     protected static void changeRunning() {
@@ -26,12 +29,8 @@ public class Steuerung {
     } 
     
     public static void main(String[] args) {
-        System.out.println("The Brick has started to work");  //MQTT MESSAGE
-        
         Steuerung m = new Steuerung();
         m.start();
-        
-        System.out.println("The Brick has shut down");  //MQTT MESSAGE
         System.exit(0);
     }
 }

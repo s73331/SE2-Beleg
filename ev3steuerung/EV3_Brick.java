@@ -9,6 +9,7 @@ import lejos.hardware.lcd.*;
 import lejos.hardware.motor.*;
 import lejos.hardware.sensor.*;
 import lejos.utility.Delay;
+import ev3steuerung.rezeptabarbeitung.Recipe;
 
 /**
  * EV3_Brick contains all Hardware-Access Points relevant to the Program
@@ -28,13 +29,13 @@ public class EV3_Brick {
     private boolean confirmed;
     private boolean produce;
     private boolean sleep;
-    private String nextRecipe;
+    private Recipe nextRecipe;
     
     // Data Structures to save the needed Resources in
     protected String id;
-    protected Map<Character,BaseRegulatedMotor> motorMap;
-    protected Map<Integer,AnalogSensor> sensorMap;
-    protected MqttHelper mqttHelper;
+    //protected Map<Character,BaseRegulatedMotor> motorMap;
+    //protected Map<Integer,AnalogSensor> sensorMap;
+    public MqttHelper mqttHelper;
     // TODO: Insert protected Recipe Datastructure here
     
     // Internal EV3-Hardware
@@ -47,23 +48,29 @@ public class EV3_Brick {
      * the first state to TurningOn
      */
     private EV3_Brick() {
-        System.out.println("Hardware is being initialized"); //MQTT Message
-        //initializeHardware();
         this.confirmed = false;
         this.fix = false;
+        try {
+            // only for fix-Reasons with Monitoring-Tool!
+            this.currentState = new Idle();
+            startMqtt();
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+        }
+        //initializeHardware();
+        
         this.currentState = new TurningOn();
     }
-    
+     
     /**
      * Returns the Instance of the EV3_Brick if its already created, else
      * creates a new Instance and returns it [Singleton]
      * 
      * @return        EV3_Brick
      */
-    protected static EV3_Brick getInstance() {
+    public static EV3_Brick getInstance() {
         if (instance == null)
             instance = new EV3_Brick();
-        
         return instance;
     }
 
@@ -82,6 +89,7 @@ public class EV3_Brick {
      * @param  s    The new State for changing into
      */
     protected void setState(State s) {
+        mqttHelper.debug("Setting the State to: "+s.getName());
         this.currentState = s;
     }
     
@@ -92,7 +100,9 @@ public class EV3_Brick {
      */
     protected boolean isFixed() {
         boolean result = this.fix;
-        this.fix = false;
+        mqttHelper.debug("Check Fix: "+result);
+        if (result)
+            this.fix = false;
         return result;
     }
     /**
@@ -102,7 +112,9 @@ public class EV3_Brick {
      */
     protected boolean isConfirmed() {
         boolean result = this.confirmed;
-        this.confirmed = false;
+        mqttHelper.debug("Check Confirm: "+result);
+        if (result)
+            this.confirmed = false;
         return result;
     }
     /**
@@ -112,7 +124,9 @@ public class EV3_Brick {
      */
     protected boolean isProduce() {
         boolean result = this.produce;
-        this.produce = false;
+        mqttHelper.debug("Check Produce: "+result);
+        if (result)
+            this.produce = false;
         return result;
     }
     /**
@@ -122,7 +136,9 @@ public class EV3_Brick {
      */
     protected boolean isSleep() {
         boolean result = this.sleep;
-        this.sleep = false;
+        mqttHelper.debug("Check Sleep: "+result);
+        if (result)    
+            this.sleep = false;
         return result;
     }
     /**
@@ -130,7 +146,8 @@ public class EV3_Brick {
      * 
      * @return  String  Name of the Recipe to load up
      */
-    protected String nextRecipe() {
+    protected Recipe nextRecipe() {
+        mqttHelper.debug("Getting the next Recipe: "+this.nextRecipe.toString());
         return this.nextRecipe;
     }
     
@@ -138,13 +155,12 @@ public class EV3_Brick {
      * Initializes the Hardware
      */
     protected void initializeHardware() {
+        mqttHelper.debug("Hardware is being initialized");
         this.ev3 = (EV3)BrickFinder.getDefault();
         audio = ev3.getAudio();
         led = ev3.getLED();
         
         identifyPorts();
-        
-        loadRecipes();
     }
     
     /**
@@ -154,10 +170,10 @@ public class EV3_Brick {
      * @return  boolean If this was successfuly or not
      */
     private boolean identifyPorts() {
-        // MQTT DEBUG
+        mqttHelper.debug("Identify Ports");
         
-        motorMap = new HashMap<Character,BaseRegulatedMotor>();
-        sensorMap = new HashMap<Integer,AnalogSensor>();
+        //motorMap = new HashMap<Character,BaseRegulatedMotor>();
+        //sensorMap = new HashMap<Integer,AnalogSensor>();
         
         // Insert Identification Code from Sepp here
         
@@ -165,22 +181,36 @@ public class EV3_Brick {
     }
     
     /**
-     * Loads up the nessecary Recipes
+     * Loads up the nessecary Recipe
      * 
      * @return  boolean If this was successfuly or not
      */
-    protected boolean loadRecipes() {
-        // MQTT DEBUG
-        // Insert Recipe-Loading Code here
+    protected boolean loadRecipe(String recName) {
+        mqttHelper.debug("Load Recipe "+recName);
+        this.nextRecipe = Recipe.load(recName);
+        
+        /* Check if this works out with the ports , if not null*/
+        
+        /* Returns true if its ok, false if its not */
         return true;
     }
     
+    /**
+     * Gets the next Recipe
+     * 
+     * @return  Recipe
+     */
+    protected Recipe getNextRecipe() {
+        mqttHelper.debug("Get the next Recipe");
+        return this.nextRecipe;
+    }
     /**
      * Waits for specific Button Press (default any)
      * 
      * @param   but     Button to be pressed
      */
     protected void waitForButtonPress(String but) {
+        mqttHelper.debug("Wait for button press "+but);
         switch (but) {
             default:
             case "any":
@@ -212,6 +242,7 @@ public class EV3_Brick {
      * @param  time    time in ms
      */
     protected void wait(int time) {
+        mqttHelper.debug("Waiting "+time+" ms");
         Delay.msDelay(time);
     }
     
@@ -229,6 +260,7 @@ public class EV3_Brick {
      *  or this message arrived because of something else
      */
     protected void manualFix() {
+        mqttHelper.debug("Manual Fixing");
         if (currentState instanceof Maint)
             this.fix = true;
     }
@@ -237,7 +269,7 @@ public class EV3_Brick {
      *  or this message arrived because of something else
      */
     protected void emergencyShutdown() {
-        System.out.println("emergency shutdown");
+        mqttHelper.debug("Emergency Shutdown");
     }
     /**
      *  This always comes from topic vwp/toolid ???as mqtthelper handles everything else
@@ -246,13 +278,15 @@ public class EV3_Brick {
      *  @param message
      */
     protected void messageArrived(String message) {
+        mqttHelper.debug("A Message Arrived");
         if (message.contains("produce") && currentState instanceof Idle) {
             this.produce = true;
             
             String recString = message.replaceAll("produce:", "");
             System.out.println("New Recipe = "+recString);
             
-            this.nextRecipe = recString;
+            loadRecipe(recString);
+            
         } else {
             switch (message) {
                 case "confirm":
@@ -270,11 +304,7 @@ public class EV3_Brick {
      * Stops Mqtt-Handling
      */
     protected void stopMqtt() {
+        mqttHelper.debug("MQTT - Handler is stopping");
         mqttHelper.close();
-    }
-    
-    protected void spinMotor(/*TODO: Insert Parameters here*/) {
-        //TODO: new Spin(...);
-        //TODO: OR Spin Logik hier rein ?
     }
 }
