@@ -279,10 +279,10 @@ public class EV3_Brick {
      *  This always comes from topic vwp/toolid ???as mqtthelper handles everything else
      *  the messages are directly forwarded to this function, no checks are done
      * 
-     *  @param message
+     *  @param  String  message that arrived
      */
-    protected void messageArrived(String message) {
-        if (message.contains("produce") && currentState instanceof Idle && waiting) {
+    protected synchronized void messageArrived(String message) {
+        if (message.contains("produce") && currentState instanceof Idle && waiting && !produce) {
             this.produce = true;
             
             String recString = message.replaceAll("produce:", "");
