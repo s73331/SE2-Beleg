@@ -30,12 +30,11 @@ public class Maint implements State
         //ev3.wait(4000);
         ////ev3.audio.systemSound(1);
         
-        System.out.println("Wait 2 Entstör");
+        System.out.println("Please Fix the Machine ASAP");
         //ev3.waitForButtonPress("any");
         
         boolean errorMode = true;
         ev3.mqttHelper.debug("Waiting for manual fix");
-        ev3.waiting = true;
         for (int i = 0; i < 10 && errorMode; i++) {
             if (ev3.isFixed()) {
                 ev3.mqttHelper.debug("Manual Fix acknowledged");
@@ -50,7 +49,6 @@ public class Maint implements State
                 }
             }
         }
-        ev3.waiting = false;
         
         if (!errorMode) {
             ev3.mqttHelper.debug("Manual Fix applied");

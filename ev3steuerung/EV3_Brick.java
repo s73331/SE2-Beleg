@@ -55,6 +55,7 @@ public class EV3_Brick {
     private EV3_Brick() {
         this.confirmed = false;
         this.fix = false;
+        this.waiting = false;
         try {
             // only for fix-Reasons with Monitoring-Tool!
             this.currentState = new Idle();
@@ -269,25 +270,29 @@ public class EV3_Brick {
      */
     protected void messageArrived(String message) {
         mqttHelper.debug("A Message Arrived: "+message);
-        if (message.contains("produce") && currentState instanceof Idle) {
+        if (message.contains("produce") && currentState instanceof Idle && waiting) {
             this.produce = true;
             
             String recString = message.replaceAll("produce:", "");
-            mqttHelper.debug("Recipe: "+recString+" setting recName");
+            mqttHelper.debug("Message Arrived: produce:"+recString);
             this.recName = recString;
             
         } else if (waiting) {
             switch (message) {
                 case "confirm":
+                    mqttHelper.debug("Message Arrived: "+message);
                     this.confirmed = true;
                     break;
                 case "sleep":
+                    mqttHelper.debug("Message Arrived: "+message);
                     this.sleep = true;
                     break;
                 default:
                     mqttHelper.debug("unknown message arrived: "+message);
                     break;
             }
+        } else {
+            mqttHelper.debug("Out of Time-Frame-Message recieved: "+message);
         }
     }
      /**

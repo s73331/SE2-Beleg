@@ -51,7 +51,7 @@ public class Proc implements State
         
         try {
             // Working and Shit
-            boolean workOK = false;
+            boolean workOK = true;
             ev3.mqttHelper.debug("Working on: "+recipe);
             
             if (workOK) {
