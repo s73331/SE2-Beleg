@@ -1,4 +1,4 @@
-package ev3steuerung.rezeptabarbeitung;
+package Maschinensteuerung;
 
 
 public class Spin {
@@ -8,7 +8,6 @@ public class Spin {
 	private int device;
 	private int sensor;
 	private int till;
-
 
 	public int getAngle() {
 		return angle;
@@ -59,6 +58,7 @@ public class Spin {
 		this.setSensor(sensor);
 		this.setTill(till);
 	}
+	
 
 
 

@@ -1,4 +1,4 @@
-package ev3steuerung.rezeptabarbeitung;
+package Maschinensteuerung;
 
 import lejos.hardware.Brick;
 import lejos.hardware.BrickFinder;
@@ -41,6 +41,12 @@ public class TouchSensor extends Device {
 	public boolean isPressed(){
 
 		return touch.isPressed();
+	}
+	
+	@Override
+	public boolean isNotPressed(){
+
+		return !touch.isPressed();
 	}
 	
 	@Override

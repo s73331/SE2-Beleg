@@ -1,4 +1,6 @@
-package ev3steuerung.rezeptabarbeitung;
+package Maschinensteuerung;
+
+import lejos.utility.Delay;
 
 public abstract class Device {
 	
@@ -34,6 +36,22 @@ public abstract class Device {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+	public boolean detectColor() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public boolean isNotPressed() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	
+
+
+
+	
 	
 
 }

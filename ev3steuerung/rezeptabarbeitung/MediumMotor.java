@@ -1,8 +1,7 @@
-package ev3steuerung.rezeptabarbeitung;
+package Maschinensteuerung;
 
 import lejos.hardware.Brick;
 import lejos.hardware.BrickFinder;
-import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
 import lejos.hardware.port.Port;
 
