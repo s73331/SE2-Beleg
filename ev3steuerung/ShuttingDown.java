@@ -21,6 +21,7 @@ public class ShuttingDown implements State
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
         ev3.mqttHelper.debug("Start of ShuttingDown");
+        ev3.mqttHelper.publishState();
         
         // MQTT STATE INDICATION
         ev3.mqttHelper.indicateState(this.getName());

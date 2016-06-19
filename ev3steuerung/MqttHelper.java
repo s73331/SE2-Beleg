@@ -48,7 +48,7 @@ public class MqttHelper implements MqttCallback, Runnable {
                 ;
             }
             if(failedMessages.size() == 0)
-                return publishToDeviceID(mqttBrick.getState().getName());;
+                return true;//publishToDeviceID(mqttBrick.getState().getName());
             return false;
         } catch (MqttException mqtte) {
             error=true;
@@ -116,7 +116,8 @@ public class MqttHelper implements MqttCallback, Runnable {
             case 1:
                 switch(information[0]) {
                 case "hello":
-                    publishState();
+                    if (!(mqttBrick.getState() instanceof TurningOn))
+                        publishState();
                     break;
                 case "SHUTTING_DOWN":
                 case "TURNING_ON":

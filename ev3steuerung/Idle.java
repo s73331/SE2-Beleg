@@ -22,6 +22,7 @@ public class Idle implements State
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
         ev3.mqttHelper.debug("Start of Idle");
+        ev3.mqttHelper.publishState();
         
         ev3.mqttHelper.debug("State: "+getName());
         
@@ -44,7 +45,7 @@ public class Idle implements State
             }
             if (ev3.isProduce()) {
                 produce = true;
-                ev3.setState(new Proc()); //TODO: RECIPE STRUCTURES
+                ev3.setState(new Proc(),false); //TODO: RECIPE STRUCTURES
                 ev3.mqttHelper.debug("Produce acknowlegded");
             }
             else {
@@ -62,7 +63,7 @@ public class Idle implements State
         
         // If There was neither a Sleep, nor a produce or the TIme as run out
         if (!produce) {
-            ev3.setState(new ShuttingDown());
+            ev3.setState(new ShuttingDown(),false);
             ev3.mqttHelper.debug("Maximum produce or sleep wait time has passed");
         }
         

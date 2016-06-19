@@ -21,6 +21,7 @@ public class Maint implements State
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
         ev3.mqttHelper.debug("Start of Maint");
+        ev3.mqttHelper.publishState();
         
         // MQTT STATE INDICATION
         ev3.mqttHelper.indicateState(this.getName());
@@ -52,10 +53,10 @@ public class Maint implements State
         
         if (!errorMode) {
             ev3.mqttHelper.debug("Manual Fix applied");
-            ev3.setState(new Idle());
+            ev3.setState(new Idle(),false);
         } else {
             ev3.mqttHelper.debug("Maximum fix wait time has passed");
-            ev3.setState(new ShuttingDown());
+            ev3.setState(new ShuttingDown(),false);
         }
         
         ev3.mqttHelper.debug("End of Maint");

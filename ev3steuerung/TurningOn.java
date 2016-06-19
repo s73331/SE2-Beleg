@@ -32,7 +32,6 @@ public class TurningOn implements State
         // FUN STUFF
         //ev3.waitForButtonPress("any");
         
-        ev3.setState(new Idle());
         ev3.mqttHelper.debug("Send Register to MES");
         ev3.mqttHelper.register();
         
@@ -44,6 +43,7 @@ public class TurningOn implements State
         for (int i = 0; i < 3 && !mqttConfirm; i++) {
             if (ev3.isConfirmed()) {
                 mqttConfirm = true;
+                ev3.setState(new Idle(),false);
                 ev3.mqttHelper.debug("Confirm acknowleged");
             } else {
                 try {
@@ -58,7 +58,7 @@ public class TurningOn implements State
         ev3.waiting = false;
         
         if (!mqttConfirm) {
-            ev3.setState(new ShuttingDown());
+            ev3.setState(new ShuttingDown(),false);
             ev3.mqttHelper.debug("Maximum Confirm waiting time passed");
         }
         

@@ -29,6 +29,7 @@ public class EV3_Brick {
     private boolean confirmed;
     private boolean produce;
     private boolean sleep;
+    private boolean forcedState;
     
     // Data Structures to save the needed Resources in
     protected String id;
@@ -56,6 +57,7 @@ public class EV3_Brick {
         this.confirmed = false;
         this.fix = false;
         this.waiting = false;
+        this.forcedState = false;
         try {
             // only for fix-Reasons with Monitoring-Tool!
             this.currentState = new Idle();
@@ -123,9 +125,19 @@ public class EV3_Brick {
      * 
      * @param  s    The new State for changing into
      */
-    protected void setState(State s) {
-        mqttHelper.debug("Setting the State to: "+s.getName());
-        this.currentState = s;
+    protected void setState(State s, boolean forced) {
+        mqttHelper.debug("Attempting to change State with Forced: "+forced);
+        
+        if (!forcedState) {
+             mqttHelper.debug("Setting the State to: "+s.getName());
+             this.currentState = s;
+        } else
+            mqttHelper.debug("Unable to set the State due to forcedState being true");
+            
+        if (forced) {
+            forcedState = true;
+            mqttHelper.debug("Forcing no other state changes");
+        }
     }
     
     /* MAIN FUNCTIONS END */
@@ -261,6 +273,7 @@ public class EV3_Brick {
      */
     protected void emergencyShutdown() {
         mqttHelper.debug("Emergency Shutdown");
+        setState(new ShuttingDown(),true);
     }
     /**
      *  This always comes from topic vwp/toolid ???as mqtthelper handles everything else
@@ -269,7 +282,6 @@ public class EV3_Brick {
      *  @param message
      */
     protected void messageArrived(String message) {
-        mqttHelper.debug("A Message Arrived: "+message);
         if (message.contains("produce") && currentState instanceof Idle && waiting) {
             this.produce = true;
             

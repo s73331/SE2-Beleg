@@ -26,7 +26,12 @@ public class Steuerung {
         else
             running = true;
         EV3_Brick.getInstance().mqttHelper.debug("Running has been changed to "+running);
+        EV3_Brick.getInstance().mqttHelper.debug("Reason for change: "+reason);
     } 
+    
+    protected static void softOff(String reason) {
+        
+    }
     
     public static void main(String[] args) {
         Steuerung m = new Steuerung();
