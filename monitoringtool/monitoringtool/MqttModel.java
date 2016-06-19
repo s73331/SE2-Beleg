@@ -6,5 +6,5 @@ public interface MqttModel {
     public boolean isDebugging();
     public void debugArrived();
     public void addDebug(String string);
-    public void newState(String state);
+    public void setState(String state);
 }

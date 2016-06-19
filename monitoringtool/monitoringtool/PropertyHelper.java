@@ -48,7 +48,7 @@ public class PropertyHelper {
             }
         }
     }
-    public static boolean isIntParsable(String input){
+    private static boolean isIntParsable(String input){
         boolean parsable = true;
         try{
             Integer.parseInt(input);

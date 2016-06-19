@@ -26,7 +26,6 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     private PSQLHelper psql;
     private PropertyHelper propertyHelper;
     private String state="";
-    private boolean dispatchActive=false;
     private MqttHelper mqtt;
     private String currentItem;
     private String failedItems;
@@ -48,61 +47,122 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         mqtt=new MqttHelper(propertyHelper, deviceID, this);
         logger.debug("initialized Model");
     }
+    /**
+     * 
+     * @return model instance
+     */
     public static Model getInstance() {
         return model;
     }
+    /**
+     * Returns the name of the currently processed item, without updating it from the database.
+     * @return Name of currently processed item
+     */
     public synchronized String getCurrentItem() {
         return currentItem;
     }
+    /**
+     * 
+     * @return all debug messages
+     */
     public synchronized String getDebugLog() {
         return debugLog;
     }
     public synchronized String getDeviceID() {
         return deviceID;
-        }
+    }
+    /**
+     * Returns the number of failed items in the last 24h, without updating it from the database.
+     * @return number of failed items
+     */
     public synchronized String getFailedItems() {
         return failedItems;
     }
+    /**
+     * Returns the preferred height from monitoringtool.properties.
+     * @return preferred height in pixels
+     */
     public int getHeight() {
         return propertyHelper.getHeight();          //won't get changed at any point, so no reason for sync
     }
+    /**
+     * Returns the current online time, without updating it from the database.
+     * @return current online time
+     */
     public synchronized String getOnlineTime() {
         return onlineTime;
     }
+    /**
+     * Returns the number of processed items in the last 24h, without updating it from the database.
+     * @return number of processed items
+     */
     public synchronized String getProcessedItems() {
         return processedItems;
     }
+    //TODO
     public Collection<String> getQueries() {        //won't get changed at any point, so no reason for sync
         return propertyHelper.getQueries();
     }
+    /**
+     * Returns the ResultSet of the query, without updating it from the database.
+     * @return current ResultSet
+     */
     public synchronized ResultSet getQuery() {
         return queryResult;
     }
+    /**
+     * 
+     * @return all recipes
+     */
     public synchronized String getRecipes() {
         return recipes;
     }
+    /**
+     * 
+     * @return current state
+     */
     public synchronized String getState() {
         return state;
     }
+    /**
+     * Returns the preferred width from monitoringtool.properties.
+     * @return preferred width in pixels
+     */
     public int getWidth() {                          //won't get changed at any point, so no reason for sync
         return propertyHelper.getWidth();
     }
+    /**
+     * 
+     * @return true - MQTT error, false - no MQTT error
+     */
     public synchronized boolean hasMqttError() {
         return mqtt.hasError();
     }
+    /**
+     * 
+     * @return true - SQL error, false - no SQL error
+     */
     public synchronized boolean hasSQLError() {
         return psql.hasError();
     }
+    /**
+     * Returns, whether debug mode is activated.
+     */
     @Override
     public synchronized boolean isDebugging() {
         return debugMode;
     }
-    public synchronized boolean isDispatchActive() {
-        return dispatchActive;
-    }
+    /**
+     * Returns, whether the tool is connected via MQTT and the monitoring tool - EV3 protocol
+     * @return
+     */
     public synchronized boolean isMqttOnline() {
         return mqtt.isOnline();
     }
+    /**
+     * Returns, whether the current result set is closed
+     * @return
+     */
     public boolean isResultSetClosed() {
         try {
             return queryResult.isClosed();
@@ -112,19 +172,37 @@ public class Model implements MqttModel, PSQLListener, Runnable {
             return true;
         }
     }
+    /**
+     * Sets a new query.
+     * @param name name of the query
+     */
     public synchronized void setCurrentQuery(String name) {
         currentQuery=propertyHelper.getQuery(name);
-        dispatchActive=false;
-        logger.debug("setCurrentQuery(): not showing dispatch list");
         logger.info("new currentQuery: "+name);
     }
+    @Override
+    public synchronized void setState(String state) {
+        this.state=state;
+        if(view!=null) view.update();
+    }
+    /**
+     * Registers a view, to update it when needed.
+     * @param view new view
+     */
     public void setView(View view) {
         this.view=view;
     }
+    /**
+     * Toggles the debug mode.
+     */
     public synchronized void toggleDebug() {
         debugMode^=mqtt.publish("debug "+!debugMode);
         logger.debug("toggleDebug(): debug mode toggled");
     }
+    /**
+     * Tries to retrieve the currently processed item from the database.
+     * @return empty string - machine is not in PROC, else name of the currently processed item
+     */
     public synchronized String updateCurrentItem() {
         if("PROC".equals(state)) {
             currentItem=psql.getCurrentItem(deviceID);
@@ -134,10 +212,18 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         }
         return currentItem;
     }
+    /**
+     * Updates the number of failed items and returns them.
+     * @return number of failed items.
+     */
     public synchronized String updateFailedItems() {
         failedItems=psql.getFailedItems(deviceID);
         return failedItems;
     }
+    /**
+     * Updates the online time and returns it.
+     * @return online time
+     */
     public synchronized String updateOnlineTime() {
         if("DOWN".equals(state)) {
             logger.debug("getOnlineTime(): not looking for online time in db, as machine is down");
@@ -147,10 +233,18 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         }
         return onlineTime;
     }
+    /**
+     * Updates the number of processed items and returns them.
+     * @return number of processed items.
+     */
     public synchronized String updateProcessedItems() {
         processedItems = psql.getProcessedItems(deviceID);
         return processedItems;
     }
+    /**
+     * Updates the ResultSet, if the query is marked as autoupdating.
+     * @return null - query not marked as autoupdating, else updated ResultSet
+     */
     public synchronized ResultSet updateAutoQuery() {
         if(propertyHelper.shouldAutoUpdate(currentQuery)) return updateQuery();
         else {
@@ -158,6 +252,10 @@ public class Model implements MqttModel, PSQLListener, Runnable {
             return null;
         }
     }
+    /**
+     * Updates the query.
+     * @return updated ResultSet
+     */
     public synchronized ResultSet updateQuery() {
         try {
             logger.info("executing query: "+currentQuery);
@@ -171,10 +269,18 @@ public class Model implements MqttModel, PSQLListener, Runnable {
             return null;
         }
     }
+    /**
+     * Updates the list of recipes.
+     * @return all recipes
+     */
     public synchronized String updateRecipes() {
         recipes=psql.getRecipes(deviceID);
         return recipes;
     }
+    /**
+     * Retrieves the state from the database, when MQTT has an error or the tool is not connected.
+     * @return machine state
+     */
     public synchronized String updateState() {
         if(mqtt.hasError()||!mqtt.isOnline()) {
             state=psql.getMachineState(deviceID);
@@ -192,6 +298,9 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         }
         return state;
     }
+    /**
+     * @param debug new debug message
+     */
     @Override
     public synchronized void addDebug(String debug) {
         debugLog+=debug;
@@ -226,11 +335,6 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         if(view!=null) view.update();
     }
     @Override
-    public synchronized void newState(String state) {
-        this.state=state;
-        if(view!=null) view.update();
-    }
-    @Override
     public synchronized void psqlErrorFixed() {
         if(view!=null) view.update();
     }
@@ -238,6 +342,9 @@ public class Model implements MqttModel, PSQLListener, Runnable {
     public synchronized void psqlErrorOccured() {
         if(view!=null) view.update();
     }
+    /**
+     * Updates all information every 60s.
+     */
     @Override
     public void run() {
         while(true) {
@@ -258,6 +365,9 @@ public class Model implements MqttModel, PSQLListener, Runnable {
             }
         }
     }
+    /**
+     * Closes PSQLHelper and MqttHelper.
+     */
     public synchronized void shutdown() {
         try {
             psql.close();
@@ -267,6 +377,9 @@ public class Model implements MqttModel, PSQLListener, Runnable {
             logger.debug("shutdown():\n"+sqle);
         }
     }
+    /**
+     * Attempts to fix MQTT connection.
+     */
     public synchronized void fixMqtt() {
         mqtt.fix();
     }

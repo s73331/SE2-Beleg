@@ -9,14 +9,34 @@ import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
  
+
+/**
+ * Main class for Monitoring Tool.
+ * 
+ * @author martin
+ *
+ */
 public class MonitoringTool extends Application {
     private Model model;
+    /**
+     * Launches the Monitoring Tool.
+     */
+    public MonitoringTool() {
+        launch((String[])null);
+    }
     private static final Logger logger=LogManager.getLogger();
+    /**
+     * Main method for Monitoring Tool. Instantiates a new instance of MonitoringTool.
+     * @param args not used
+     */
     public static void main(String[] args) {
         logger.debug("main(): entered");
-        launch(args);
+        new MonitoringTool();
         logger.debug("main(): exiting");
     }
+    /**
+     * Method as defined by javafx.application.Application.
+     */
     @Override
     public void start(Stage primaryStage) {
         try {
@@ -40,6 +60,9 @@ public class MonitoringTool extends Application {
             stop();
         }
     }
+    /**
+     * Method as defined by javafx.application.Application.
+     */
     public void stop() {
         model.shutdown();
         logger.info("exiting successfully");

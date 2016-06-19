@@ -1,7 +1,5 @@
 package monitoringtool;
 
- 
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -25,21 +23,32 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 
+/**
+ * 
+ * Implementation of Controller and View (method update) in the MVC pattern.
+ * The style of the view is defined in monitoringview.fxml, which uses style.css.
+ * 
+ * @author martin
+ *
+ */
 public class Controller implements InvalidationListener, Runnable, View {
     private Model model=Model.getInstance();
     private  static final Logger logger=LogManager.getLogger();
     @FXML
-    Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation, mqttError, sqlError, mqttStatus, extraStatus;
+    private Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation, mqttError, sqlError, mqttStatus, extraStatus;
     @FXML
-    Pane debugPane, queryPane, informationPane, buttonPane;
+    private Pane debugPane, queryPane, informationPane, buttonPane;
     @FXML
-    ListView<String> queryList;
+    private ListView<String> queryList;
     @FXML
-    TableView<ObservableList<String>> queryContent;
+    private TableView<ObservableList<String>> queryContent;
     @FXML
-    Button machineFixButton, shutdownButton, debugButton, queryButton, mqttFixButton;
+    private Button machineFixButton, shutdownButton, debugButton, queryButton, mqttFixButton;
     private ObservableList<String> queries;
     private ObservableList<ObservableList<String>> data;
+    /**
+     * Method as defined by JavaFX specifications.
+     */
     public void initialize() {
         logger.debug("initialize(): entered");
         showDebug();
@@ -55,11 +64,17 @@ public class Controller implements InvalidationListener, Runnable, View {
         new Thread(model).start();
         logger.debug("initialize(): at end");
     }
+    /**
+     * Method to show the debug pane instead of the query pane.
+     */
     public void showDebug() {
         logger.info("showing debug");
         debugPane.setVisible(true);
         queryPane.setVisible(false);
     }
+    /**
+     * Method to show the query pane instead of the debug pane.
+     */
     public void showQuery() {
         logger.info("showing query");
         debugPane.setVisible(false);
@@ -68,9 +83,15 @@ public class Controller implements InvalidationListener, Runnable, View {
         model.updateQuery();
         updateQuery(true);
     }
+    /**
+     * Method to send an emergency shutdown to the machine.
+     */
     public void emergencyShutdown() {
         model.emergencyShutdown();
     }
+    /**
+     * Method to toggle the debug state of the machine.
+     */
     public void toggleDebug() {
         model.toggleDebug();
         String debugStateText="Debug Mode: ";
@@ -81,12 +102,17 @@ public class Controller implements InvalidationListener, Runnable, View {
         }
         debugState.setText(debugStateText);
     }
-    /*
-     * necessary for FXML
+    /**
+     *  Method to update the query.
+     *  This implementation calls the method updateQuery(boolean) with the parameter false.
      */
     public void updateQuery() {
         updateQuery(false);
     }
+    /**
+     * Method to update the query
+     * @param changeColumns Indicates, whether the columns shall be reloaded. This is not necessary, when the query has not changed and lets the order defined by the user stay.
+     */
     public void updateQuery(boolean changeColumns) {
         logger.info("refreshing query with changeColumns: "+changeColumns);
         ResultSet resultSet=model.updateQuery();
@@ -142,14 +168,24 @@ public class Controller implements InvalidationListener, Runnable, View {
         queryContent.setItems(data);
         logger.debug("refreshed query");
     }
+    /**
+     * Method as defined by the interface InvalidationListener.
+     */
     public void invalidated(Observable arg0) {
         logger.info("selection of queryList changed to "+queryList.getSelectionModel().getSelectedItem());
         model.setCurrentQuery(queryList.getSelectionModel().getSelectedItem());
         updateQuery(true);
     }
+    /**
+     * Method to send a manual fix to the machine.
+     */
     public void fixMachine() {
         model.fixMachine();
     }
+    /**
+     * Method to update the view.
+     * This method must be called by the JavaFX Thread. To do this, use update().
+     */
     @Override
     public void run() {
         logger.info("refreshing view");
@@ -169,8 +205,6 @@ public class Controller implements InvalidationListener, Runnable, View {
                        extraStatus.setText("illegal state: "+state);
         }
         logger.debug("background color:"+backgroundColor);
-        informationPane.setStyle("-fx-background-color: "+backgroundColor+";");
-        buttonPane.setStyle("-fx-background-color: "+backgroundColor+";");
         String recs=model.getRecipes();
         debugInformation.setText(model.getDebugLog());
         if(recs.length()>0) {
@@ -210,12 +244,14 @@ public class Controller implements InvalidationListener, Runnable, View {
             debugButton.setDisable(false);
             shutdownButton.setDisable(false);
         } else {
+            backgroundColor="white";
             mqttStatus.setText("device is offline via MQTT");
             debugButton.setDisable(true);
             machineFixButton.setDisable(true);
             shutdownButton.setDisable(true);
         }
         if(model.hasMqttError()) {              //Mqtt Error last, highest priority
+            backgroundColor="white";
             debugButton.setDisable(true);
             machineFixButton.setDisable(true);
             shutdownButton.setDisable(true);
@@ -234,12 +270,20 @@ public class Controller implements InvalidationListener, Runnable, View {
         if(!"".equals(failed)) {
             failedItems.setText("Fehlgeschlagene Teile: "+failed);
         }
+        informationPane.setStyle("-fx-background-color: "+backgroundColor+";");
+        buttonPane.setStyle("-fx-background-color: "+backgroundColor+";");
         updateQuery(false);
         logger.info("refreshed view");
     } 
+    /**
+     * Method to update the view.
+     */
     public void update() {
         Platform.runLater(this);
     }
+    /**
+     * Method to fix mqtt errors.
+     */
     public void fixMqtt() {
         model.fixMqtt();
     }

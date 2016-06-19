@@ -13,6 +13,11 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+/**
+ * Support class to handle MQTT. Designed for use in monitoringtool.Model.
+ * @author martin
+ *
+ */
 public class MqttHelper implements MqttCallback {
     private static final Logger logger=LogManager.getLogger();
     private MqttAsyncClient mqtt;
@@ -20,7 +25,7 @@ public class MqttHelper implements MqttCallback {
     private String deviceID;
     private MqttModel model;
     private PropertyHelper propertyHelper;
-    private boolean status;                 //true: online, false: offine
+    private boolean status=false;                 //true: online, false: offine
     public MqttHelper(PropertyHelper propertyHelper, String deviceID, MqttModel model) {
         if(deviceID==null) throw new IllegalArgumentException("deviceID can not be null");
         if(propertyHelper==null) throw new IllegalArgumentException("propertyHelper can not be null");
@@ -58,6 +63,11 @@ public class MqttHelper implements MqttCallback {
         error=true;
         return false;
     }
+    /**
+     * Sends the message to the topic deviceID defined in the constructor.
+     * @param message
+     * @return
+     */
     public synchronized boolean publish(String message) {
         if(error&&!connect()) {
             logger.warn("mqtt error not resolved, not publishing "+message);
@@ -111,7 +121,7 @@ public class MqttHelper implements MqttCallback {
                 if("DOWN".equals(information[0])) status=false;
                 else status=true;
                 publish("debug "+model.isDebugging());
-                model.newState(information[0]);
+                model.setState(information[0]);
                 return;
             }
             if("hello".equals(information[0])) {
