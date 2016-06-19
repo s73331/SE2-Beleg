@@ -30,9 +30,10 @@ public class EV3_Brick {
     private boolean produce;
     private boolean sleep;
     private boolean forcedState;
+    private PropertyHelper propertyHelper;
     
     // Data Structures to save the needed Resources in
-    protected String id;
+    protected String deviceId;
     //protected Map<Character,BaseRegulatedMotor> motorMap;
     //protected Map<Integer,AnalogSensor> sensorMap;
     public MqttHelper mqttHelper;
@@ -65,6 +66,7 @@ public class EV3_Brick {
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
+        //initializeProperties();
         //initializeHardware();
         
         this.currentState = new TurningOn();
@@ -80,6 +82,18 @@ public class EV3_Brick {
         if (instance == null)
             instance = new EV3_Brick();
         return instance;
+    }
+    
+    private void initializeProperties() {
+        mqttHelper.debug("initializeProperties()");
+        try {
+            propertyHelper=new PropertyHelper("ev3steuerung.properties");
+        } catch (java.io.IOException ioe) {
+            mqttHelper.debug("error: could not load properties\ncwd: "+System.getProperty("user.dir")+"\nexpected file: monitoringtool.properties\n"+ioe);
+            mqttHelper.debug("initializeProperties(): \n"+ioe);
+            System.exit(1);
+        }
+        
     }
     
     /**
@@ -256,7 +270,7 @@ public class EV3_Brick {
      * Starts Mqtt Handling
      */
     protected void startMqtt() throws InterruptedException {
-        this.mqttHelper = new MqttHelper(this,"STP1001", "tcp://localhost", "192.168.1.1");
+        this.mqttHelper = new MqttHelper(this,deviceId, "tcp://localhost", "192.168.1.1");
     }
     /**
      *  User pressed fix button in gui
