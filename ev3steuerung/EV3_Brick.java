@@ -17,9 +17,8 @@ import ev3steuerung.rezeptabarbeitung.Recipe;
  * 
  * @author Christoph Schmidt
  * @version 0.8
- * @since 01.04.2016
- */
-
+ * @since 01.04.2016 */
+ 
 public class EV3_Brick {
     // Instance of the Brick as its Singleton
     private static EV3_Brick instance;
@@ -37,7 +36,7 @@ public class EV3_Brick {
     //protected Map<Character,BaseRegulatedMotor> motorMap;
     //protected Map<Integer,AnalogSensor> sensorMap;
     /** Variable to access mqtt-functionality of the program */
-    public MqttHelper mqttHelper;
+    protected MqttHelper mqttHelper;
     /** Name of the next Recipe to load */
     protected String recName;
     /** Variable to see if the program is waiting for a response
@@ -239,7 +238,7 @@ public class EV3_Brick {
     /**
      * Waits for specific Button Press (default any)
      * 
-     * @param   but - String representation of Button to be pressed */
+     * @param   but String representation of Button to be pressed */
     protected void waitForButtonPress(String but) {
         mqttHelper.debug("Wait for button press "+but);
         switch (but) {
@@ -301,7 +300,7 @@ public class EV3_Brick {
      *  
      *  @see MqttHelper
      *  @see Mqtt-Threads
-     *  @param  message - Message that arrived over Mqtt from MES */
+     *  @param  message Message that arrived over Mqtt from MES */
     protected synchronized void messageArrived(String message) {
         if (message.contains("produce") && currentState instanceof Idle && waiting && !produce) {
             this.produce = true;
@@ -331,6 +330,7 @@ public class EV3_Brick {
      /**
      * Stops the Mqtt-Handler, closes all connections and deletes all folders
      * 
+     * @see Control
      * @see MqttHelper.close() */
     protected void stopMqtt() {
         mqttHelper.debug("MQTT - Handler is stopping");

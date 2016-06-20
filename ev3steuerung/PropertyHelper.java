@@ -8,15 +8,22 @@ import java.util.Properties;
 
 /**
  * Support class to handle properties file. Designed for use in ev3steuerung.
- * @author martin
- *
- */
+ * @author Martin Schöne */
+ 
 public class PropertyHelper {
     Properties properties;
-    public PropertyHelper(String file) throws IOException {
+    
+    /**
+     * Class constructor of PropertyHelper Class
+     * 
+     * @param file - Filename of the .properties file to be loaded
+     * @return PropertyHelper Class object
+     * @throws IOException If there is anything wrong with the .properties file */
+    protected PropertyHelper(String file) throws IOException {
         InputStream fileStream=new FileInputStream(file);
         properties=new Properties();
         properties.load(fileStream);
+        
         //checks
         if(!properties.containsKey("name"))
             throw new IOException("key name not found");
@@ -60,31 +67,68 @@ public class PropertyHelper {
         }
         return parsable;
     }
-    public String getName() {
+    /**
+     * Getter Function
+     * 
+     * @see EV3_Brick.initializeProperties()
+     * @return The DEVICE_ID of the Machine */
+    protected String getName() {
         return properties.getProperty("name");
     }
-    public String getIP() {
+    /**
+     * Getter Function
+     * 
+     * @see EV3_Brick.initializeProperties()
+     * @return The IP of the Machine */
+    protected String getIP() {
         return properties.getProperty("ip");
     }
-    public String getMqttServerIP() {
+    /**
+     * Getter Function
+     * 
+     * @see EV3_Brick.initializeProperties()
+     * @return The MQTTSERV_IP of the Machine */
+    protected String getMqttServerIP() {
         return properties.getProperty("mqttserverip");
     }
-    public String getMesIP() {
-        return properties.getProperty("mesip");
-    }
-    public int getRegisterTimeout() {
+    /**
+     * Getter Function
+     * 
+     * @see EV3_Brick.initializeProperties()
+     * @return The REGCONF_TIMEOUT of the Machine */
+    protected int getRegisterTimeout() {
         return Integer.parseInt(properties.getProperty("registertimeout"));
     }
-    public int getTaskIndConfirmTimeout() {
+    /**
+     * Getter Function
+     * 
+     * @see EV3_Brick.initializeProperties()
+     * @return The TASKCONF_TIMEOUT of the Machine */
+    protected int getTaskIndConfirmTimeout() {
         return Integer.parseInt(properties.getProperty("taskindconfirmtimeout"));
     }
-    public int getTaskReqTimeout() {
+    /**
+     * Getter Function
+     * 
+     * @see EV3_Brick.initializeProperties()
+     * @return The TASKREQ_TIMEOUT of the Machine */
+    protected int getTaskReqTimeout() {
         return Integer.parseInt(properties.getProperty("taskreqtimeout"));
     }
-    public int getSleepTime() {
+    /**
+     * Getter Function
+     * 
+     * @see EV3_Brick.initializeProperties()
+     * @return The SLEEP_TIME of the Machine */
+    protected int getSleepTime() {
         return Integer.parseInt(properties.getProperty("sleeptime"));
     }
-    public int getMaxMaintTime() {
+    /**
+     * Getter Function
+     * 
+     * @see EV3_Brick.initializeProperties()
+     * @return The MAXMAINT_TIME of the Machine */
+    protected int getMaxMaintTime() {
         return Integer.parseInt(properties.getProperty("maxmainttime"));
     }
 }

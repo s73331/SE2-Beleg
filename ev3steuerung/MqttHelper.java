@@ -15,10 +15,9 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 
 /**
- * Support class to handle MQTT. Designed for use in ev3steuerung.
- * @author martin
- *
- */
+ * Support class to handle MQTT. Designed for use in package ev3steuerung
+ * @author Martin Schöne */
+ 
 public class MqttHelper implements MqttCallback, Runnable {
     private MqttAsyncClient mqtt;
     private boolean error = false;
@@ -30,7 +29,17 @@ public class MqttHelper implements MqttCallback, Runnable {
     private LinkedList<String> failedDebugMessages;
     private String ip;
     private boolean thread = false; // is a thread running executing the run method
-    public MqttHelper(EV3_Brick mqttBrick, String deviceID, String serverURI, String ip) {
+    
+    /**
+     * Constructor of the Mqtt-Helper Class
+     * 
+     * @param mqttBrick - The EV3_Brick instance
+     * @param deviceID - The DEVICE_ID from the properties file
+     * @param serverURI - the MQTTSERV_IP from the properties file
+     * @param ip - the IP from the properties file
+     * @see EV3_Brick.startMqtt()
+     * @return MqttHelper - Connected Mqtt-Interface */
+    protected MqttHelper(EV3_Brick mqttBrick, String deviceID, String serverURI, String ip) {
         this.deviceID            =   deviceID;
         this.mqttBrick           =   mqttBrick;
         this.serverURI           =   serverURI;
@@ -107,66 +116,88 @@ public class MqttHelper implements MqttCallback, Runnable {
     }
     /**
      * Registers the device at the MES, as shown in Mr. Ringel's state diagram in transition 1.
-     * @return
-     */
-    public synchronized boolean register() {
+     * 
+     * @see Idle
+     * @return True - If the register message could be sent successfully */
+    protected synchronized boolean register() {
         return publishToMES(deviceID+":register:{\"ip\":\""+ip+"\",\"name\":\""+deviceID+"\",\"status\":\""+mqttBrick.getState().getName()+"\"}");
     }
     /**
      * Requests a task from the MES, as shown in Mr. Ringel's state diagram in transition 3.
-     * @return
-     */
-    public synchronized boolean requestTask() {
+     * 
+     * @see Idle
+     * @return True - If the TaskRequest message could be sent successfully */
+    protected synchronized boolean requestTask() {
         return publishToMES(deviceID+":TaskREQ");
     }
     /**
      * Indicates a task to the MES, as shown in Mr. Ringel's state diagram in transition 5 and PROC -> MAINT.
-     * @param task
-     * @param result
-     * @return
-     */
-    public synchronized boolean indicateTask(String task, String result) {
+     * 
+     * @see Proc
+     * @param task  - String representation of the Recipe that was worked on
+     * @param result - String representation of the result the work came out [done, terminated, abort]
+     * @return True - If the TaskIndication message could be sent successfully */
+    protected synchronized boolean indicateTask(String task, String result) {
         return publishToMES(deviceID+":TaskIND:"+task+":"+result);
     }
     /**
      * Indicates a state change to the MES.
-     * @param message
-     * @return
-     */
-    public synchronized boolean indicateState(String message) {
+     * 
+     * @see Idle
+     * @see Proc
+     * @see Maint
+     * @see ShuttingDown
+     * @param message - String representation of the current State
+     * @return True - If the StateIndication message could be sent successfully */
+    protected synchronized boolean indicateState(String message) {
         return publishToMES(deviceID+":StateIND:State:->"+message);
     }
     /**
-     * Reports the current state to the monitoring tool.
-     */
-    public synchronized void publishState() {
+     * Reports the current state to the monitoring tool via topic DEVICE_ID
+     * 
+     * @see MqttHelper.publishToDeviceId(..) */
+    protected synchronized void publishState() {
         publishToDeviceID(mqttBrick.getState().getName());
     }
-    /* MUST BE LONGER THAN 2 WORDS ! */
-    /* ? christoph */
     /**
      * Sends the message as debug to the monitoring tool.
-     * @param message
-     */
+     * This message must be at least 2 spaced words.
+     * 
+     * @param message - Payload of Message to send for debugging purpose */
     public synchronized void debug(String message) {
         if(debugMode) 
             publishToDeviceID("debug "+message);
     }
+    /**
+     * Nothing really to see here. Just Mqtt-Edge-case-Handling.
+     * Setting error flag.
+     * 
+     * @param cause - Throwable cause */
     @Override
     public synchronized void connectionLost(Throwable cause) {
         error=true;
         debug("mqtt connection lost");
         /* joke of the year: when mqtt stops working, we debug it via mqtt
          * still makes sense, as it will be sent later (hopefully)
+         * topkek
          */
     }
+    /**
+     * Nothing really to see here.
+     * 
+     * @param token - no Description */
     @Override
     public synchronized void deliveryComplete(IMqttDeliveryToken token) {
         //nothing yeah
     }
     /**
-     * Handles incoming messages.
-     */
+     * Handles incoming messages for all topics,
+     * specially forwards from topic vwp/DEVICE_ID to EV3_Brick
+     * 
+     * @see EV3_Brick.messageArrived(..)
+     * @param topic - Topic on which it has been recieved
+     * @param message - MqttMessage of incoming transaction
+     * @throws Exception - If there was an error while forwarding messages */
     @Override
     public synchronized void messageArrived(String topic, MqttMessage message) throws Exception {
         if(("vwp/"+deviceID).equals(topic)) {
@@ -226,15 +257,17 @@ public class MqttHelper implements MqttCallback, Runnable {
     }
     /**
      * Reports the shutdown to the MES and closes the MQTT connection.
-     */
-    public synchronized void close() {
+     * 
+     * @see EV3_Brick.stopMqtt() */
+    protected synchronized void close() {
         try {
             publishToMES(deviceID+":shutting down");
             mqtt.disconnect();
             mqtt.close();
         } catch (MqttException e) {
-            //TODO
-            System.out.println("Something happened in mqttHelper.close()");
+            e.printStackTrace();
+            debug("MqttException while closing Mqtt");
+            System.out.println("MqttException while closing Mqtt");
         }
         String[] directories=Paths.get("").toAbsolutePath().toFile().list(new FilenameFilter(){
             @Override
@@ -250,8 +283,9 @@ public class MqttHelper implements MqttCallback, Runnable {
         }
     }
     /**
-     * Tries to fix the MQTT connection every 10s.
-     */
+     * Tries to fix the MQTT connection every 10s
+     * 
+     * @see Mqtt-Threads */
     public void run() {
         synchronized(this) {
             thread = true;
