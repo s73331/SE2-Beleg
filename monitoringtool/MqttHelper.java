@@ -136,9 +136,8 @@ public class MqttHelper implements MqttCallback {
             }
             if(information.length>1) {
                 String debug=new String(message.getPayload()).substring("debug ".length());
-                model.addDebug(debug+"\n");
+                model.debugArrived(debug+"\n");
                 logger.debug("debug added: "+debug);
-                model.debugArrived();
                 return;
             }
         }

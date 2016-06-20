@@ -298,18 +298,12 @@ public class Model implements MqttModel, PSQLListener, Runnable {
         }
         return state;
     }
-    /**
-     * @param debug new debug message
-     */
-    @Override
-    public synchronized void addDebug(String debug) {
+    public void debugArrived(String debug) {
         debugLog+=debug;
         logger.debug("addDebug(): "+debug);
         if(!debugMode) {
             mqtt.publish("debug false");
         }
-    }
-    public void debugArrived() {
         if(view!=null) view.update();
     }
     public synchronized void emergencyShutdown() {

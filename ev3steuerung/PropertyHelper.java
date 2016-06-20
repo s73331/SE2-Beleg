@@ -6,6 +6,11 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.Properties;
 
+/**
+ * Support class to handle properties file. Designed for use in ev3steuerung.
+ * @author martin
+ *
+ */
 public class PropertyHelper {
     Properties properties;
     public PropertyHelper(String file) throws IOException {

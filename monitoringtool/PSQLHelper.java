@@ -9,6 +9,11 @@ import java.sql.Statement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * Support class to handle PostrgreSQL. Designed for use in monitoringtool.Model.
+ * @author martin
+ *
+ */
 public class PSQLHelper {
     private static final Logger logger=LogManager.getLogger();
     private Connection connection;
@@ -176,7 +181,7 @@ public class PSQLHelper {
         }
     }
     /**
-     * Returns the number of failed items in the last 24h, without updating it from the database.
+     * Returns the number of failed items in the last 24h.
      * @return number of failed items
      */
     public String getFailedItems(String deviceID) {
@@ -198,6 +203,10 @@ public class PSQLHelper {
             return "";
         }
     }
+    /**
+     * Returns the number of processed items in the last 24h.
+     * @return number of processed items
+     */
     public String getProcessedItems(String deviceID) {
         try {
             ResultSet rs=executeQuery("SELECT COUNT(*) FROM events24 WHERE entity='"+deviceID+"' AND note='Processing finished' GROUP BY note;");
@@ -217,6 +226,10 @@ public class PSQLHelper {
             return "";
         }
     }
+    /**
+     * Returns, whether the PSQLHelper currently has an error.
+     * @return
+     */
     public boolean hasError() {
         return error;
     }
