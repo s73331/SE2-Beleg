@@ -76,7 +76,7 @@ public class Proc implements State
         // WAIT FOR NON-CONFIRM
         ev3.mqttHelper.debug("Waiting for confirm");
         ev3.waiting = true;
-        for (int i = 0; i < 3 && !mqttConfirm; i++) {
+        for (int i = 0; i < ev3.TASKCONF_TIMEOUT && !mqttConfirm; i++) {
             if (ev3.isConfirmed()) {
                 mqttConfirm = true;
                 ev3.mqttHelper.debug("Confirm acknowleged");

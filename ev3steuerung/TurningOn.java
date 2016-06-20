@@ -40,7 +40,7 @@ public class TurningOn implements State
         // WAIT FOR NON-CONFIRM
         ev3.mqttHelper.debug("Waiting for confirmation of register");
         ev3.waiting = true;
-        for (int i = 0; i < 3 && !mqttConfirm; i++) {
+        for (int i = 0; i < ev3.REGCONF_TIMEOUT && !mqttConfirm; i++) {
             if (ev3.isConfirmed()) {
                 mqttConfirm = true;
                 ev3.setState(new Idle(),false);

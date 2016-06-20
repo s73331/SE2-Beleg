@@ -36,7 +36,7 @@ public class Maint implements State
         
         boolean errorMode = true;
         ev3.mqttHelper.debug("Waiting for manual fix");
-        for (int i = 0; i < 10 && errorMode; i++) {
+        for (int i = 0; i < ev3.MAXMAINT_TIME && errorMode; i++) {
             if (ev3.isFixed()) {
                 ev3.mqttHelper.debug("Manual Fix acknowledged");
                 errorMode = false;

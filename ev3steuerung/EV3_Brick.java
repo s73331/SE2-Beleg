@@ -2,6 +2,7 @@ package ev3steuerung;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.io.IOException;
 
 import lejos.hardware.*;
 import lejos.hardware.ev3.*;
@@ -46,10 +47,17 @@ public class EV3_Brick {
     protected LED led;
     protected Audio audio;
     
-    
-    
+    // CONSTANTS
+    protected String DEVICE_ID;
+    protected String IP;
+    protected String MQTTSERV_IP;
+    protected int REGCONF_TIMEOUT;
+    protected int TASKCONF_TIMEOUT;
+    protected int TASKREQ_TIMEOUT;
+    protected int SLEEP_TIME;
+    protected int MAXMAINT_TIME;
+
     /* MAIN FUNCTIONS START */
-    
     /**
      * Private Class Constructor that initializes the Hardware and sets
      * the first state to TurningOn
@@ -59,14 +67,14 @@ public class EV3_Brick {
         this.fix = false;
         this.waiting = false;
         this.forcedState = false;
+        
+        initializeProperties();
+        
         try {
-            // only for fix-Reasons with Monitoring-Tool!
-            this.currentState = new Idle();
             startMqtt();
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
-        //initializeProperties();
         //initializeHardware();
         
         this.currentState = new TurningOn();
@@ -85,15 +93,24 @@ public class EV3_Brick {
     }
     
     private void initializeProperties() {
-        mqttHelper.debug("initializeProperties()");
         try {
             propertyHelper=new PropertyHelper("ev3steuerung.properties");
-        } catch (java.io.IOException ioe) {
-            mqttHelper.debug("error: could not load properties\ncwd: "+System.getProperty("user.dir")+"\nexpected file: monitoringtool.properties\n"+ioe);
-            mqttHelper.debug("initializeProperties(): \n"+ioe);
+        } catch (IOException ioe) {
+            System.out.println("The ev3steuerung.properties file could not be loaded");
+            wait(5000);
             System.exit(1);
         }
         
+        this.DEVICE_ID = propertyHelper.getName();
+        this.IP = propertyHelper.getIP();
+        this.MQTTSERV_IP = propertyHelper.getMqttServerIP();
+        this.REGCONF_TIMEOUT = propertyHelper.getRegisterTimeout();
+        this.TASKCONF_TIMEOUT = propertyHelper.getTaskIndConfirmTimeout();
+        this.TASKREQ_TIMEOUT = propertyHelper.getTaskReqTimeout();
+        this.SLEEP_TIME = propertyHelper.getSleepTime();
+        this.MAXMAINT_TIME = propertyHelper.getMaxMaintTime();
+        
+        System.out.println("ev3steuerung.properites file has been loaded");
     }
     
     /**
@@ -259,7 +276,6 @@ public class EV3_Brick {
      * @param  time    time in ms
      */
     protected void wait(int time) {
-        mqttHelper.debug("Waiting "+time+" ms");
         Delay.msDelay(time);
     }
     
@@ -270,7 +286,7 @@ public class EV3_Brick {
      * Starts Mqtt Handling
      */
     protected void startMqtt() throws InterruptedException {
-        this.mqttHelper = new MqttHelper(this,deviceId, "tcp://localhost", "192.168.1.1");  //CHRISTOPH: statt tcp://localhost die mqttserverip
+        this.mqttHelper = new MqttHelper(this,DEVICE_ID, "tcp://"+MQTTSERV_IP, IP);
     }
     /**
      *  User pressed fix button in gui
