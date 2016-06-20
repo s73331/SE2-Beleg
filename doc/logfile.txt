@@ -1,0 +1,48 @@
+Class documentation
+<---- javadoc command: ---->
+C:\Program Files (x86)\Utility\Java\jdk1.8.0_66\bin\javadoc.exe
+-author
+-version
+-nodeprecated
+-package
+-noindex
+-notree
+-nohelp
+-nonavbar
+-source
+1.8
+-classpath
+C:\Program Files (x86)\Utility\BlueJ\lib\bluejcore.jar;C:\Program Files (x86)\Utility\BlueJ\lib\junit-4.8.2.jar;C:\Program Files\Utility\leJOS EV3\lib\ev3\dbusjava.jar;C:\Program Files\Utility\leJOS EV3\lib\ev3\ev3classes.jar;C:\Program Files\Utility\leJOS EV3\lib\ev3\3rdparty\opencv-2411.jar;C:\Program Files (x86)\Utility\BlueJ\lib\extensions\log4j-api-2.6.1.jar;C:\Program Files (x86)\Utility\BlueJ\lib\extensions\log4j-core-2.6.1.jar;C:\Program Files (x86)\Utility\BlueJ\lib\extensions\paho-mqtt-1.0.2.jar;C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\lib\postgresql-9.4.1208.jar;C:\Program Files (x86)\Utility\BlueJ\lib\userlib\pi4j-core.jar;C:\Program Files (x86)\Utility\BlueJ\lib\userlib\pi4j-device.jar;C:\Program Files (x86)\Utility\BlueJ\lib\userlib\pi4j-gpio-extension.jar;C:\Program Files (x86)\Utility\BlueJ\lib\userlib\pi4j-service.jar;C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung
+-d
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc
+-encoding
+windows-1252
+-charset
+windows-1252
+-docletpath
+C:\Program Files (x86)\Utility\BlueJ\lib\bjdoclet.jar
+-doclet
+bluej.doclet.doclets.formats.html.HtmlDoclet
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java
+<---- end of javadoc command ---->
+Loading source file C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java...
+Constructing Javadoc information...
+Standard Doclet version 1.8.0_66
+Building tree for all the packages and classes...
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\EV3_Brick.html...
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:228: warning - Tag @see: missing '#': "Recipe.load()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:228: warning - Tag @see: can't find Recipe.load() in ev3steuerung.EV3_Brick
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:305: warning - Tag @see:illegal character: "45" in "Mqtt-Threads"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:335: warning - Tag @see: missing '#': "MqttHelper.close()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:335: warning - Tag @see: can't find MqttHelper.close() in ev3steuerung.EV3_Brick
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:305: warning - Tag @see: reference not found: Mqtt-Threads
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\package-frame.html...
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\package-summary.html...
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\constant-values.html...
+Building index for all the packages and classes...
+Building index for all classes...
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\allclasses-frame.html...
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\allclasses-noframe.html...
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\index.html...
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\stylesheet.css...
+6 warnings

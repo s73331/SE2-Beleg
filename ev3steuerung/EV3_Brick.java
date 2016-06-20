@@ -13,11 +13,11 @@ import lejos.utility.Delay;
 import ev3steuerung.rezeptabarbeitung.Recipe;
 
 /**
- * EV3_Brick contains all Hardware-Access Points relevant to the Program
- * This is the main place you get your objects from, as its validated that these exist
+ * EV3_Brick contains lightweight Hardware-Access and mimicks the Machine virtually
  * 
  * @author Christoph Schmidt
- * @version 0.5
+ * @version 0.8
+ * @since 01.04.2016
  */
 
 public class EV3_Brick {
@@ -34,58 +34,59 @@ public class EV3_Brick {
     private PropertyHelper propertyHelper;
     
     // Data Structures to save the needed Resources in
-    protected String deviceId;
     //protected Map<Character,BaseRegulatedMotor> motorMap;
     //protected Map<Integer,AnalogSensor> sensorMap;
+    /** Variable to access mqtt-functionality of the program */
     public MqttHelper mqttHelper;
+    /** Name of the next Recipe to load */
     protected String recName;
+    /** Variable to see if the program is waiting for a response
+     * to catch Out-Of-Time-Frame messages and discard them  */
     protected boolean waiting;
-    // TODO: Insert protected Recipe Datastructure here
     
     // Internal EV3-Hardware
     private EV3 ev3;
+    /** LED-Object of the EV3 */
     protected LED led;
+    /** Audio-Object of the EV3 */
     protected Audio audio;
     
     // CONSTANTS
-    protected String DEVICE_ID;
-    protected String IP;
-    protected String MQTTSERV_IP;
-    protected int REGCONF_TIMEOUT;
-    protected int TASKCONF_TIMEOUT;
-    protected int TASKREQ_TIMEOUT;
-    protected int SLEEP_TIME;
-    protected int MAXMAINT_TIME;
+    /** Constant for MQTT-Handling */
+    protected String DEVICE_ID, IP, MQTTSERV_IP;
+    /** Constant for Time-Behaviour of the Program */
+    protected int REGCONF_TIMEOUT, TASKCONF_TIMEOUT, TASKREQ_TIMEOUT, SLEEP_TIME, MAXMAINT_TIME;
 
     /* MAIN FUNCTIONS START */
-    /**
+    /*
      * Private Class Constructor that initializes the Hardware and sets
-     * the first state to TurningOn
-     */
+     * the first state to TurningOn */
     private EV3_Brick() {
         this.confirmed = false;
         this.fix = false;
         this.waiting = false;
         this.forcedState = false;
         
+        // Load the Properties File "ev3steuerung.properties"
         initializeProperties();
         
+        // Start MQTT-Handling
         try {
             startMqtt();
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
+        // Initialize the LED / Audio / Maybe Ports as well TODO
         initializeHardware();
         
-        this.currentState = new TurningOn();
+        // Set the State 
+        this.setState(new TurningOn(), false) ;
     }
      
     /**
-     * Returns the Instance of the EV3_Brick if its already created, else
-     * creates a new Instance and returns it [Singleton]
+     * Returns the Instance of the EV3_Brick [Singleton]
      * 
-     * @return        EV3_Brick
-     */
+     * @return  EV3_Brick - The Instance of the Singleton */
     public static EV3_Brick getInstance() {
         if (instance == null)
             instance = new EV3_Brick();
@@ -113,10 +114,9 @@ public class EV3_Brick {
         System.out.println("Properites loaded");
     }
     
-    /**
-     * Initializes the Hardware components
-     */
-    protected void initializeHardware() {
+    /*
+     * Initializes the ev3-Object, the Audio-Object, the LED-Object and the Ports maybe TODO */
+    private void initializeHardware() {
         mqttHelper.debug("Hardware is being initialized");
         this.ev3 = (EV3)BrickFinder.getDefault();
         audio = ev3.getAudio();
@@ -125,12 +125,11 @@ public class EV3_Brick {
         identifyPorts();
     }
     
-    /**
+    /*
      * Initialize Port-Settings (From Properties?)
      * and write them into the Instance Variables motor/sensor-Map
      * 
-     * @return  boolean If this was successfuly or not
-     */
+     * @return  boolean If this was successfuly or not */
     private boolean identifyPorts() {
         mqttHelper.debug("Identify Ports");
         
@@ -145,8 +144,8 @@ public class EV3_Brick {
     /**
      * Returns the current State of the Machine
      * 
-     * @return        State
-     */
+     * @return  State - Current Value of EV3_Brick.currentState
+     * @see State */
     protected State getState() {
         return currentState;
     }
@@ -154,14 +153,15 @@ public class EV3_Brick {
     /**
      * Changes the State to a given new state
      * 
-     * @param  s    The new State for changing into
-     */
-    protected void setState(State s, boolean forced) {
+     * @param  state New State to work next
+     * @param  forced If the State shall be forced or not, default false.
+     * If true, no change of state can occur after this. */
+    protected void setState(State state, boolean forced) {
         mqttHelper.debug("Attempting to change State with Forced: "+forced);
         
         if (!forcedState) {
-             mqttHelper.debug("Setting the State to: "+s.getName());
-             this.currentState = s;
+             mqttHelper.debug("Setting the State to: "+state.getName());
+             this.currentState = state;
         } else
             mqttHelper.debug("Unable to set the State due to forcedState being true");
             
@@ -171,15 +171,13 @@ public class EV3_Brick {
         }
     }
     
-    /* MAIN FUNCTIONS END */
-    
-    
+    /*  MAIN FUNCTIONS END      */
+    /*  WORKING FUNCTIONS START */
     
     /**
-     * Check for a Manual Fix or other Fix for going out of MAINT
-     * 
-     * @return  boolean
-     */
+     * Check if a Manual fix message has arrived
+     * @see Maint
+     * @return  True - If there has been a "manual fix" message recieved */
     protected boolean isFixed() {
         boolean result = this.fix;
         mqttHelper.debug("Check Fix: "+result);
@@ -188,10 +186,10 @@ public class EV3_Brick {
         return result;
     }
     /**
-     * Check for a confirmed Message from MES
-     * 
-     * @return  boolean
-     */
+     * Check if a Confirm message has arrived
+     * @see Idle
+     * @see Proc
+     * @return  True - If there has been a "confirm" message recieved */
     protected boolean isConfirmed() {
         boolean result = this.confirmed;
         mqttHelper.debug("Check Confirm: "+result);
@@ -200,10 +198,9 @@ public class EV3_Brick {
         return result;
     }
     /**
-     * Check for a Produce Message from MES
-     * 
-     * @return  boolean
-     */
+     * Check if a produce message has arrived
+     * @see Idle
+     * @return  True - If there has been a "produce:taskXX" message recieved */
     protected boolean isProduce() {
         boolean result = this.produce;
         mqttHelper.debug("Check Produce: "+result);
@@ -212,10 +209,9 @@ public class EV3_Brick {
         return result;
     }
     /**
-     * Check for a Sleep Message from MES
-     * 
-     * @return  boolean
-     */
+     * Check if a sleep message has arrived
+     * @see Idle
+     * @return  True - If there has been a "sleep" message recieved */
     protected boolean isSleep() {
         boolean result = this.sleep;
         mqttHelper.debug("Check Sleep: "+result);
@@ -223,12 +219,12 @@ public class EV3_Brick {
             this.sleep = false;
         return result;
     }
-    
     /**
-     * Loads up the nessecary Recipe
-     * 
-     * @return  boolean If this was successfuly or not
-     */
+     * Starts the Loading of a certain Recipe
+     * @see Proc
+     * @see Recipe.load()
+     * @param   recName The name of the Recipe to load up
+     * @return  Recipe that shall be loaded */
     protected Recipe loadRecipe(String recName) {
         mqttHelper.debug("loadRecipe( "+recName+" )");
         /* Check if this works out with the ports , if not null*/
@@ -237,11 +233,13 @@ public class EV3_Brick {
         return Recipe.load(recName);
     }
     
+    /*  WORKING FUNCTIONS END   */
+    /*  HELPER FUNCTIONS START  */
+    
     /**
      * Waits for specific Button Press (default any)
      * 
-     * @param   but     Button to be pressed
-     */
+     * @param   but - String representation of Button to be pressed */
     protected void waitForButtonPress(String but) {
         mqttHelper.debug("Wait for button press "+but);
         switch (but) {
@@ -262,38 +260,48 @@ public class EV3_Brick {
         Delay.msDelay(time);
     }
     
-    /*
-    *   MQTT Functions
-    */
+    /*  HELPER FUNCTIONS END  */
+    
+    /*  MQTT FUNCTIONS START  */
+    
     /**
-     * Starts Mqtt Handling
-     */
+     * Method to start MQTT-Handling by creating a
+     * new MqttHelper Class and setting mqttHelper
+     * 
+     * @see MqttHelper
+     * @throws InterruptedException When there was a problem creating the mqtt-handler */
     protected void startMqtt() throws InterruptedException {
         this.mqttHelper = new MqttHelper(this,DEVICE_ID, "tcp://"+MQTTSERV_IP, IP);
     }
     /**
-     *  User pressed fix button in gui
-     *  or this message arrived because of something else
-     */
+     *  Method to call from MqttHelper when "manual fix" message arrives.
+     *  This sets a fix flag, if the current State is instanceof Maint
+     *  
+     *  @see Maint
+     *  @see MqttHelper */
     protected void manualFix() {
         mqttHelper.debug("Manual Fixing");
         if (currentState instanceof Maint)
             this.fix = true;
     }
     /**
-     *  User pressed shutdown button in gui
-     *  or this message arrived because of something else
-     */
+     *  Method to call from MqttHelper when "emergency shutdown" message arrives.
+     *  This sets the state forcibly to ShuttingDown
+     *  
+     *  @see ShuttingDown
+     *  @see MqttHelper */
     protected void emergencyShutdown() {
         mqttHelper.debug("Emergency Shutdown");
         setState(new ShuttingDown(),true);
     }
     /**
-     *  This always comes from topic vwp/toolid ???as mqtthelper handles everything else
-     *  the messages are directly forwarded to this function, no checks are done
-     * 
-     *  @param  String  message that arrived
-     */
+     *  Method to call when a message is recieved on the Topic vwp/DEVICE_ID.
+     *  No Checks have been made to the input.
+     *  Handles produce, confirm, sleep
+     *  
+     *  @see MqttHelper
+     *  @see Mqtt-Threads
+     *  @param  message - Message that arrived over Mqtt from MES */
     protected synchronized void messageArrived(String message) {
         if (message.contains("produce") && currentState instanceof Idle && waiting && !produce) {
             this.produce = true;
@@ -321,10 +329,13 @@ public class EV3_Brick {
         }
     }
      /**
-     * Stops Mqtt-Handling
-     */
+     * Stops the Mqtt-Handler, closes all connections and deletes all folders
+     * 
+     * @see MqttHelper.close() */
     protected void stopMqtt() {
         mqttHelper.debug("MQTT - Handler is stopping");
         mqttHelper.close();
     }
+    
+    /*  MQTT FUNCTIONS END  */
 }
