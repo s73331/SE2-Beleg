@@ -52,11 +52,22 @@ public class PSQLHelper {
             return false;
         }
     }
+    /**
+     * Tries to execute the given query.
+     * @param query
+     * @return null - non-fixable SQL error, else ResultSet returned by java.sql.Statement.executeQuery(...)
+     * @throws SQLException as thrown by java.sql.Statement.executeQuery(...)
+     */
     public ResultSet executeQuery(String query) throws SQLException {
         if(error&&!connect()||query==null) return null;
         logger.info("executing query: "+query);
         return statement.executeQuery(query);
     }
+    /**
+     * Returns the current machine state, as it is in the database.
+     * @param deviceID
+     * @return machine state
+     */
     public String getMachineState(String deviceID) {
         ResultSet resultSet;
         String result="";
@@ -77,6 +88,11 @@ public class PSQLHelper {
         logger.info("state from psql: "+result);
         return result;
     }
+    /**
+     * Returns the recipes, which the machine can execute according to the table ptime.
+     * @param deviceID
+     * @return all recipes
+     */
     public String getRecipes(String deviceID) {
         String query="SELECT recipe FROM ptime WHERE tool='"+deviceID+"';";
         logger.info(query);
@@ -97,6 +113,10 @@ public class PSQLHelper {
         logger.info("recipes from psql: "+result.replace("\n", "\\n"));
         return result;
     }
+    /**
+     * Closes the SQL connection.
+     * @throws SQLException
+     */
     public void close() throws SQLException {
         try {
             connection.close();
@@ -107,6 +127,10 @@ public class PSQLHelper {
             reportError();
         }
     }
+    /**
+     * Returns the current online time, without updating it from the database.
+     * @return current online time
+     */
     public String getOnlineTime(String deviceID) {
         try {
             ResultSet rs=executeQuery("SELECT CURRENT_TIMESTAMP - (SELECT timestamp FROM events WHERE entity='"+deviceID+"' AND event LIKE '->%' AND timestamp > (SELECT timestamp FROM events WHERE entity='"+deviceID+"' AND event='->DOWN' ORDER BY timestamp DESC LIMIT 1) ORDER BY timestamp ASC LIMIT 1) AS onlinetime;");
@@ -128,6 +152,10 @@ public class PSQLHelper {
             return "";
         }
     }
+    /**
+     * Returns the name of the currently processed item, without updating it from the database.
+     * @return Name of currently processed item
+     */
     public String getCurrentItem(String deviceID) {
         try {
             ResultSet rs=executeQuery("SELECT note FROM events WHERE entity='"+deviceID+"' AND event='->PROC' ORDER BY TIMESTAMP DESC LIMIT 1;");
@@ -147,6 +175,10 @@ public class PSQLHelper {
             return "";
         }
     }
+    /**
+     * Returns the number of failed items in the last 24h, without updating it from the database.
+     * @return number of failed items
+     */
     public String getFailedItems(String deviceID) {
         try {
             ResultSet rs=executeQuery("SELECT COUNT(*) FROM events24 WHERE event='->MAINT' AND entity='"+deviceID+"' AND note LIKE '' GROUP BY event;");
