@@ -20,19 +20,15 @@ public class Maint implements State
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
+        ev3.led.setPattern(5);
         ev3.mqttHelper.debug("Start of Maint");
-        ev3.mqttHelper.publishState();
         
         // MQTT STATE INDICATION
         ev3.mqttHelper.indicateState(this.getName());
+        ev3.mqttHelper.publishState();
+        System.out.println("-> "+getName());
         
-        //ev3.led.setPattern(5);
-        ev3.mqttHelper.debug("State: "+getName());
-        //ev3.wait(4000);
-        ////ev3.audio.systemSound(1);
-        
-        System.out.println("Please Fix the Machine ASAP");
-        //ev3.waitForButtonPress("any");
+        System.out.println("Fix the Machine");
         
         boolean errorMode = true;
         ev3.mqttHelper.debug("Waiting for manual fix");

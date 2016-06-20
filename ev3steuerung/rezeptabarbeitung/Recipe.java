@@ -30,7 +30,7 @@ public class Recipe {
         ev3.mqttHelper.debug("Creating Recipe");
        }
     
-    public void register() {
+    public void register() throws lejos.hardware.DeviceException {
         ev3.mqttHelper.debug("Recipe: "+this+" registering Devices");
         /*Geräte registrieren*/
         this.devices = (Device[]) rezept.getFirst();
@@ -42,11 +42,12 @@ public class Recipe {
         
        }
     
-    public void work() {
+    public boolean work() throws InterruptedException {
         ev3.mqttHelper.debug("Recipe: "+this+" working the tasks");
+        boolean ok = true;
         
         /* Rezepte ausführen*/
-        while(!rezept.isEmpty()) { /* Solange Rezeptbefehle vorhanden sind*/
+        while(!rezept.isEmpty() && ok) { /* Solange Rezeptbefehle vorhanden sind*/
             
             /* Spin starten */
             if(rezept.getFirst().getClass().toString().contains("Spin")) {
@@ -97,6 +98,7 @@ public class Recipe {
             }
         rezept.removeFirst(); /* Zuletzt ausgeführter Rezeptbefehl löschen*/
         }
+        return true;
     }
     
     public void close() {
@@ -105,8 +107,6 @@ public class Recipe {
         for (Device x:devices){
             x.close();
         }
-        
-        // Button.waitForAnyPress();    REENABLE ASAP
     }
     
     public String toString() {
@@ -114,7 +114,6 @@ public class Recipe {
     }
     
     public static Recipe load(String recName) {
-        EV3_Brick.getInstance().mqttHelper.debug("Recipe.load( "+recName+" )");
         // GET ALL NAMES OF SUBDIRECTORY ./RECIPES
         
         /* Insert Code here */
@@ -134,8 +133,8 @@ public class Recipe {
         
         Device[] init = {d1, d2, d3, d4};
         
-        Spin s1 = new Spin(2500,360,0,0, 9);    // Medium Motor allein bis Gradzahl
-        Spin s2 = new Spin(2500,360,1, 0,9);    // Große Motor allein bis Gradzahl
+        Spin s1 = new Spin(2500,360,1,0, 9);    // Medium Motor allein bis Gradzahl
+        Spin s2 = new Spin(2500,360,0, 0,9);    // Große Motor allein bis Gradzahl
         Spin s3 = new Spin(0,360, 1, 2, 1);     // Drehe bis Sensor gedrückt wird
         Spin s4 = new Spin(0, 360, 0, 2, 0);    // Drehe bis Sensor losgelassen
         Wait s5 = new Wait(5000, 0);            // Warten in ms

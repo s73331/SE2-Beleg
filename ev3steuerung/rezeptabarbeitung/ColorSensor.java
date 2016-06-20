@@ -63,6 +63,7 @@ public class ColorSensor extends Device{
 	}
 	
 	public boolean close(){
+	    sensor.close();
 		return true;
 	}
 	

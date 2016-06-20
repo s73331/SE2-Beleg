@@ -75,7 +75,7 @@ public class EV3_Brick {
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
-        //initializeHardware();
+        initializeHardware();
         
         this.currentState = new TurningOn();
     }
@@ -110,7 +110,7 @@ public class EV3_Brick {
         this.SLEEP_TIME = propertyHelper.getSleepTime();
         this.MAXMAINT_TIME = propertyHelper.getMaxMaintTime();
         
-        System.out.println("ev3steuerung.properites file has been loaded");
+        System.out.println("Properites loaded");
     }
     
     /**
@@ -231,7 +231,6 @@ public class EV3_Brick {
      */
     protected Recipe loadRecipe(String recName) {
         mqttHelper.debug("loadRecipe( "+recName+" )");
-        
         /* Check if this works out with the ports , if not null*/
         
         /* Returns true if its ok, false if its not */
@@ -253,22 +252,6 @@ public class EV3_Brick {
             //TODO: More Cases with other buttons
         }
     }
-    
-    /**
-     * Returns the Audio-Object of the EV3
-     * @return        Audio
-     */
-    // protected Audio getAudio() {
-    //    return audio;
-    //}
-    
-    /**
-     * Returns the LED-Object of the EV3
-     * @return        LED
-     */
-    //protected LED getLED() {
-    //    return led;
-    //}
     
     /**
      * Waits a given time in ms

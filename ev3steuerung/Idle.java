@@ -21,15 +21,14 @@ public class Idle implements State
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
+        ev3.led.setPattern(3);
         ev3.mqttHelper.debug("Start of Idle");
-        ev3.mqttHelper.publishState();
-        
-        ev3.mqttHelper.debug("State: "+getName());
         
         // MQTT STATE INDICATION
         ev3.mqttHelper.indicateState(this.getName());
+        ev3.mqttHelper.publishState();
+        System.out.println("-> "+getName());
         
-        //ev3.led.setPattern(3);
         // //ev3.audio.systemSound(0);
         //ev3.wait(4000);
         

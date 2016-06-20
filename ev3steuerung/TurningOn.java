@@ -20,17 +20,11 @@ public class TurningOn implements State
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
+        ev3.led.setPattern(4);
         ev3.mqttHelper.debug("Start of TurningOn");
         
-        // Set Brick-Colors
-        //ev3.led.setPattern(4);
-        ////ev3.audio.systemSound(3);
-        
-        // Tell where you at
-        ev3.mqttHelper.debug("State: "+getName());
-        
-        // FUN STUFF
-        //ev3.waitForButtonPress("any");
+        System.out.println("-> "+getName());
+        ev3.audio.systemSound(3);
         
         ev3.mqttHelper.debug("Send Register to MES");
         ev3.mqttHelper.register();
