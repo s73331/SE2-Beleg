@@ -18,20 +18,14 @@ import javafx.stage.Stage;
  */
 public class MonitoringTool extends Application {
     private Model model;
-    /**
-     * Launches the Monitoring Tool.
-     */
-    public MonitoringTool() {
-        launch((String[])null);
-    }
     private static final Logger logger=LogManager.getLogger();
     /**
-     * Main method for Monitoring Tool. Instantiates a new instance of MonitoringTool.
+     * Launches the Monitoring Tool.
      * @param args not used
      */
     public static void main(String[] args) {
         logger.debug("main(): entered");
-        new MonitoringTool();
+        launch(args);
         logger.debug("main(): exiting");
     }
     /**

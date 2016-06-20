@@ -16,7 +16,6 @@ public class PropertyHelper {
         if(!properties.containsKey("name")) throw new IOException("key name not found");
         if(!properties.containsKey("ip")) throw new IOException("key ip not found");
         if(!properties.containsKey("mqttserverip")) throw new IOException("key mqttserverip not found");
-        if(!properties.containsKey("mesip")) throw new IOException("key mesip not found");
         if(!properties.containsKey("registertimeout")) throw new IOException("key registertimeout not found");
         if(!properties.containsKey("taskindconfirmtimeout")) throw new IOException("key taskindconfirmtimeout not found");
         if(!properties.containsKey("taskreqtimeout")) throw new IOException("key taskreqtimeout not found");
@@ -29,7 +28,6 @@ public class PropertyHelper {
         if(!isIntParsable(properties.getProperty("maxmainttime"))) throw new IOException("key maxmainttime can not be parsed to int");
         if(null==InetAddress.getByName(properties.getProperty("ip"))) throw new IOException("key ip does not match ip pattern");
         if(null==InetAddress.getByName(properties.getProperty("mqttserverip"))) throw new IOException("key mqttserverip does not match ip pattern");
-        if(null==InetAddress.getByName(properties.getProperty("mesip"))) throw new IOException("key mesip does not match ip pattern");
     }
     private static boolean isIntParsable(String input){
         boolean parsable = true;

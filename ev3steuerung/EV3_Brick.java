@@ -270,7 +270,7 @@ public class EV3_Brick {
      * Starts Mqtt Handling
      */
     protected void startMqtt() throws InterruptedException {
-        this.mqttHelper = new MqttHelper(this,deviceId, "tcp://localhost", "192.168.1.1");
+        this.mqttHelper = new MqttHelper(this,deviceId, "tcp://localhost", "192.168.1.1");  //CHRISTOPH: statt tcp://localhost die mqttserverip
     }
     /**
      *  User pressed fix button in gui
