@@ -13,18 +13,37 @@ public class ColorSensor extends Device{
 	private String port;
 	private EV3ColorSensor sensor;
 	
+    /**
+     *
+     *@return port
+     */
 	public String getPort() {
 		return port;
 	}
+    
+    /**
+     *@param port on which the ColorSensor is connected
+     */
 	public void setPort(String port) {
+        if(port == null) throw new IllegalArgumentException("port must not be null");
 		this.port = port;
 	}
 	
+    /**
+     *Constructor
+     *@param port on which the ColorSensor is connected
+     */
 	public ColorSensor(String port){
+        if(port == null) throw new IllegalArgumentException("port must not be null");
 		this.port = port;
 		
 	}
 	
+    /**
+     *Register the ColorSensor with the specified port in the recipe.
+     *Create the ColorSensor.
+     *@return true
+     */
 	@Override
 	public boolean register(){
 		
@@ -35,8 +54,10 @@ public class ColorSensor extends Device{
 		return true;
 	}
 	
-	
-	
+	/**
+     *Detect the color on the ColorSensor and display the detected color on the LCD of the EV3.
+     *@return true
+     */
 	@Override
 	public boolean detectColor(){
 		
@@ -61,7 +82,10 @@ public class ColorSensor extends Device{
 		return true;
 		
 	}
-	
+	/**
+     *Close the ColorSensor with the specified port.
+     *@return true
+     */
 	public boolean close(){
 	    sensor.close();
 		return true;
