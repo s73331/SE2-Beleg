@@ -14,18 +14,34 @@ public class TouchSensor extends Device {
 	private EV3TouchSensor sensor;
 	private SimpleTouch touch;
 	
+	 /**
+     *
+     *@return port
+     */
 	public String getPort() {
 		return port;
 	}
 
+	 /**
+     *@param port on which the TouchSensor is connected
+     */
 	public void setPort(String port) {
 		this.port = port;
 	}
 	
+	  /**
+     *Constructor
+     *@param port on which the TouchSensor is connected
+     */
 	public TouchSensor(String port){
 		this.port = port;
 	}
 	
+	 /**
+     *Register the TouchSensor with the specified port in the recipe.
+     *Create the TouchSensor.
+     *@return true
+     */
 	@Override
 	public boolean register(){
 		
@@ -37,18 +53,31 @@ public class TouchSensor extends Device {
 		return true;
 	}
 	
+	/**
+	*Checks if the TouchSensor is pressed
+	*@return true/false
+	*/
 	@Override
 	public boolean isPressed(){
 
 		return touch.isPressed();
 	}
 	
+	/**
+	*Checks if the TouchSensor is not pressed
+	*@return true/false
+	*/
 	@Override
 	public boolean isNotPressed(){
 
 		return !touch.isPressed();
 	}
 	
+	/**
+	*Waits until the TouchSensor is pressed.
+	*Checks every 50 ms if the TouchSensor is pressed.
+	*@return false
+	*/
 	@Override
 	public boolean waitForPress(){
 		
@@ -58,6 +87,11 @@ public class TouchSensor extends Device {
 		return false;
 	}
 	
+	/**
+	*Waits until the TouchSensor is released.
+	**Checks every 50 ms if the TouchSensor is released.
+	*@return false
+	*/
 	@Override
 	public boolean waitForRelease(){
 		
@@ -67,12 +101,14 @@ public class TouchSensor extends Device {
 		return false;
 	}
 	
+	/**
+     *Close the TouchSensor with the specified port.
+     *@return true
+     */
 	@Override
 	public boolean close(){
 		sensor.close();
 		return true;
 	}
-
-
 
 }
