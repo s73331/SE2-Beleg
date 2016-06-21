@@ -11,18 +11,34 @@ public class LargeMotor extends Device {
 	private String port;
 	private EV3LargeRegulatedMotor motor;
 	
+    /**
+     *
+     *@return port
+     */
 	public String getPort() {
 		return port;
 	}
 
+    /**
+     *@param port on which the LargeMotor is connected
+     */
 	public void setPort(String port) {
 		this.port = port;
 	}
 	
+    /**
+     *Constructor
+     *@param port on which the LargeMotor is connected
+     */
 	public LargeMotor(String port){
 		this.port = port;
 	}
 	
+    /**
+     *Register the LargeMotor with the specified port in the recipe.
+     *Create the LargeMotor.
+     *@return true
+     */
 	@Override
 	public boolean register(){
 		
@@ -32,6 +48,12 @@ public class LargeMotor extends Device {
 		return true;
 	}
 	
+    /**
+     *rotates the motor with the specified speed and angle from the recipe.
+     *if the specified speed is smaller than the maxSpeed (getMaxSpeed) of the LargeMotor, then use it
+     *else use the maxSpeed from the LargeMotor
+     *@return true
+     */
 	@Override
 	public boolean rotate(boolean mode,int speed, int angle ){
 		
@@ -51,6 +73,12 @@ public class LargeMotor extends Device {
 		
 	}
 	
+    /**
+     *rotates the motor with the specified speed from the recipe
+     *if the specified speed is smaller than the maxSpeed (getMaxSpeed) of the LargeMotor, then use it
+     *else use the maxSpeed from the LargeMotor
+     *@return true
+     */
 	@Override
 	public boolean forward(int speed){
 		
@@ -69,12 +97,20 @@ public class LargeMotor extends Device {
 		return true;
 	}
 	
+    /**
+     *stops the motor
+     *@return true
+     */
 	@Override
 	public boolean stop(){
 		motor.stop();
 		return true;
 	}
 	
+    /**
+     *Close the LargeMotor with the specified port.
+     *@return true
+     */
 	@Override
 	public boolean close(){
 		motor.close();
