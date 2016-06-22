@@ -21,40 +21,40 @@ public class Maint implements State
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
         ev3.led.setPattern(5);
-        ev3.mqttHelper.debug("Start of Maint");
+        ev3.getMqttHelper().debug("Start of Maint");
         
         // MQTT STATE INDICATION
-        ev3.mqttHelper.indicateState(this.getName());
-        ev3.mqttHelper.publishState();
+        ev3.getMqttHelper().indicateState(this.getName());
+        ev3.getMqttHelper().publishState();
         System.out.println("-> "+getName());
         
         System.out.println("Fix the Machine");
         
         boolean errorMode = true;
-        ev3.mqttHelper.debug("Waiting for manual fix");
+        ev3.getMqttHelper().debug("Waiting for manual fix");
         for (int i = 0; i < ev3.MAXMAINT_TIME && errorMode; i++) {
             if (ev3.isFixed()) {
-                ev3.mqttHelper.debug("Manual Fix acknowledged");
+                ev3.getMqttHelper().debug("Manual Fix acknowledged");
                 errorMode = false;
             } else {
                 try {
-                    ev3.mqttHelper.debug("Waiting longer for manual fix");
+                    ev3.getMqttHelper().debug("Waiting longer for manual fix");
                     Thread.sleep(1000);
                 } catch (InterruptedException ie) {
-                    ev3.mqttHelper.debug("Interrupted Exception recieved");
+                    ev3.getMqttHelper().debug("Interrupted Exception recieved");
                     ie.printStackTrace();
                 }
             }
         }
         
         if (!errorMode) {
-            ev3.mqttHelper.debug("Manual Fix applied");
+            ev3.getMqttHelper().debug("Manual Fix applied");
             ev3.setState(new Idle(),false);
         } else {
-            ev3.mqttHelper.debug("Maximum fix wait time has passed");
+            ev3.getMqttHelper().debug("Maximum fix wait time has passed");
             ev3.setState(new ShuttingDown(),false);
         }
         
-        ev3.mqttHelper.debug("End of Maint");
+        ev3.getMqttHelper().debug("End of Maint");
     }
 }

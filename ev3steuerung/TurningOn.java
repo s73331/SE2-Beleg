@@ -21,30 +21,30 @@ public class TurningOn implements State
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
         ev3.led.setPattern(4);
-        ev3.mqttHelper.debug("Start of TurningOn");
+        ev3.getMqttHelper().debug("Start of TurningOn");
         
         System.out.println("-> "+getName());
         ev3.audio.systemSound(3);
         
-        ev3.mqttHelper.debug("Send Register to MES");
-        ev3.mqttHelper.register();
+        ev3.getMqttHelper().debug("Send Register to MES");
+        ev3.getMqttHelper().register();
         
         boolean mqttConfirm = false;
         
         // WAIT FOR NON-CONFIRM
-        ev3.mqttHelper.debug("Waiting for confirmation of register");
+        ev3.getMqttHelper().debug("Waiting for confirmation of register");
         ev3.waiting = true;
         for (int i = 0; i < ev3.REGCONF_TIMEOUT && !mqttConfirm; i++) {
             if (ev3.isConfirmed()) {
                 mqttConfirm = true;
                 ev3.setState(new Idle(),false);
-                ev3.mqttHelper.debug("Confirm acknowleged");
+                ev3.getMqttHelper().debug("Confirm acknowleged");
             } else {
                 try {
-                    ev3.mqttHelper.debug("Waiting longer for confirm");
+                    ev3.getMqttHelper().debug("Waiting longer for confirm");
                     Thread.sleep(1000);
                 } catch (InterruptedException ie) {
-                    ev3.mqttHelper.debug("Confirm Wait InterruptedException recieved");
+                    ev3.getMqttHelper().debug("Confirm Wait InterruptedException recieved");
                     ie.printStackTrace();
                 }
             }
@@ -53,9 +53,9 @@ public class TurningOn implements State
         
         if (!mqttConfirm) {
             ev3.setState(new ShuttingDown(),false);
-            ev3.mqttHelper.debug("Maximum Confirm waiting time passed");
+            ev3.getMqttHelper().debug("Maximum Confirm waiting time passed");
         }
         
-        ev3.mqttHelper.debug("End of TurningOn");
+        ev3.getMqttHelper().debug("End of TurningOn");
     }
 }

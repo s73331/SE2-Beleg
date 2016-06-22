@@ -36,7 +36,7 @@ public class EV3_Brick {
     //protected Map<Character,BaseRegulatedMotor> motorMap;
     //protected Map<Integer,AnalogSensor> sensorMap;
     /** Variable to access mqtt-functionality of the program */
-    protected MqttHelper mqttHelper;
+    private MqttHelper mqttHelper;
     /** Name of the next Recipe to load */
     protected String recName;
     /** Variable to see if the program is waiting for a response
@@ -170,6 +170,14 @@ public class EV3_Brick {
         }
     }
     
+    /**
+     * Returns the current MqttHelper of the Machine
+     * 
+     * @return  MqttHelper - The main mqtt-sending Object
+     * @see MqttHelper */
+    public MqttHelper getMqttHelper() {
+        return this.mqttHelper;
+    }
     /*  MAIN FUNCTIONS END      */
     /*  WORKING FUNCTIONS START */
     
@@ -280,8 +288,10 @@ public class EV3_Brick {
      *  @see MqttHelper */
     protected void manualFix() {
         mqttHelper.debug("Manual Fixing");
-        if (currentState instanceof Maint)
+        if (currentState instanceof Maint) {
             this.fix = true;
+            mqttHelper.debug("Manual Fix Applied");
+        }
     }
     /**
      *  Method to call from MqttHelper when "emergency shutdown" message arrives.

@@ -9,106 +9,112 @@ import lejos.hardware.sensor.SensorMode;
 import lejos.utility.Delay;
 
 public class TouchSensor extends Device {
-	
-	private String port;
-	private EV3TouchSensor sensor;
-	private SimpleTouch touch;
-	
-	 /**
+    
+    private String port;
+    private EV3TouchSensor sensor;
+    private SimpleTouch touch;
+    
+     /**
      *
      *@return port
      */
-	public String getPort() {
-		return port;
-	}
+    public String getPort() {
+        return port;
+    }
 
-	 /**
+     /**
      *@param port on which the TouchSensor is connected
      */
-	public void setPort(String port) {
-		this.port = port;
-	}
-	
-	  /**
+    public void setPort(String port) {
+        this.port = port;
+    }
+    
+      /**
      *Constructor
      *@param port on which the TouchSensor is connected
      */
-	public TouchSensor(String port){
-		this.port = port;
-	}
-	
-	 /**
+    public TouchSensor(String port){
+        this.port = port;
+    }
+    
+     /**
      *Register the TouchSensor with the specified port in the recipe.
      *Create the TouchSensor.
      *@return true
      */
-	@Override
-	public boolean register(){
-		
-		Brick brick = BrickFinder.getDefault();
-		Port p = brick.getPort(port);
-		sensor = new EV3TouchSensor(p);
-		touch = new SimpleTouch(sensor);
+    @Override
+    public boolean register(){
+        
+        Brick brick = BrickFinder.getDefault();
+        Port p = brick.getPort(port);
+        sensor = new EV3TouchSensor(p);
+        touch = new SimpleTouch(sensor);
 
-		return true;
-	}
-	
-	/**
-	*Checks if the TouchSensor is pressed
-	*@return true/false
-	*/
-	@Override
-	public boolean isPressed(){
+        return true;
+    }
+    
+    /**
+    *Checks if the TouchSensor is pressed
+    *@return true/false
+    */
+    @Override
+    public boolean isPressed(){
 
-		return touch.isPressed();
-	}
-	
-	/**
-	*Checks if the TouchSensor is not pressed
-	*@return true/false
-	*/
-	@Override
-	public boolean isNotPressed(){
+        return touch.isPressed();
+    }
+    
+    /**
+    *Checks if the TouchSensor is not pressed
+    *@return true/false
+    */
+    @Override
+    public boolean isNotPressed(){
 
-		return !touch.isPressed();
-	}
-	
-	/**
-	*Waits until the TouchSensor is pressed.
-	*Checks every 50 ms if the TouchSensor is pressed.
-	*@return false
-	*/
-	@Override
-	public boolean waitForPress(){
-		
-		while (!touch.isPressed()) {
-		      Delay.msDelay(50);
-		    }
-		return false;
-	}
-	
-	/**
-	*Waits until the TouchSensor is released.
-	**Checks every 50 ms if the TouchSensor is released.
-	*@return false
-	*/
-	@Override
-	public boolean waitForRelease(){
-		
-		while (touch.isPressed()) {
-		      Delay.msDelay(50);
-		    }
-		return false;
-	}
-	
-	/**
+        return !touch.isPressed();
+    }
+    
+    /**
+    *Waits until the TouchSensor is pressed.
+    *Checks every 50 ms if the TouchSensor is pressed.
+    *@return false
+    */
+    @Override
+    public boolean waitForPress(){
+        int time = 0;
+        while (!touch.isPressed() && time < 10000) {
+              Delay.msDelay(50);
+              time += 50;
+            }
+        return false;
+    }
+    
+    /**
+    *Waits until the TouchSensor is released.
+    **Checks every 50 ms if the TouchSensor is released.
+    *@return false
+    */
+    @Override
+    public boolean waitForRelease(){
+        
+        while (touch.isPressed()) {
+              Delay.msDelay(50);
+            }
+        return false;
+    }
+    
+    /**
      *Close the TouchSensor with the specified port.
      *@return true
      */
-	@Override
-	public boolean close(){
-		sensor.close();
-		return true;
-	}
+    @Override
+    public boolean close(){
+        sensor.close();
+        return true;
+    }
+    
+    @Override
+    public SimpleTouch getSensor() {
+        return touch;
+    }
 
 }
