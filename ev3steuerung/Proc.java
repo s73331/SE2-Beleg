@@ -1,8 +1,7 @@
 package ev3steuerung;
 
- 
-
 import ev3steuerung.rezeptabarbeitung.Recipe;
+
 /**
  * State Pattern Entity in MES-StateDiagram
  * 
@@ -33,20 +32,14 @@ public class Proc implements State {
         // Recipe checking
         ev3.getMqttHelper().debug("Getting the next Recipe");
         Recipe recipe;
-        if (ev3.recName.isEmpty()) {
+        recipe = ev3.getNextRecipe();
+        if (recipe == null) {
             ev3.setState(new Maint(),false);
-            ev3.getMqttHelper().debug("Recipe name is not set");
+            ev3.getMqttHelper().debug("Recipe failed to load");
             return;
-        } else{
-            recipe = ev3.loadRecipe(ev3.recName);
-            if (recipe == null) {
-                ev3.setState(new Maint(),false);
-                ev3.getMqttHelper().debug("Recipe failed to load");
-                return;
-            }
-            ev3.getMqttHelper().debug("Recipe loaded");
         }
-        System.out.println("-> "+getName()+": produce "+ev3.recName);
+        ev3.getMqttHelper().debug("Recipe loaded");
+        System.out.println("-> "+getName()+": produce "+recipe);
         try {
             // Actually Working
             ev3.getMqttHelper().debug("Register Recipe");
@@ -60,25 +53,27 @@ public class Proc implements State {
                 ev3.setState(new Idle(),false);
                 ev3.getMqttHelper().debug("Work has been done");
                 ev3.getMqttHelper().indicateTask(recipe.toString(), "done");
-                ev3.waiting = true;
             } else {
                 ev3.setState(new Idle(),false);
                 ev3.getMqttHelper().debug("Work has been terminated");
                 ev3.getMqttHelper().indicateTask(recipe.toString(), "terminated");
-                ev3.waiting = true;
             }
         } catch (InterruptedException e) {
             ev3.setState(new Maint(),false);
             ev3.getMqttHelper().debug("Work has been aborted");
             ev3.getMqttHelper().indicateTask(recipe.toString(), "abort");
-            ev3.waiting = true;
         } catch (lejos.hardware.DeviceException de) {
             de.printStackTrace();
             ev3.setState(new Maint(),false);
             ev3.getMqttHelper().debug("Problem Registering Ports on EV3");
             ev3.getMqttHelper().indicateTask(recipe.toString(), "abort");
-            ev3.waiting = true;
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
+            ev3.setState(new Maint(),false);
+            ev3.getMqttHelper().debug("Problem Registering a specific Device on EV3");
+            ev3.getMqttHelper().indicateTask(recipe.toString(), "abort");
         } finally {
+            ev3.waiting = true;
             ev3.getMqttHelper().debug("Closing Recipe");
             recipe.close();
         }

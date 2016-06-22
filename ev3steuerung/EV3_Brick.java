@@ -1,6 +1,5 @@
 package ev3steuerung; 
 
-import java.util.Map;
 import java.util.HashMap;
 import java.io.IOException;
 
@@ -22,6 +21,7 @@ import ev3steuerung.rezeptabarbeitung.Recipe;
 public class EV3_Brick {
     // Instance of the Brick as its Singleton
     private static EV3_Brick instance;
+    private EV3 ev3;
     
     // State of the current Machine
     private State currentState;
@@ -30,21 +30,14 @@ public class EV3_Brick {
     private boolean produce;
     private boolean sleep;
     private boolean forcedState;
+    private String recName;
     private PropertyHelper propertyHelper;
-    
-    // Data Structures to save the needed Resources in
-    //protected Map<Character,BaseRegulatedMotor> motorMap;
-    //protected Map<Integer,AnalogSensor> sensorMap;
-    /** Variable to access mqtt-functionality of the program */
     private MqttHelper mqttHelper;
-    /** Name of the next Recipe to load */
-    protected String recName;
+    private HashMap<String,Recipe> recipes;
+    
     /** Variable to see if the program is waiting for a response
      * to catch Out-Of-Time-Frame messages and discard them  */
     protected boolean waiting;
-    
-    // Internal EV3-Hardware
-    private EV3 ev3;
     /** LED-Object of the EV3 */
     protected LED led;
     /** Audio-Object of the EV3 */
@@ -75,7 +68,7 @@ public class EV3_Brick {
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         }
-        // Initialize the LED / Audio / Maybe Ports as well TODO
+        // Initialize the LED / Audio / Recipe-set
         initializeHardware();
         
         // Set the State 
@@ -120,6 +113,7 @@ public class EV3_Brick {
         this.ev3 = (EV3)BrickFinder.getDefault();
         audio = ev3.getAudio();
         led = ev3.getLED();
+        recipes = new HashMap<String,Recipe>();
         
         identifyPorts();
     }
@@ -178,6 +172,16 @@ public class EV3_Brick {
     public MqttHelper getMqttHelper() {
         return this.mqttHelper;
     }
+    
+    /**
+     * Returns the next Recipe that shall be completed
+     * 
+     * @return Recipe - Object that was loaded
+     */
+    protected Recipe getNextRecipe() {
+        return recipes.get(recName);
+    }
+    
     /*  MAIN FUNCTIONS END      */
     /*  WORKING FUNCTIONS START */
     
@@ -225,19 +229,6 @@ public class EV3_Brick {
         if (result)    
             this.sleep = false;
         return result;
-    }
-    /**
-     * Starts the Loading of a certain Recipe
-     * @see Proc
-     * @see Recipe.load()
-     * @param   recName The name of the Recipe to load up
-     * @return  Recipe that shall be loaded */
-    protected Recipe loadRecipe(String recName) {
-        mqttHelper.debug("loadRecipe( "+recName+" )");
-        /* Check if this works out with the ports , if not null*/
-        
-        /* Returns true if its ok, false if its not */
-        return Recipe.load(recName);
     }
     
     /*  WORKING FUNCTIONS END   */
@@ -308,17 +299,36 @@ public class EV3_Brick {
      *  No Checks have been made to the input.
      *  Handles produce, confirm, sleep
      *  
+     *  @param  message Message that arrived over Mqtt from MES 
      *  @see MqttHelper
-     *  @see Mqtt-Threads
-     *  @param  message Message that arrived over Mqtt from MES */
+     *  @see Mqtt-Threads 
+     *  @see Recipe
+     */
     protected synchronized void messageArrived(String message) {
         if (message.contains("produce") && currentState instanceof Idle && waiting && !produce) {
+            mqttHelper.debug("Message Arrived: "+message);
+            String recString;
+            
+            // Add the recipe name to the variable recName
+            recString = message.replaceAll("produce:", "");     // Remove Produce:
+            recString = message.replaceAll(" ", "");            // Remove Whitespaces
+            
+            if (recString.isEmpty()) {
+                mqttHelper.debug("Recipe-String was empty, did not recieve a valid response");
+                return;
+            }
+            
+            this.recName = recString;
+            // Tell them you recieved shit
             this.produce = true;
             
-            String recString = message.replaceAll("produce:", "");
-            mqttHelper.debug("Message Arrived: produce:"+recString);
-            this.recName = recString;
-            
+            mqttHelper.debug("Check if Recipe: "+recString+" is already added");
+            if(!recipes.containsKey(recString)) {
+                mqttHelper.debug("Add Recipe newly to the set");
+                recipes.put(recString, Recipe.load(recString));
+            }
+            mqttHelper.debug("Set contains Recipe now");
+                
         } else if (waiting) {
             switch (message) {
                 case "confirm":
@@ -330,7 +340,7 @@ public class EV3_Brick {
                     this.sleep = true;
                     break;
                 default:
-                    mqttHelper.debug("unknown message arrived: "+message);
+                    mqttHelper.debug("Unknown Message Arrived: "+message);
                     break;
             }
         } else {
