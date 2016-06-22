@@ -21,20 +21,26 @@ public class Recipe {
     public static final boolean PARALLEL = true;
     public static final boolean SEQENZIELL = false;
     
-    Deque<Object[]> rezept;
-    Device[] devices;
-    String name;
-    EV3_Brick ev3;
+    private Deque<Object[]> rezept;
+    private Device[] devices;
+    private String name;
+    private EV3_Brick ev3;
     
-    public Recipe(String recName, Deque<Object[]> rezept) {
+    private Recipe(String recName, Deque<Object[]> rezept) {
         this.name = recName;
         this.rezept = rezept;
         this.ev3 = EV3_Brick.getInstance();
-        ev3.mqttHelper.debug("Creating Recipe");
-       }
+        ev3.getMqttHelper().debug("Creating Recipe");
+    }
     
+    /**
+     * Registers all Devices that are used from the Recipe
+     * 
+     * @throws lejos.hardware.DeviceException - When a Device is unable to open its port
+     * @see Device
+     * */
     public void register() throws lejos.hardware.DeviceException {
-        ev3.mqttHelper.debug("Recipe: "+this+" registering Devices");
+        ev3.getMqttHelper().debug("Recipe: "+this+" registering Devices");
         /*Geräte registrieren*/
         this.devices = (Device[]) rezept.getFirst();
         
@@ -42,11 +48,18 @@ public class Recipe {
             x.register();
         }   
         rezept.removeFirst();
-        
-       }
+    }
     
+    /**
+     * Method to start the work on the Recipe.
+     * 
+     * @throws InterruptedException - Is thrown when someone intervenes
+     * or the Timeout has been reached
+     * @see Device
+     * @return True - When The whole Recipe has been finished without Problems
+     */
     public boolean work() throws InterruptedException {
-        ev3.mqttHelper.debug("Recipe: "+this+" working the tasks");
+        ev3.getMqttHelper().debug("Recipe: "+this+" working the tasks");
         boolean ok = true;
         
         /* Rezepte ausführen*/
@@ -119,30 +132,29 @@ public class Recipe {
     public static Recipe load(String recName) {
         // GET ALL NAMES OF SUBDIRECTORY ./RECIPES
         
-        /* Insert Code here */
+        /* Insert Code here start */
         
         // Load Certain Recipe that is specified in the recName
         
-        /* Insert Code here */
+        /* Insert Code here end */
         
         // -> Sample Recipe here
         /* Sepp */
         
         LargeMotor d1 = new LargeMotor("B");
         MediumMotor d2 = new MediumMotor("A");
-        TouchSensor d3 = new TouchSensor("S1");
-        ColorSensor d4 = new ColorSensor("S2");
+        TouchSensor d3 = new TouchSensor("S2");
+        ColorSensor d4 = new ColorSensor("S1");
 
         
         Device[] init = {d1, d2, d3, d4};
         
         Spin s1 = new Spin(2500,360,1,0, 9);    // Medium Motor allein bis Gradzahl
         Spin s2 = new Spin(2500,360,0, 0,9);    // Große Motor allein bis Gradzahl
-        Spin s3 = new Spin(0,360, 1, 2, 1);     // Drehe bis Sensor gedrückt wird
+        Spin s3 = new Spin(0,360, 0, 2, 1);     // Drehe bis Sensor gedrückt wird
         Spin s4 = new Spin(0, 360, 0, 2, 0);    // Drehe bis Sensor losgelassen
         Wait s5 = new Wait(5000, 0);            // Warten in ms
-        Wait s6 = new Wait(2, 2);               // Warten auf Touch
-        
+        Wait s6 = new Wait(2, 1);               // Warten auf Touch
         
         
         /*angle, speed, welcher Motor ,welcher Touchsensor, Touchsensor Einstellung*/
@@ -160,13 +172,13 @@ public class Recipe {
         rezept.addLast(init);
         //rezept.addLast(befehl6);
         //rezept.addLast(befehl3);
-        //rezept.addLast(befehl4);
+        rezept.addLast(befehl4);
         //rezept.addLast(befehl5);
         //rezept.addLast(befehl7);  // Color
         
-        rezept.addLast(befehl2);
-        rezept.addLast(befehl8);
-        rezept.addLast(befehl2);
+        //rezept.addLast(befehl2);
+        //rezept.addLast(befehl8);
+        //rezept.addLast(befehl2);
 
 
         /* Bis hier bekommen wir von Sepp übergeben */
