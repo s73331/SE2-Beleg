@@ -81,19 +81,19 @@ public class Spin {
 	}
 
     /**
-     *@param sensor on which the motor should react for press/release
+     * @param sensor on which the motor should react for press/release
      */
 	public void setSensor(int sensor) {
 		this.sensor = sensor;
 	}
 
 	/**
-     *Constructor
-     *@param speed
-     *@param angle
-     *@param device
-     *@param sensor
-     *@param till
+     * Constructor
+     * @param angle - What Angle it shall turn to
+     * @param speed - What Speed it should use
+     * @param device - What MotorPort it shall use
+     * @param sensor - What sensor on which the motor should react for press/release
+     * @param till - TODO: No Idea
      */
 	public Spin(int angle, int speed, int device, int sensor, int till){
 		this.speed = speed;

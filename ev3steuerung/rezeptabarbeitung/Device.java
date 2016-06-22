@@ -1,6 +1,7 @@
 package ev3steuerung.rezeptabarbeitung;
 
 import lejos.utility.Delay;
+import lejos.hardware.motor.BaseRegulatedMotor;
 
 public abstract class Device {
 	
@@ -81,17 +82,17 @@ public abstract class Device {
 
     /**
      *Checks if the TouchSensor is not pressed
-     *@return false
+      *@return false
      */
-	public boolean isNotPressed() {
-		return false;
-	}
+    public boolean isNotPressed() {
+        return false;
+    }
 
-	
-
-
-
-	
-	
-
+    public BaseRegulatedMotor getEV3Motor(){
+        return null;
+    }
+       
+    public SimpleTouch getSensor() {
+       return null;
+       }
 }

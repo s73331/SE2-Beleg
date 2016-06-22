@@ -4,6 +4,7 @@ import lejos.hardware.Brick;
 import lejos.hardware.BrickFinder;
 import lejos.hardware.lcd.LCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.motor.BaseRegulatedMotor;
 import lejos.hardware.port.Port;
 
 public class LargeMotor extends Device {
@@ -15,9 +16,9 @@ public class LargeMotor extends Device {
      *
      *@return port
      */
-	public String getPort() {
-		return port;
-	}
+    public String getPort() {
+        return this.port;
+    }
 
     /**
      *@param port on which the LargeMotor is connected
@@ -111,12 +112,14 @@ public class LargeMotor extends Device {
      *Close the LargeMotor with the specified port.
      *@return true
      */
-	@Override
-	public boolean close(){
-		motor.close();
-		return true;
-	}
+    @Override
+    public boolean close(){
+        motor.close();
+        return true;
+    }
 
-
+    public BaseRegulatedMotor getEV3Motor() {
+        return this.motor;
+    }
 
 }

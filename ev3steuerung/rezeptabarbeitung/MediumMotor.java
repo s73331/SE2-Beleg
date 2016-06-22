@@ -3,6 +3,7 @@ package ev3steuerung.rezeptabarbeitung;
 import lejos.hardware.Brick;
 import lejos.hardware.BrickFinder;
 import lejos.hardware.motor.EV3MediumRegulatedMotor;
+import lejos.hardware.motor.BaseRegulatedMotor;
 import lejos.hardware.port.Port;
 
 public class MediumMotor extends Device {
@@ -110,12 +111,14 @@ public class MediumMotor extends Device {
      *Close the MediumMotor with the specified port.
      *@return true
      */
-	@Override
-	public boolean close(){
-		motor.close();
-		return true;
-	}
-
-
+    @Override
+    public boolean close(){
+        motor.close();
+        return true;
+    }
+    
+    public BaseRegulatedMotor getEV3Motor() {
+        return this.motor;
+    }
 
 }

@@ -9,12 +9,15 @@ import java.util.Deque;
 import java.util.LinkedList;
 import lejos.hardware.Button;
 import lejos.hardware.lcd.LCD;
+import lejos.hardware.motor.BaseRegulatedMotor;
+import lejos.utility.Delay;
+
 
 import ev3steuerung.EV3_Brick;
 
 public class Recipe {
     
-    //TODO Konstanten auslagern
+    /** Constant for the Work on the Recipe */
     public static final boolean PARALLEL = true;
     public static final boolean SEQENZIELL = false;
     

@@ -105,10 +105,15 @@ public class TouchSensor extends Device {
      *Close the TouchSensor with the specified port.
      *@return true
      */
-	@Override
-	public boolean close(){
-		sensor.close();
-		return true;
-	}
+    @Override
+    public boolean close(){
+        sensor.close();
+        return true;
+    }
+    
+    @Override
+    public SimpleTouch getSensor() {
+        return touch;
+    }
 
 }
