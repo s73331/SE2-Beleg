@@ -288,9 +288,10 @@ public class EV3_Brick {
      *  @see MqttHelper */
     protected void manualFix() {
         mqttHelper.debug("Manual Fixing");
-        if (currentState instanceof Maint)
+        if (currentState instanceof Maint) {
             this.fix = true;
             mqttHelper.debug("Manual Fix Applied");
+        }
     }
     /**
      *  Method to call from MqttHelper when "emergency shutdown" message arrives.

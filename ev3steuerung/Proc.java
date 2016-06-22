@@ -4,16 +4,13 @@ package ev3steuerung;
 
 import ev3steuerung.rezeptabarbeitung.Recipe;
 /**
- * Beschreiben Sie hier die Klasse Proc.
+ * State Pattern Entity in MES-StateDiagram
  * 
- * @author (Ihr Name) 
- * @version (eine Versionsnummer oder ein Datum)
+ * @author Christoph Schmidt
+ * @version 0.8
  */
-public class Proc implements State
-{
-    public Proc() {
-        
-    };
+public class Proc implements State {
+    public Proc() { }
 
     public int getColor() {
         return 1; // Green flashing
@@ -33,8 +30,7 @@ public class Proc implements State
         ev3.getMqttHelper().publishState();
         System.out.println("-> "+getName());
         
-        // Rezept überprüfen
-        ev3.mqttHelper.debug("Getting the next Recipe");
+        // Recipe checking
         ev3.getMqttHelper().debug("Getting the next Recipe");
         Recipe recipe;
         if (ev3.recName.isEmpty()) {
