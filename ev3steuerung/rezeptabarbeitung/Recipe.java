@@ -65,6 +65,13 @@ public class Recipe {
         /* Rezepte ausführen*/
         while(!rezept.isEmpty() && ok) { /* Solange Rezeptbefehle vorhanden sind*/
             
+            boolean pressinTime;
+            boolean releaseinTime;
+            boolean rightAngle;
+            boolean run = true;
+            int time = 0;
+            boolean stall = false;
+            
             /* Spin starten */
             if(rezept.getFirst().getClass().toString().contains("Spin")) {
                 Spin[] befehl = (Spin[]) rezept.getFirst();
@@ -76,59 +83,147 @@ public class Recipe {
                     mode = PARALLEL; // Auf Motoren warten bis nächsten Schritt
                 
                 for (Spin s:befehl) {
+                    ev3.getMqttHelper().debug("Working on Spin "+s.toString());
+                    BaseRegulatedMotor em = devices[s.getDevice()].getEV3Motor();
+                    em.setStallThreshold(2, 50);
+                    SimpleTouch touch = devices[s.getSensor()].getSensor();
                     if(s.getTill() == 1) {
+                        ev3.getMqttHelper().debug("Wait util its pressed");
                         devices[s.getDevice()].forward(s.getSpeed());
-                        devices[s.getSensor()].waitForPress();
+                        stall = false;
+                        time = 0;
+                        while (!touch.isPressed() && time < 10000 && !stall) {
+                            if (em.isStalled()) {
+                                ev3.getMqttHelper().debug("Stalling detected");
+                                stall = true;
+                            }
+                            Delay.msDelay(50);
+                            time += 50;
+                        }
+                        
+                        if (stall || time >= 10000) {
+                                devices[s.getDevice()].stop();
+                                ok = false;
+                                throw new InterruptedException("Stalled or Timeout");
+                        }
                         devices[s.getDevice()].stop();
                     }
                     else if(s.getTill() == 0){
+                        ev3.getMqttHelper().debug("Wait until its released");
                         devices[s.getDevice()].forward(s.getSpeed());
-                        devices[s.getSensor()].waitForRelease();
-                        devices[s.getDevice()].stop();
+                        time = 0;
+                        stall = false;
+                        while (touch.isPressed() && time < 10000 && !stall) {
+                            if (em.isStalled()) {
+                                ev3.getMqttHelper().debug("Stalling detected");
+                                stall = true;
+                            }
+                            Delay.msDelay(50);
+                            time += 50;
+                        }
+                        
+                        if (stall || time >= 10000) {
+                                devices[s.getDevice()].stop();
+                                ok = false;
+                                throw new InterruptedException("Stalled or Timeout");
+                        }
                     }
                     else if(s.getTill() == 9){
-                        devices[s.getDevice()].rotate(mode, s.getSpeed(), s.getAngle());
+                        ev3.getMqttHelper().debug("Turn to an angle");
+                        rightAngle = devices[s.getDevice()].rotate(mode, s.getSpeed(), s.getAngle());
+                        if (!rightAngle) {
+                            ev3.getMqttHelper().debug("Not the right angle");
+                            throw new InterruptedException("not the right angle!");
+                        }
                     }
                 }
-                
             }
             /* Wartezeit starten */
             else if(rezept.getFirst().getClass().toString().contains("Wait")) {
+                ev3.getMqttHelper().debug("Waiting operation");
                 Wait[] befehl = (Wait[]) rezept.getFirst();
+                SimpleTouch touch = devices[befehl[0].getSensor()].getSensor();
+                time = 0;
                     
-                
                 switch(befehl[0].getMode()) {
                 case 0:
-                    befehl[0].waitTime();
+                    ev3.getMqttHelper().debug("Wait certain time");
+                    Delay.msDelay(50);
                     break;
                     
                 case 1:
-                    devices[befehl[0].getSensor()].waitForPress();
+                    ev3.getMqttHelper().debug("Wait for Release");
+                    time = 0;
+                    
+                    while (touch.isPressed() && time < 10000 ) {
+                        Delay.msDelay(50);
+                        time += 50;
+                    }
+                    ev3.getMqttHelper().debug("Done waiting time: "+time);
+                    if (time >= 10000) {
+                        ok = false;
+                        ev3.getMqttHelper().debug("The wait timed out");
+                        throw new InterruptedException("Timeout waiting");
+                    }
                     break;
                 
                 case 2:
-                    devices[befehl[0].getSensor()].waitForRelease();
+                    ev3.getMqttHelper().debug("Wait for Press");
+                    time = 0;
+                    
+                    while (!touch.isPressed() && time < 10000 ) {
+                        Delay.msDelay(50);
+                        time += 50;
+                    }
+                    
+                    if (time >= 10000) {
+                        ok = false;
+                        throw new InterruptedException("Timeout waiting");
+                    }
                     break;
                 
                 }
             }
-        rezept.removeFirst(); /* Zuletzt ausgeführter Rezeptbefehl löschen*/
+            rezept.removeFirst(); /* Zuletzt ausgeführter Rezeptbefehl löschen*/
         }
-        return true;
+        
+        if (rezept.isEmpty())
+            return true;
+        else
+            return false;
     }
     
+    /**
+     * Close the Devices and disconnect the ports that are used in the Recipe
+     * 
+     * @see Device
+     */
     public void close() {
-        ev3.mqttHelper.debug("Recipe: "+this+" close Devices");
-        /*Verbindungen zu Motoren/Sensoren trennen*/
+        ev3.getMqttHelper().debug("Recipe: "+this+" close Devices");
+        /* Verbindungen zu Motoren/Sensoren trennen */
         for (Device x:devices){
             x.close();
         }
     }
     
+    /**
+     * Override the toString()-Method to display the name of the Recipe
+     * 
+     * @return Name of the Recipe
+     */
+    @Override
     public String toString() {
         return name;
     }
     
+    /**
+     * Loads up the specified Recipe, creates a new Recipe-Object,
+     * loads the Resources and returns it.
+     * 
+     * @param recName Name of the Recipe that shall be loaded
+     * @Return Recipe that was created and filled
+     * @see EV3_Brick.loadRecipe(..)
+     */
     public static Recipe load(String recName) {
         // GET ALL NAMES OF SUBDIRECTORY ./RECIPES
         
