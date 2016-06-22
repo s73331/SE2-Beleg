@@ -44,40 +44,41 @@ public class TouchSensor extends Device {
      */
     @Override
     public boolean register(){
-        
-        Brick brick = BrickFinder.getDefault();
-        Port p = brick.getPort(port);
-        sensor = new EV3TouchSensor(p);
-        touch = new SimpleTouch(sensor);
-
-        return true;
+        boolean isOk = true;
+        try {
+            Brick brick = BrickFinder.getDefault();
+            Port p = brick.getPort(port);
+            sensor = new EV3TouchSensor(p);
+            touch = new SimpleTouch(sensor);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isOk = false;
+        }
+        return isOk;
     }
     
     /**
-    *Checks if the TouchSensor is pressed
-    *@return true/false
+    * Checks if the TouchSensor is pressed
+    * @return True - When the TouchSensor is pressed
     */
     @Override
     public boolean isPressed(){
-
         return touch.isPressed();
     }
     
     /**
-    *Checks if the TouchSensor is not pressed
-    *@return true/false
+    * Checks if the TouchSensor is not pressed
+    * @return True - When the TouchSensor is pressed
     */
     @Override
     public boolean isNotPressed(){
-
         return !touch.isPressed();
     }
     
-    /**
-    *Waits until the TouchSensor is pressed.
-    *Checks every 50 ms if the TouchSensor is pressed.
-    *@return false
-    */
+    /*
+    * Waits until the TouchSensor is pressed.
+    * Checks every 50 ms if the TouchSensor is pressed.
+    * @return false
     @Override
     public boolean waitForPress(){
         int time = 0;
@@ -89,10 +90,10 @@ public class TouchSensor extends Device {
     }
     
     /**
-    *Waits until the TouchSensor is released.
-    **Checks every 50 ms if the TouchSensor is released.
-    *@return false
-    */
+    * Waits until the TouchSensor is released.
+    * Checks every 50 ms if the TouchSensor is released.
+    * @return false
+    *
     @Override
     public boolean waitForRelease(){
         
@@ -102,6 +103,7 @@ public class TouchSensor extends Device {
         return false;
     }
     
+    */
     /**
      *Close the TouchSensor with the specified port.
      *@return true
@@ -111,7 +113,12 @@ public class TouchSensor extends Device {
         sensor.close();
         return true;
     }
-    
+    /**
+     * Getter for the SimpleTouch object
+     * 
+     * @return touch - Simple Touch object
+     * @see Recipe.work()
+     */
     @Override
     public SimpleTouch getSensor() {
         return touch;

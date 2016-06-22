@@ -39,15 +39,33 @@ public class Recipe {
      * @throws lejos.hardware.DeviceException - When a Device is unable to open its port
      * @see Device
      * */
-    public void register() throws lejos.hardware.DeviceException {
+    public void register() throws lejos.hardware.DeviceException, NullPointerException {
         ev3.getMqttHelper().debug("Recipe: "+this+" registering Devices");
-        /*Geräte registrieren*/
+        /* Ger�te registrieren */
         this.devices = (Device[]) rezept.getFirst();
-        
+        boolean ok = true;
         for (Device x:devices){
-            x.register();
-        }   
+            if (!x.register()) {
+                ok = false;
+                break;
+            }
+        } 
+        if (!ok)
+            throw new NullPointerException("Failed Registering a Device");
         rezept.removeFirst();
+    }
+    
+    /**
+     * Close the Devices and disconnect the ports that are used in the Recipe
+     * 
+     * @see Device
+     */
+    public void close() {
+        ev3.getMqttHelper().debug("Recipe: "+this+" close Devices");
+        /* Verbindungen zu Motoren/Sensoren trennen */
+        for (Device x:devices){
+            x.close();
+        }
     }
     
     /**
@@ -194,29 +212,6 @@ public class Recipe {
     }
     
     /**
-     * Close the Devices and disconnect the ports that are used in the Recipe
-     * 
-     * @see Device
-     */
-    public void close() {
-        ev3.getMqttHelper().debug("Recipe: "+this+" close Devices");
-        /* Verbindungen zu Motoren/Sensoren trennen */
-        for (Device x:devices){
-            x.close();
-        }
-    }
-    
-    /**
-     * Override the toString()-Method to display the name of the Recipe
-     * 
-     * @return Name of the Recipe
-     */
-    @Override
-    public String toString() {
-        return name;
-    }
-    
-    /**
      * Loads up the specified Recipe, creates a new Recipe-Object,
      * loads the Resources and returns it.
      * 
@@ -278,5 +273,70 @@ public class Recipe {
 
         /* Bis hier bekommen wir von Sepp übergeben */
         return new Recipe(recName, rezept);
+    }
+    
+    
+    /**
+     * Override the toString()-Method to display the name of the Recipe
+     * 
+     * @return Name of the Recipe
+     */
+    @Override
+    public String toString() {
+        return name;
+    }
+    
+    /**
+     * Overrides the usual Hashcode-method to return
+     * the name as HashCode for Identification purpose in a HashSet
+     * 
+     * @return hashcode that is used to identify it
+     * @see EV3_Brick
+     * @see java.util.HashSet
+     */
+    @Override
+    public int hashCode() {
+        int i = 0;
+        int num = 0;
+        boolean isNeg = false;
+        
+        //Process each character of the string;
+        while( i < name.length()) {
+            num *= 10;
+            num += name.charAt(i++) - '0'; //Minus the ASCII code of '0' to get the value of the charAt(i++).
+        }
+        
+        //Check for negative sign; if it's there, set the isNeg flag
+        if (name.charAt(0) == '-') {
+            isNeg = true;
+            i = 1;
+        }
+        
+        // Check for negativity, if so make it positive again
+        if (isNeg)
+            num = -num;
+            
+        return num;
+    }
+    
+    /**
+     * Overrides the equals-Method to better check if two
+     * Recipes are in fact equal
+     * 
+     * @param obj The Object to check equality against
+     * @return True - If the Objects describe the same Recipe
+     */
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+         return true;
+      if (obj == null)
+         return false;
+      if (getClass() != obj.getClass())
+         return false;
+      Recipe other = (Recipe) obj;
+      if (!this.toString().equals(other.toString()))
+         return false;
+      return true;
     }
 }

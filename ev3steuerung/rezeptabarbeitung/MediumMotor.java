@@ -8,51 +8,59 @@ import lejos.hardware.port.Port;
 
 public class MediumMotor extends Device {
     
-	private String port;
+    private String port;
     private EV3MediumRegulatedMotor motor;
     
     /**
-     *
-     *@return port
+     * Getter for the Port of the Motor
+     * 
+     * @return port of the MediumMotor
      */
     public String getPort() {
         return port;
     }
     
     /**
-     *@param port on which the MediumMotor is connected
+     * Sets the Port where the MediumMotor is connected
+     * 
+     * @param Port on which the MediumMotor is connected
      */
     public void setPort(String port) {
         this.port = port;
     }
     
     /**
-     *Constructor
-     *@param port on which the MediumMotor is connected
+     * Constructor
+     * @param port on which the MediumMotor is connected
      */
     public MediumMotor(String port){
         this.port = port;
     }
     
     /**
-     *Register the MediumMotor with the specified port in the recipe.
-     *Create the MediumMotor.
-     *@return true
+     * Register the MediumMotor with the specified port in the recipe.
+     * Create the MediumMotor.
+     * @return True - When registering worked
      */
     @Override
     public boolean register (){
-        
-        Brick brick = BrickFinder.getDefault();
-        Port p = brick.getPort(port);
-        motor = new EV3MediumRegulatedMotor(p);
-        return true;
+        boolean isOk = true;
+        try {
+             Brick brick = BrickFinder.getDefault();
+             Port p = brick.getPort(port);
+             motor = new EV3MediumRegulatedMotor(p);
+        } catch (Exception e) {
+            e.printStackTrace();
+            isOk = false;
+        }
+        return isOk;
     }
     
     /**
-     *rotates the motor with the specified speed and angle from the recipe.
-     *if the specified speed is smaller than the maxSpeed (getMaxSpeed) of the MediumMotor, then use it
-     *else use the maxSpeed from the MediumMotor
-     *@return true
+     * rotates the motor with the specified speed and angle from the recipe.
+     * if the specified speed is smaller than the maxSpeed (getMaxSpeed) of the MediumMotor, then use it
+     * else use the maxSpeed from the MediumMotor
+     * @return True
      */
     @Override
     public boolean rotate(boolean mode,int speed, int angle ){
@@ -76,10 +84,12 @@ public class MediumMotor extends Device {
     }
     
     /**
-     *rotates the motor with the specified speed from the recipe
-     *if the specified speed is smaller than the maxSpeed (getMaxSpeed) of the MediumMotor, then use it
-     *else use the maxSpeed from the MediumMotor
-     *@return true
+     * rotates the motor with the specified speed from the recipe
+     * if the specified speed is smaller than the maxSpeed (getMaxSpeed) of the MediumMotor, then use it
+     * else use the maxSpeed from the MediumMotor
+     *
+     * @param speed Value how fast the Motor should turn
+     * @return True
      */
     @Override
     public boolean forward(int speed){
@@ -100,8 +110,8 @@ public class MediumMotor extends Device {
     }
     
     /**
-     *stops the motor
-     *@return true
+     * stops the motor
+     * @return True
      */
     @Override
     public boolean stop(){
@@ -110,8 +120,8 @@ public class MediumMotor extends Device {
     }
     
     /**
-     *Close the MediumMotor with the specified port.
-     *@return true
+     * Close the MediumMotor with the specified port.
+     * @return True - If the Motor and his Port could be closed successfuzlly
      */
     @Override
     public boolean close(){
@@ -119,6 +129,12 @@ public class MediumMotor extends Device {
         return true;
     }
     
+    /**
+     * Getter for the Motor Object
+     * 
+     * @return motor - The motor object
+     * @see Recipe
+     */
     public BaseRegulatedMotor getEV3Motor() {
         return this.motor;
     }
