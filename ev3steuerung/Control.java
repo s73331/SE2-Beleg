@@ -17,13 +17,13 @@ public class Control {
     
     private void start() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
-        ev3.mqttHelper.debug("STRG: Start of the Machine");
+        ev3.getMqttHelper().debug("STRG: Start of the Machine");
         while (running) {
             if (ev3.getState() instanceof ShuttingDown)
                 running = false;
             ev3.getState().doAction();
         }
-        ev3.mqttHelper.debug("STRG: End of the Machine");
+        ev3.getMqttHelper().debug("STRG: End of the Machine");
         ev3.stopMqtt();
     }
     
