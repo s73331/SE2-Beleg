@@ -18,7 +18,7 @@ import ev3steuerung.rezeptabarbeitung.Recipe;
  * @version 0.8
  * @since 01.04.2016 */
  
-public class EV3_Brick {
+public class EV3_Brick implements MqttBrick {
     // Instance of the Brick as its Singleton
     private static EV3_Brick instance;
     private EV3 ev3;
@@ -31,7 +31,7 @@ public class EV3_Brick {
     private boolean sleep;
     private boolean forcedState;
     private String recName;
-    private PropertyHelper propertyHelper;
+    private PropertyLoader propertyHelper;
     private MqttHelper mqttHelper;
     private HashMap<String,Recipe> recipes;
     
@@ -87,11 +87,11 @@ public class EV3_Brick {
     
     private void initializeProperties() {
         try {
-            propertyHelper=new PropertyHelper("ev3steuerung.properties");
+            propertyHelper=new ConcretePropertyLoader("ev3steuerung.properties");
         } catch (IOException ioe) {
             System.out.println("The ev3steuerung.properties file could not be loaded");
-            wait(5000);
-            System.exit(1);
+            System.out.println("Press a Button");
+            Button.waitForAnyPress();
         }
         
         this.DEVICE_ID = propertyHelper.getName();
