@@ -25,6 +25,21 @@ public class Control {
         }
         ev3.getMqttHelper().debug("STRG: End of the Machine");
         ev3.stopMqtt();
+        fixDir();
+    }
+    
+    private void fixDir() {
+        String[] directories = java.nio.file.Paths.get("").toAbsolutePath().toFile().list(new java.io.FilenameFilter(){
+            @Override
+            public boolean accept(java.io.File dir, String name) {
+                if(name.startsWith("paho")) return true;
+                return false;
+            } 
+        });
+        for(String directory:directories) {
+            new java.io.File(directory+"/.lck").delete();
+            new java.io.File(directory).delete();
+        }
     }
     
     /**
