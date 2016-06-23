@@ -44,15 +44,11 @@ public class Recipe {
         ev3.getMqttHelper().debug("Recipe: "+this+" registering Devices");
         /* Ger‰te registrieren */
         this.devices = (Device[]) rezept.getFirst();
-        boolean ok = true;
         for (Device x:devices){
             if (!x.register()) {
-                ok = false;
-                break;
+                throw new NullPointerException("Failed Registering a Device");
             }
-        } 
-        if (!ok)
-            throw new NullPointerException("Failed Registering a Device");
+        }
         rezept.removeFirst();
     }
     
@@ -81,8 +77,8 @@ public class Recipe {
         ev3.getMqttHelper().debug("Recipe: "+this+" working the tasks");
         boolean ok = true;
         
-        /* Rezepte ausf√ºhren*/
-        while(!rezept.isEmpty() && ok) { /* Solange Rezeptbefehle vorhanden sind*/
+        /* Solange Rezeptbefehle vorhanden sind*/
+        while(!rezept.isEmpty() && ok) { 
             
             boolean pressinTime;
             boolean releaseinTime;
@@ -103,12 +99,15 @@ public class Recipe {
                 
                 for (Spin s:befehl) {
                     ev3.getMqttHelper().debug("Working on Spin "+s.toString());
-                    BaseRegulatedMotor em = devices[s.getDevice()].getEV3Motor();
+                    
+                    BaseRegulatedMotor em = ((MotorDevice)devices[s.getDevice()]).getEV3Motor();
+                    TouchSensor touch = (TouchSensor)devices[s.getSensor()];
+                    MotorDevice md = (MotorDevice)devices[s.getDevice()];
                     em.setStallThreshold(2, 50);
-                    SimpleTouch touch = devices[s.getSensor()].getSensor();
                     if(s.getTill() == 1) {
+                        System.out.println("Press TouchSensor");
                         ev3.getMqttHelper().debug("Wait util its pressed");
-                        devices[s.getDevice()].forward(s.getSpeed());
+                        md.forward(s.getSpeed());
                         stall = false;
                         time = 0;
                         while (!touch.isPressed() && time < TOUCHWAITTIMEOUT && !stall) {
@@ -125,11 +124,12 @@ public class Recipe {
                                 ok = false;
                                 throw new InterruptedException("Stalled or Timeout");
                         }
-                        devices[s.getDevice()].stop();
+                        md.stop();
                     }
                     else if(s.getTill() == 0){
+                        System.out.println("Release TouchSensor");
                         ev3.getMqttHelper().debug("Wait until its released");
-                        devices[s.getDevice()].forward(s.getSpeed());
+                        md.forward(s.getSpeed());
                         time = 0;
                         stall = false;
                         while (touch.isPressed() && time < TOUCHWAITTIMEOUT && !stall) {
@@ -170,16 +170,18 @@ public class Recipe {
             else if(rezept.getFirst().getClass().toString().contains("Wait")) {
                 ev3.getMqttHelper().debug("Waiting operation");
                 Wait[] befehl = (Wait[]) rezept.getFirst();
-                SimpleTouch touch = devices[befehl[0].getSensor()].getSensor();
+                TouchSensor touch = (TouchSensor)devices[befehl[0].getSensor()];
                 time = 0;
-                    
+                
                 switch(befehl[0].getMode()) {
                 case 0:
+                    long toWait = befehl[0].getMs();
                     ev3.getMqttHelper().debug("Wait certain time");
-                    Delay.msDelay(50);
+                    Delay.msDelay(toWait);
                     break;
                     
                 case 1:
+                    System.out.println("Release TouchSensor");
                     ev3.getMqttHelper().debug("Wait for Release");
                     time = 0;
                     
@@ -196,6 +198,7 @@ public class Recipe {
                     break;
                 
                 case 2:
+                    System.out.println("Press TouchSensor");
                     ev3.getMqttHelper().debug("Wait for Press");
                     time = 0;
                     
