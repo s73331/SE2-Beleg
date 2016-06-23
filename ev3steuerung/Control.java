@@ -19,7 +19,7 @@ public class Control {
         EV3_Brick ev3 = EV3_Brick.getInstance();
         ev3.getMqttHelper().debug("STRG: Start of the Machine");
         while (running) {
-            if (ev3.getState() instanceof ShuttingDown)
+            if (ev3.getStateName().equals("DOWN"))
                 running = false;
             ev3.getState().doAction();
         }

@@ -141,6 +141,11 @@ public class EV3_Brick {
      * @see State */
     protected State getState() {
         return currentState;
+    /**
+     * 
+     */
+    public String getStateName() {
+        return this.currentState.getName();
     }
     
     /**
@@ -279,7 +284,7 @@ public class EV3_Brick {
      *  @see MqttHelper */
     protected void manualFix() {
         mqttHelper.debug("Manual Fixing");
-        if (currentState instanceof Maint) {
+        if (getStateName().equals("MAINT")) {
             this.fix = true;
             mqttHelper.debug("Manual Fix Applied");
         }
@@ -304,8 +309,8 @@ public class EV3_Brick {
      *  @see Mqtt-Threads 
      *  @see Recipe
      */
-    protected synchronized void messageArrived(String message) {
-        if (message.contains("produce") && currentState instanceof Idle && waiting && !produce) {
+    public synchronized void messageArrived(String message) {
+        if (message.contains("produce") && getStateName().equals("IDLE") && waiting && !produce) {
             mqttHelper.debug("Message Arrived: "+message);
             String recString;
             
@@ -356,6 +361,5 @@ public class EV3_Brick {
         mqttHelper.debug("MQTT - Handler is stopping");
         mqttHelper.close();
     }
-    
     /*  MQTT FUNCTIONS END  */
 }

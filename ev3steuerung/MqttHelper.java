@@ -120,7 +120,7 @@ public class MqttHelper implements MqttCallback, Runnable {
      * @see Idle
      * @return True - If the register message could be sent successfully */
     protected synchronized boolean register() {
-        return publishToMES(deviceID+":register:{\"ip\":\""+ip+"\",\"name\":\""+deviceID+"\",\"status\":\""+mqttBrick.getState().getName()+"\"}");
+        return publishToMES(deviceID+":register:{\"ip\":\""+ip+"\",\"name\":\""+deviceID+"\",\"status\":\""+mqttBrick.getStateName()+"\"}");
     }
     /**
      * Requests a task from the MES, as shown in Mr. Ringel's state diagram in transition 3.
@@ -157,7 +157,7 @@ public class MqttHelper implements MqttCallback, Runnable {
      * 
      * @see MqttHelper.publishToDeviceId(..) */
     protected synchronized void publishState() {
-        publishToDeviceID(mqttBrick.getState().getName());
+        publishToDeviceID(mqttBrick.getStateName());
     }
     /**
      * Sends the message as debug to the monitoring tool.
@@ -209,20 +209,20 @@ public class MqttHelper implements MqttCallback, Runnable {
             switch(information.length) {
             case 1:
                 switch(information[0]) {
-                case "hello":
-                    if (!(mqttBrick.getState() instanceof TurningOn))
-                        publishState();
-                    break;
-                case "SHUTTING_DOWN":
-                case "TURNING_ON":
-                case "IDLE":
-                case "PROC":
-                case "MAINT":
-                case "DOWN":
-                    break;
-                default:
-                    System.out.println("unrecognized message "+new String(message.getPayload()));
-                }
+                    case "hello":
+                        if (!(mqttBrick.getStateName().equals("TURNING_ON")))
+                            publishState();
+                        break;
+                    case "SHUTTING_DOWN":
+                    case "TURNING_ON":
+                    case "IDLE":
+                    case "PROC":
+                    case "MAINT":
+                    case "DOWN":
+                        break;
+                    default:
+                        System.out.println("unrecognized message "+new String(message.getPayload()));
+                    }
                 break;
             case 2:
                 switch(information[0]) {
