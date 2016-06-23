@@ -37,48 +37,72 @@ Loading source files for package monitoringtool...
 Constructing Javadoc information...
 Standard Doclet version 1.8.0_66
 Building tree for all the packages and classes...
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\ConcretePropertyLoader.html...
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:75: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:75: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.ConcretePropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:83: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:83: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.ConcretePropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:91: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:91: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.ConcretePropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:99: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:99: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.ConcretePropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:107: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:107: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.ConcretePropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:115: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:115: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.ConcretePropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:123: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:123: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.ConcretePropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:131: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:131: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.ConcretePropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:17: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:17: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:23: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:23: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:29: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:29: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:35: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:35: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:41: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:41: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:47: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:47: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:53: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:53: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:59: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyLoader.java:59: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyLoader
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\ConcretePropertyLoader.java:22: warning - Tag @return cannot be used in constructor documentation.  It can only be used in the following types of documentation: method.
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\Control.html...
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\EV3_Brick.html...
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:307: warning - Tag @see:illegal character: "45" in "Mqtt-Threads"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:355: warning - Tag @see: missing '#': "MqttHelper.close()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:355: warning - Tag @see: can't find MqttHelper.close() in ev3steuerung.EV3_Brick
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:307: warning - Tag @see: reference not found: Mqtt-Threads
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:331: warning - Tag @see:illegal character: "45" in "Mqtt-Threads"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:377: warning - Tag @see: missing '#': "MqttHelper.close()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:377: warning - Tag @see: can't find MqttHelper.close() in ev3steuerung.EV3_Brick
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttBrick.java:43: warning - Tag @see:illegal character: "45" in "Mqtt-Threads"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttBrick.java:49: warning - Tag @see: missing '#': "MqttHelper.close()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttBrick.java:49: warning - Tag @see: can't find MqttHelper.close() in ev3steuerung.MqttBrick
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:331: warning - Tag @see: reference not found: Mqtt-Threads
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\EV3_Brick.java:166: warning - Tag @see: reference not found: MqttBrick.messageArrived
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\Idle.html...
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\State.java:24: warning - Tag @see: reference not found: EV3 LED-Color Scheme
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\Maint.html...
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\State.java:24: warning - Tag @see: reference not found: EV3 LED-Color Scheme
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\MqttBrick.html...
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttBrick.java:43: warning - Tag @see: reference not found: Mqtt-Threads
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttBrick.java:43: warning - Tag @see: reference not found: Recipe
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\MqttHelper.html...
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:42: warning - Tag @see: missing '#': "EV3_Brick.startMqtt()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:42: warning - Tag @see: can't find EV3_Brick.startMqtt() in ev3steuerung.MqttHelper
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:42: warning - Tag @see: missing '#': "MqttBrick.startMqtt()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:42: warning - Tag @see: can't find MqttBrick.startMqtt() in ev3steuerung.MqttHelper
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:159: warning - Tag @see: missing '#': "MqttHelper.publishToDeviceId(..)"
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:159: warning - Tag @see: can't find MqttHelper.publishToDeviceId(..) in ev3steuerung.MqttHelper
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:202: warning - Tag @see: missing '#': "EV3_Brick.messageArrived(..)"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:202: warning - Tag @see: can't find EV3_Brick.messageArrived(..) in ev3steuerung.MqttHelper
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:262: warning - Tag @see: missing '#': "EV3_Brick.stopMqtt()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:262: warning - Tag @see: can't find EV3_Brick.stopMqtt() in ev3steuerung.MqttHelper
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:202: warning - Tag @see: missing '#': "MqttBrick.messageArrived(..)"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:202: warning - Tag @see: can't find MqttBrick.messageArrived(..) in ev3steuerung.MqttHelper
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:262: warning - Tag @see: missing '#': "MqttBrick.stopMqtt()"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:262: warning - Tag @see: can't find MqttBrick.stopMqtt() in ev3steuerung.MqttHelper
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:289: warning - Tag @see:illegal character: "45" in "Mqtt-Threads"
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:42: warning - Tag @return cannot be used in constructor documentation.  It can only be used in the following types of documentation: method.
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\MqttHelper.java:289: warning - Tag @see: reference not found: Mqtt-Threads
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\Proc.html...
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\State.java:24: warning - Tag @see: reference not found: EV3 LED-Color Scheme
-Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\PropertyHelper.html...
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:75: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:75: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyHelper
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:83: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:83: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyHelper
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:91: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:91: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyHelper
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:99: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:99: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyHelper
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:107: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:107: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyHelper
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:115: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:115: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyHelper
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:123: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:123: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyHelper
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:131: warning - Tag @see: missing '#': "EV3_Brick.initializeProperties()"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:131: warning - Tag @see: can't find EV3_Brick.initializeProperties() in ev3steuerung.PropertyHelper
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\PropertyHelper.java:22: warning - Tag @return cannot be used in constructor documentation.  It can only be used in the following types of documentation: method.
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\PropertyLoader.html...
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\ShuttingDown.html...
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\State.java:24: warning - Tag @see: reference not found: EV3 LED-Color Scheme
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\State.html...
@@ -91,10 +115,12 @@ Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\rezeptabarbeitung\LargeMotor.java:29: warning - @param argument "Port" is not a parameter name.
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\rezeptabarbeitung\MediumMotor.html...
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\rezeptabarbeitung\MediumMotor.java:28: warning - @param argument "Port" is not a parameter name.
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\rezeptabarbeitung\MotorDevice.html...
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\rezeptabarbeitung\Recipe.html...
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\rezeptabarbeitung\Recipe.java:222: warning - Tag @see: missing '#': "EV3_Brick.loadRecipe(..)"
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\rezeptabarbeitung\Recipe.java:222: warning - Tag @see: can't find EV3_Brick.loadRecipe(..) in ev3steuerung.rezeptabarbeitung.Recipe
-C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\rezeptabarbeitung\Recipe.java:222: warning - @Return is an unknown tag -- same as a known tag except for case.
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\rezeptabarbeitung\Recipe.java:236: warning - Tag @see: missing '#': "EV3_Brick.loadRecipe(..)"
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\rezeptabarbeitung\Recipe.java:236: warning - Tag @see: can't find EV3_Brick.loadRecipe(..) in ev3steuerung.rezeptabarbeitung.Recipe
+C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\rezeptabarbeitung\Recipe.java:236: warning - @Return is an unknown tag -- same as a known tag except for case.
+Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\rezeptabarbeitung\SensorDevice.html...
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\rezeptabarbeitung\SimpleTouch.html...
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\ev3steuerung\rezeptabarbeitung\Spin.html...
 C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\ev3steuerung\rezeptabarbeitung\Spin.java:50: warning - @param argument "device." is not a parameter name.
@@ -138,4 +164,4 @@ Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\index.html...
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\overview-summary.html...
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\help-doc.html...
 Generating C:\Users\Christoph\Desktop\Se2\Beleg-Programmierung\doc\stylesheet.css...
-52 warnings
+74 warnings
