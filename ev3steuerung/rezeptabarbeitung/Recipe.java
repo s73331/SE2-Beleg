@@ -20,6 +20,7 @@ public class Recipe {
     /** Constant for the Work on the Recipe */
     public static final boolean PARALLEL = true;
     public static final boolean SEQENZIELL = false;
+    public static final int TOUCHWAITTIMEOUT = 10000;
     
     private Deque<Object[]> rezept;
     private Device[] devices;
@@ -110,7 +111,7 @@ public class Recipe {
                         devices[s.getDevice()].forward(s.getSpeed());
                         stall = false;
                         time = 0;
-                        while (!touch.isPressed() && time < 10000 && !stall) {
+                        while (!touch.isPressed() && time < TOUCHWAITTIMEOUT && !stall) {
                             if (em.isStalled()) {
                                 ev3.getMqttHelper().debug("Stalling detected");
                                 stall = true;
@@ -119,8 +120,8 @@ public class Recipe {
                             time += 50;
                         }
                         
-                        if (stall || time >= 10000) {
-                                devices[s.getDevice()].stop();
+                        if (stall || time >= TOUCHWAITTIMEOUT) {
+                                md.stop();
                                 ok = false;
                                 throw new InterruptedException("Stalled or Timeout");
                         }
@@ -131,7 +132,7 @@ public class Recipe {
                         devices[s.getDevice()].forward(s.getSpeed());
                         time = 0;
                         stall = false;
-                        while (touch.isPressed() && time < 10000 && !stall) {
+                        while (touch.isPressed() && time < TOUCHWAITTIMEOUT && !stall) {
                             if (em.isStalled()) {
                                 ev3.getMqttHelper().debug("Stalling detected");
                                 stall = true;
@@ -140,17 +141,26 @@ public class Recipe {
                             time += 50;
                         }
                         
-                        if (stall || time >= 10000) {
-                                devices[s.getDevice()].stop();
+                        if (stall || time >= TOUCHWAITTIMEOUT) {
+                                md.stop();
                                 ok = false;
                                 throw new InterruptedException("Stalled or Timeout");
                         }
                     }
                     else if(s.getTill() == 9){
                         ev3.getMqttHelper().debug("Turn to an angle");
-                        rightAngle = devices[s.getDevice()].rotate(mode, s.getSpeed(), s.getAngle());
-                        if (!rightAngle) {
-                            ev3.getMqttHelper().debug("Not the right angle");
+                        md.rotate(mode, s.getSpeed(), s.getAngle());
+                        time = 0;
+                        while (time < TOUCHWAITTIMEOUT && !stall && md.getEV3Motor().isMoving()) {
+                            if (em.isStalled()) {
+                                ev3.getMqttHelper().debug("Stalling detected");
+                                stall = true;
+                            }
+                            Delay.msDelay(50);
+                            time += 50;
+                        }
+                        if (time >= TOUCHWAITTIMEOUT || stall) {
+                            md.stop();
                             throw new InterruptedException("not the right angle!");
                         }
                     }
@@ -173,12 +183,12 @@ public class Recipe {
                     ev3.getMqttHelper().debug("Wait for Release");
                     time = 0;
                     
-                    while (touch.isPressed() && time < 10000 ) {
+                    while (touch.isPressed() && time < TOUCHWAITTIMEOUT) {
                         Delay.msDelay(50);
                         time += 50;
                     }
                     ev3.getMqttHelper().debug("Done waiting time: "+time);
-                    if (time >= 10000) {
+                    if (time >= TOUCHWAITTIMEOUT) {
                         ok = false;
                         ev3.getMqttHelper().debug("The wait timed out");
                         throw new InterruptedException("Timeout waiting");
@@ -189,13 +199,14 @@ public class Recipe {
                     ev3.getMqttHelper().debug("Wait for Press");
                     time = 0;
                     
-                    while (!touch.isPressed() && time < 10000 ) {
+                    while (!touch.isPressed() && time < TOUCHWAITTIMEOUT ) {
                         Delay.msDelay(50);
                         time += 50;
                     }
                     
-                    if (time >= 10000) {
+                    if (time >= TOUCHWAITTIMEOUT) {
                         ok = false;
+                        ev3.getMqttHelper().debug("The wait timed out");
                         throw new InterruptedException("Timeout waiting");
                     }
                     break;
