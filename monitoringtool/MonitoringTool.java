@@ -38,7 +38,7 @@ public class MonitoringTool extends Application {
             Class.forName("org.postgresql.Driver");
             logger.debug("start(): loaded org.postgresql.Driver");
             model=Model.getInstance();
-            primaryStage.setTitle("Monitoring Tool - Ger√§t "+model.getDeviceID());
+            primaryStage.setTitle("Monitoring Tool - Ger‰t "+model.getDeviceID());
             logger.debug("title set");
             Pane root=(Pane)FXMLLoader.load(getClass().getResource("monitoringview.fxml"));
             logger.debug("FXML loaded");
