@@ -24,7 +24,7 @@ public class Idle implements State
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
-        ev3.led.setPattern(3);
+        ev3.getLED().setPattern(3);
         ev3.getMqttHelper().debug("Start of Idle");
         
         // MQTT STATE INDICATION
@@ -32,14 +32,14 @@ public class Idle implements State
         ev3.getMqttHelper().publishState();
         System.out.println("-> "+getName());
         
-        // //ev3.audio.systemSound(0);
+        // //ev3.getAudio().systemSound(0);
         //ev3.wait(4000);
         
         boolean produce = false;
         
         // WAIT FOR NON-CONFIRM
         ev3.getMqttHelper().debug("Waiting for produce-task or sleep");
-        ev3.waiting = true;
+        ev3.setWaiting(true);
         for (int i = 0; i < ev3.TASKREQ_TIMEOUT && !produce; i++) {
             if (ev3.isSleep()) {
                 i = 0;
@@ -61,7 +61,7 @@ public class Idle implements State
                 }
             }
         }
-        ev3.waiting = false;
+        ev3.setWaiting(false);
         
         // If There was neither a Sleep, nor a produce or the Time has run out
         if (!produce) {

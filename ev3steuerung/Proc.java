@@ -24,7 +24,7 @@ public class Proc implements State {
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
-        ev3.led.setPattern(1);
+        ev3.getLED().setPattern(1);
         ev3.getMqttHelper().debug("Start of Proc");
         
         // MQTT STATE INDICATION
@@ -76,7 +76,7 @@ public class Proc implements State {
             ev3.getMqttHelper().debug("Problem Registering a specific Device on EV3");
             ev3.getMqttHelper().indicateTask(recipe.toString(), "abort");
         } finally {
-            ev3.waiting = true;
+            ev3.setWaiting(true);
             ev3.getMqttHelper().debug("Closing Recipe");
             recipe.close();
         }
@@ -99,7 +99,7 @@ public class Proc implements State {
                 }
             }
         }
-        ev3.waiting = false;
+        ev3.setWaiting(false);
         
         if (!mqttConfirm) {
             ev3.setState(new ShuttingDown(),false);

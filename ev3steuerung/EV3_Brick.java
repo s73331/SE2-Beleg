@@ -37,11 +37,11 @@ public class EV3_Brick implements MqttBrick {
     
     /** Variable to see if the program is waiting for a response
      * to catch Out-Of-Time-Frame messages and discard them  */
-    protected boolean waiting;
+    private boolean waiting;
     /** LED-Object of the EV3 */
-    protected LED led;
+    private LED led;
     /** Audio-Object of the EV3 */
-    protected Audio audio;
+    private Audio audio;
     
     // CONSTANTS
     /** Constant for MQTT-Handling */
@@ -146,6 +146,27 @@ public class EV3_Brick implements MqttBrick {
      */
     public String getStateName() {
         return this.currentState.getName();
+    }
+    
+    /**
+     * 
+     */
+    public Audio getAudio() {
+        return this.audio;
+    }
+    
+    /**
+     * 
+     */
+    public LED getLED() {
+        return this.led;
+    }
+    
+    /**
+     * 
+     */
+    public void setWaiting(boolean wait) {
+        this.waiting = wait;
     }
     
     /**

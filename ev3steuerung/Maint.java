@@ -24,7 +24,7 @@ public class Maint implements State
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
-        ev3.led.setPattern(5);
+        ev3.getLED().setPattern(5);
         ev3.getMqttHelper().debug("Start of Maint");
         
         // MQTT STATE INDICATION

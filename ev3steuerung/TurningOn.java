@@ -21,11 +21,11 @@ public class TurningOn implements State
     
     public void doAction() {
         EV3_Brick ev3 = EV3_Brick.getInstance();
-        ev3.led.setPattern(4);
+        ev3.getLED().setPattern(4);
         ev3.getMqttHelper().debug("Start of TurningOn");
         
         System.out.println("-> "+getName());
-        ev3.audio.systemSound(3);
+        ev3.getAudio().systemSound(2);
         
         ev3.getMqttHelper().debug("Send Register to MES");
         ev3.getMqttHelper().register();
@@ -34,7 +34,7 @@ public class TurningOn implements State
         
         // WAIT FOR NON-CONFIRM
         ev3.getMqttHelper().debug("Waiting for confirmation of register");
-        ev3.waiting = true;
+        ev3.setWaiting(true);
         for (int i = 0; i < ev3.REGCONF_TIMEOUT && !mqttConfirm; i++) {
             if (ev3.isConfirmed()) {
                 mqttConfirm = true;
@@ -50,7 +50,7 @@ public class TurningOn implements State
                 }
             }
         }
-        ev3.waiting = false;
+        ev3.setWaiting(false);
         
         if (!mqttConfirm) {
             ev3.setState(new ShuttingDown(),false);
