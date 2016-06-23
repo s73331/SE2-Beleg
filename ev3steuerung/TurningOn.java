@@ -1,12 +1,13 @@
 package ev3steuerung;
 
 /**
- * Beschreiben Sie hier die Klasse TurnOn.
+ * State Pattern Entity to Turn the Brick on and make everything functional
  * 
- * @author (Ihr Name) 
- * @version (eine Versionsnummer oder ein Datum)
+ * @see EV3_Brick
+ * @author Christoph Schmidt
+ * @version 0.9
  */
-public class TurningOn implements State
+public class TurningOn implements State 
 {
     public TurningOn() {   };
 

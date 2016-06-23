@@ -6,7 +6,10 @@ import ev3steuerung.rezeptabarbeitung.Recipe;
  * State Pattern Entity in MES-StateDiagram
  * 
  * @author Christoph Schmidt
- * @version 0.8
+ * @version 0.9
+ * @see Idle
+ * @see Maint
+ * @see Recipe
  */
 public class Proc implements State {
     public Proc() { }

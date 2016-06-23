@@ -1,16 +1,19 @@
 package ev3steuerung;
 
 /**
- * Beschreiben Sie hier die Klasse Idle.
+ * State Pattern Entity in MES-StateDiagram
  * 
- * @author (Ihr Name) 
- * @version (eine Versionsnummer oder ein Datum)
+ * @author Christoph Schmidt
+ * @version 0.9
+ * @see TurningOn
+ * @see Proc
+ * @see Maint
  */
 public class Idle implements State
 {
    
     public Idle() {   };
-
+    
     public int getColor() {
         return 3; // Green flashing
     }
@@ -60,9 +63,9 @@ public class Idle implements State
         }
         ev3.waiting = false;
         
-        // If There was neither a Sleep, nor a produce or the TIme as run out
+        // If There was neither a Sleep, nor a produce or the Time has run out
         if (!produce) {
-            ev3.setState(new ShuttingDown(),false);
+            ev3.setState(new Maint(),false);
             ev3.getMqttHelper().debug("Maximum produce or sleep wait time has passed");
         }
         

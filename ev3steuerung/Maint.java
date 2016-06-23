@@ -1,10 +1,14 @@
 package ev3steuerung;
 
 /**
- * Beschreiben Sie hier die Klasse Maint.
+ * State Pattern Entity in MES-StateDiagram
  * 
- * @author (Ihr Name) 
- * @version (eine Versionsnummer oder ein Datum)
+ * @author Christoph Schmidt
+ * @version 0.9
+ * 
+ * @see Idle
+ * @see Proc
+ * @see ShuttingDown
  */
 public class Maint implements State
 {

@@ -1,10 +1,12 @@
 package ev3steuerung;
 
 /**
- * Beschreiben Sie hier die Klasse TurnOff.
+ * State Pattern Entity in MES-StateDiagram
  * 
- * @author (Ihr Name) 
- * @version (eine Versionsnummer oder ein Datum)
+ * @author Christoph Schmidt
+ * @version 0.9
+ * @see EV3_Brick
+ * @see Maint
  */
 public class ShuttingDown implements State
 {
