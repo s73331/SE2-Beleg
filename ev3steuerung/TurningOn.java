@@ -9,8 +9,6 @@ package ev3steuerung;
  */
 public class TurningOn implements State 
 {
-    public TurningOn() {   };
-
     public int getColor() {
         return 4; // Green flashing
     }

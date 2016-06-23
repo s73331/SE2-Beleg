@@ -99,8 +99,4 @@ public class ColorSensor extends SensorDevice{
         sensor.close();
         return true;
     }
-    
-    
-    
-
 }

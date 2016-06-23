@@ -11,9 +11,8 @@ import ev3steuerung.rezeptabarbeitung.Recipe;
  * @see Maint
  * @see Recipe
  */
-public class Proc implements State {
-    public Proc() { }
-
+public class Proc implements State
+{
     public int getColor() {
         return 1; // Green flashing
     }

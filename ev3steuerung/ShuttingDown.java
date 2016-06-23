@@ -10,10 +10,8 @@ package ev3steuerung;
  */
 public class ShuttingDown implements State
 {
-    public ShuttingDown() {   };
-
     public int getColor() {
-        return 6; // Green flashing
+        return 6;
     }
     
     public String getName() {

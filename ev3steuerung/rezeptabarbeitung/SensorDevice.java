@@ -15,7 +15,7 @@ public abstract class SensorDevice implements Device
      *@return true
      */
     public boolean isPressed(){
-        return true;
+        return false;
     }
     
     /**
@@ -23,7 +23,7 @@ public abstract class SensorDevice implements Device
      *@return true
      */
     public boolean waitForPress(){
-        return true;
+        return false;
     }
     
     /**
@@ -31,7 +31,7 @@ public abstract class SensorDevice implements Device
      *@return true
      */
     public boolean waitForRelease(){
-        return true;
+        return false;
     }
     
     /**

@@ -11,9 +11,6 @@ package ev3steuerung;
  */
 public class Idle implements State
 {
-   
-    public Idle() {   };
-    
     public int getColor() {
         return 3; // Green flashing
     }

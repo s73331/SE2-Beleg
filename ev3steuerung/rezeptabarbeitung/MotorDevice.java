@@ -16,7 +16,7 @@ public abstract class MotorDevice implements Device
      *@return true
      */
     public boolean rotate(boolean mode,int speed, int angle){
-        return true;
+        return false;
     }
     
     /**

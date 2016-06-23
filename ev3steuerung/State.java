@@ -4,7 +4,7 @@ package ev3steuerung;
  * Interface State brings all functionality of the State-Pattern
  * 
  * @author Christoph Schmidt
- * @version 0.1 */
+ * @version 0.9 */
 
 public interface State {
     

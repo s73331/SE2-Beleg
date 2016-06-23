@@ -13,7 +13,6 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-
 /**
  * Support class to handle MQTT. Designed for use in package ev3steuerung
  * @author Martin Schöne */

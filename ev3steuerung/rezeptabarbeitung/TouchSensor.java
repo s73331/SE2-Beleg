@@ -53,8 +53,9 @@ public class TouchSensor extends SensorDevice {
         } catch (Exception e) {
             e.printStackTrace();
             isOk = false;
+        } finally {
+            return isOk;
         }
-        return isOk;
     }
     
     /**

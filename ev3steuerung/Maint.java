@@ -12,10 +12,8 @@ package ev3steuerung;
  */
 public class Maint implements State
 {
-    public Maint() {   };
-
     public int getColor() {
-        return 5; // Green flashing
+        return 5;
     }
     
     public String getName() {

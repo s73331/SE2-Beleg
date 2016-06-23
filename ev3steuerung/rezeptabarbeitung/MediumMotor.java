@@ -52,8 +52,9 @@ public class MediumMotor extends MotorDevice {
         } catch (Exception e) {
             e.printStackTrace();
             isOk = false;
+        } finally {
+            return isOk;
         }
-        return isOk;
     }
     
     /**

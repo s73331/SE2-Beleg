@@ -58,22 +58,9 @@ public class EV3_Brick implements MqttBrick {
         this.waiting = false;
         this.forcedState = false;
         
-        // Load the Properties File "ev3steuerung.properties"
-        initializeProperties();
-        
-        // Start MQTT-Handling
-        try {
-            startMqtt();
-        } catch (InterruptedException ie) {
-            ie.printStackTrace();
-        }
-        // Initialize the LED / Audio / Recipe-set
-        initializeHardware();
-        
-        // Set the State 
-        this.setState(new TurningOn(), false) ;
+        startEV3();
     }
-     
+    
     /**
      * Returns the Instance of the EV3_Brick [Singleton]
      * 
@@ -84,13 +71,35 @@ public class EV3_Brick implements MqttBrick {
         return instance;
     }
     
+    /**
+     * Startup Method called by Constructor. Starts PropertyLoad, Mqtt and initializes the Hardware
+     */
+    private void startEV3() {
+        // Load the Properties File "ev3steuerung.properties"
+        initializeProperties();
+        
+        // Start MQTT-Handling
+        try {
+            startMqtt();
+        } catch (InterruptedException ie) {
+            System.out.println("Mqtt-Handler could not be started");
+            Delay.msDelay(5000);
+            System.exit(0);
+        }
+        // Initialize the LED / Audio / Recipe-set
+        initializeHardware();
+        
+        // Set the State 
+        this.setState(new TurningOn(), false);
+    }
+    
     private void initializeProperties() {
         try {
             propertyHelper=new ConcretePropertyLoader("ev3steuerung.properties");
         } catch (IOException ioe) {
             System.out.println("The ev3steuerung.properties file could not be loaded");
-            System.out.println("Press a Button");
-            Button.waitForAnyPress();
+            Delay.msDelay(5000);
+            System.exit(0);
         }
         
         this.DEVICE_ID = propertyHelper.getName();
@@ -109,10 +118,16 @@ public class EV3_Brick implements MqttBrick {
      * Initializes the ev3-Object, the Audio-Object, the LED-Object and the Ports maybe TODO */
     private void initializeHardware() {
         mqttHelper.debug("Hardware is being initialized");
-        this.ev3 = (EV3)BrickFinder.getDefault();
-        audio = ev3.getAudio();
-        led = ev3.getLED();
-        recipes = new HashMap<String,Recipe>();
+        try {
+            this.ev3 = (EV3)BrickFinder.getLocal();//getDefault();
+            audio = ev3.getAudio();
+            led = ev3.getLED();
+            recipes = new HashMap<String,Recipe>();
+        } catch (NoClassDefFoundError nce) {
+            System.out.println("The Brick could not be loaded");
+            Delay.msDelay(5000);
+            System.exit(0);
+        }
     }
     
     /**
@@ -125,7 +140,7 @@ public class EV3_Brick implements MqttBrick {
     }
     
     /**
-     * Getter for the Name of the current State
+     * Returns the Name of the current State
      * 
      * @return The Name of the current State
      */
@@ -134,7 +149,7 @@ public class EV3_Brick implements MqttBrick {
     }
     
     /**
-     * Getter for Audi-Object of the EV3 for Soundeffects of the State
+     * Returns the Audi-Object of the EV3 for Soundeffects of the State
      * 
      * @return audio - The lejos.hardware.Audio Object
      * @see State
@@ -144,7 +159,7 @@ public class EV3_Brick implements MqttBrick {
     }
     
     /**
-     * Getter for LED-Object of the EV3 for Visual Apperance of the State
+     * Returns the LED-Object of the EV3 for Visual Apperance of the State
      * 
      * @return led - The lejos.hardware.LED Object
      */

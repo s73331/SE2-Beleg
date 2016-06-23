@@ -54,8 +54,9 @@ public class LargeMotor extends MotorDevice {
         } catch (Exception e) {
             e.printStackTrace();
             isOk = false;
+        } finally {
+            return isOk;
         }
-        return isOk;
     }
     
     /**
