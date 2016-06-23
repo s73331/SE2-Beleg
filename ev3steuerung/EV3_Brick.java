@@ -139,8 +139,10 @@ public class EV3_Brick implements MqttBrick {
      * 
      * @return  State - Current Value of EV3_Brick.currentState
      * @see State */
-    protected State getState() {
-        return currentState;
+    public State getState() {
+        return this.currentState;
+    }
+    
     /**
      * 
      */
@@ -175,7 +177,7 @@ public class EV3_Brick implements MqttBrick {
      * @param  state New State to work next
      * @param  forced If the State shall be forced or not, default false.
      * If true, no change of state can occur after this. */
-    protected void setState(State state, boolean forced) {
+    public void setState(State state, boolean forced) {
         mqttHelper.debug("Attempting to change State with Forced: "+forced);
         
         if (!forcedState) {
@@ -204,7 +206,7 @@ public class EV3_Brick implements MqttBrick {
      * 
      * @return Recipe - Object that was loaded
      */
-    protected Recipe getNextRecipe() {
+    public Recipe getNextRecipe() {
         return recipes.get(recName);
     }
     
@@ -260,10 +262,10 @@ public class EV3_Brick implements MqttBrick {
     /*  WORKING FUNCTIONS END   */
     /*  HELPER FUNCTIONS START  */
     
-    /**
+    /*
      * Waits for specific Button Press (default any)
      * 
-     * @param   but String representation of Button to be pressed */
+     * @param   but String representation of Button to be pressed 
     protected void waitForButtonPress(String but) {
         mqttHelper.debug("Wait for button press "+but);
         switch (but) {
@@ -279,10 +281,10 @@ public class EV3_Brick implements MqttBrick {
      * Waits a given time in ms
      * 
      * @param  time    time in ms
-     */
+     *
     protected void wait(int time) {
         Delay.msDelay(time);
-    }
+    }*/
     
     /*  HELPER FUNCTIONS END  */
     
@@ -294,7 +296,7 @@ public class EV3_Brick implements MqttBrick {
      * 
      * @see MqttHelper
      * @throws InterruptedException When there was a problem creating the mqtt-handler */
-    protected void startMqtt() throws InterruptedException {
+    public void startMqtt() throws InterruptedException {
         this.mqttHelper = new MqttHelper(this,DEVICE_ID, "tcp://"+MQTTSERV_IP, IP);
     }
     /**
@@ -303,7 +305,7 @@ public class EV3_Brick implements MqttBrick {
      *  
      *  @see Maint
      *  @see MqttHelper */
-    protected void manualFix() {
+    public void manualFix() {
         mqttHelper.debug("Manual Fixing");
         if (getStateName().equals("MAINT")) {
             this.fix = true;
@@ -316,7 +318,7 @@ public class EV3_Brick implements MqttBrick {
      *  
      *  @see ShuttingDown
      *  @see MqttHelper */
-    protected void emergencyShutdown() {
+    public void emergencyShutdown() {
         mqttHelper.debug("Emergency Shutdown");
         setState(new ShuttingDown(),true);
     }
@@ -348,11 +350,9 @@ public class EV3_Brick implements MqttBrick {
             // Tell them you recieved shit
             this.produce = true;
             
-            mqttHelper.debug("Check if Recipe: "+recString+" is already added");
-            if(!recipes.containsKey(recString)) {
-                mqttHelper.debug("Add Recipe newly to the set");
-                recipes.put(recString, Recipe.load(recString));
-            }
+            mqttHelper.debug("Add Recipe newly to the set");
+            recipes.put(recString, Recipe.load(recString));
+            
             mqttHelper.debug("Set contains Recipe now");
                 
         } else if (waiting) {
@@ -378,7 +378,7 @@ public class EV3_Brick implements MqttBrick {
      * 
      * @see Control
      * @see MqttHelper.close() */
-    protected void stopMqtt() {
+    public void stopMqtt() {
         mqttHelper.debug("MQTT - Handler is stopping");
         mqttHelper.close();
     }
