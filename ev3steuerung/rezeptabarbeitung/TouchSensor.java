@@ -8,7 +8,7 @@ import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.hardware.sensor.SensorMode;
 import lejos.utility.Delay;
 
-public class TouchSensor extends Device {
+public class TouchSensor extends SensorDevice {
     
     private String port;
     private EV3TouchSensor sensor;

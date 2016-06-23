@@ -8,7 +8,7 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.SensorMode;
 import lejos.robotics.Color;
 
-public class ColorSensor extends Device{
+public class ColorSensor extends SensorDevice{
     
     private String port;
     private EV3ColorSensor sensor;
@@ -58,8 +58,9 @@ public class ColorSensor extends Device{
         } catch (Exception e) {
             e.printStackTrace();
             isOk = false;
+        } finally {
+            return isOk;
         }
-        return isOk;
     }
     
     /**

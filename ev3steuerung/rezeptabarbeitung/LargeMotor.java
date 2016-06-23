@@ -7,7 +7,7 @@ import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.BaseRegulatedMotor;
 import lejos.hardware.port.Port;
 
-public class LargeMotor extends Device {
+public class LargeMotor extends MotorDevice {
     
     private String port;
     private EV3LargeRegulatedMotor motor;
