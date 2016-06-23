@@ -24,7 +24,7 @@ public class MqttHelper implements MqttCallback, Runnable {
     private boolean debugMode = false;
     private String serverURI;
     private String deviceID;
-    private EV3_Brick mqttBrick;
+    private MqttBrick mqttBrick;
     private LinkedList<String> failedMesMessages;
     private LinkedList<String> failedDebugMessages;
     private String ip;
@@ -33,13 +33,13 @@ public class MqttHelper implements MqttCallback, Runnable {
     /**
      * Constructor of the Mqtt-Helper Class
      * 
-     * @param mqttBrick - The EV3_Brick instance
+     * @param mqttBrick - The MqttBrick instance
      * @param deviceID - The DEVICE_ID from the properties file
      * @param serverURI - the MQTTSERV_IP from the properties file
      * @param ip - the IP from the properties file
-     * @see EV3_Brick.startMqtt()
+     * @see MqttBrick.startMqtt()
      * @return MqttHelper - Connected Mqtt-Interface */
-    protected MqttHelper(EV3_Brick mqttBrick, String deviceID, String serverURI, String ip) {
+    protected MqttHelper(MqttBrick mqttBrick, String deviceID, String serverURI, String ip) {
         this.deviceID            =   deviceID;
         this.mqttBrick           =   mqttBrick;
         this.serverURI           =   serverURI;
@@ -192,9 +192,9 @@ public class MqttHelper implements MqttCallback, Runnable {
     }
     /**
      * Handles incoming messages for all topics,
-     * specially forwards from topic vwp/DEVICE_ID to EV3_Brick
+     * specially forwards from topic vwp/DEVICE_ID to MqttBrick
      * 
-     * @see EV3_Brick.messageArrived(..)
+     * @see MqttBrick.messageArrived(..)
      * @param topic - Topic on which it has been recieved
      * @param message - MqttMessage of incoming transaction
      * @throws Exception - If there was an error while forwarding messages */
@@ -258,7 +258,7 @@ public class MqttHelper implements MqttCallback, Runnable {
     /**
      * Reports the shutdown to the MES and closes the MQTT connection.
      * 
-     * @see EV3_Brick.stopMqtt() */
+     * @see MqttBrick.stopMqtt() */
     protected synchronized void close() {
         try {
             publishToMES(deviceID+":shutting down");
