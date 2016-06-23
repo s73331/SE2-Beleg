@@ -5,7 +5,6 @@ import java.io.IOException;
 
 import lejos.hardware.*;
 import lejos.hardware.ev3.*;
-import lejos.hardware.lcd.*;
 import lejos.hardware.motor.*;
 import lejos.hardware.sensor.*;
 import lejos.utility.Delay;
@@ -114,24 +113,6 @@ public class EV3_Brick implements MqttBrick {
         audio = ev3.getAudio();
         led = ev3.getLED();
         recipes = new HashMap<String,Recipe>();
-        
-        identifyPorts();
-    }
-    
-    /*
-     * Initialize Port-Settings (From Properties?)
-     * and write them into the Instance Variables motor/sensor-Map
-     * 
-     * @return  boolean If this was successfuly or not */
-    private boolean identifyPorts() {
-        mqttHelper.debug("Identify Ports");
-        
-        //motorMap = new HashMap<Character,BaseRegulatedMotor>();
-        //sensorMap = new HashMap<Integer,AnalogSensor>();
-        
-        // Insert Identification Code from Sepp here
-        
-        return false;
     }
     
     /**
@@ -144,27 +125,42 @@ public class EV3_Brick implements MqttBrick {
     }
     
     /**
+     * Getter for the Name of the current State
      * 
+     * @return The Name of the current State
      */
     public String getStateName() {
         return this.currentState.getName();
     }
     
     /**
+     * Getter for Audi-Object of the EV3 for Soundeffects of the State
      * 
+     * @return audio - The lejos.hardware.Audio Object
+     * @see State
      */
     public Audio getAudio() {
         return this.audio;
     }
     
     /**
+     * Getter for LED-Object of the EV3 for Visual Apperance of the State
      * 
+     * @return led - The lejos.hardware.LED Object
      */
     public LED getLED() {
         return this.led;
     }
     
     /**
+     * Setter for Waiting Variable [TimeWindow]-For Message-Input
+     * When True, then a Message is awaited
+     * When False, then no Message is awaited
+     * 
+     * @param wait The Boolean value waiting shall be set to
+     * @see Proc
+     * @see Idle
+     * @see MqttBrick.messageArrived
      * 
      */
     public void setWaiting(boolean wait) {
