@@ -20,7 +20,6 @@ import ev3steuerung.rezeptabarbeitung.Recipe;
 public class EV3_Brick implements MqttBrick {
     // Instance of the Brick as its Singleton
     private static EV3_Brick instance;
-    private EV3 ev3;
     
     // State of the current Machine
     private State currentState;
@@ -37,6 +36,8 @@ public class EV3_Brick implements MqttBrick {
     /** Variable to see if the program is waiting for a response
      * to catch Out-Of-Time-Frame messages and discard them  */
     private boolean waiting;
+    /** Lejos-EV3-Object from the machine*/
+    private EV3 ev3;
     /** LED-Object of the EV3 */
     private LED led;
     /** Audio-Object of the EV3 */
@@ -49,7 +50,7 @@ public class EV3_Brick implements MqttBrick {
     protected int REGCONF_TIMEOUT, TASKCONF_TIMEOUT, TASKREQ_TIMEOUT, SLEEP_TIME, MAXMAINT_TIME;
 
     /* MAIN FUNCTIONS START */
-    /*
+    /**
      * Private Class Constructor that initializes the Hardware and sets
      * the first state to TurningOn */
     private EV3_Brick() {
