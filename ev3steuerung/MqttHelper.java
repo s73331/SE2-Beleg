@@ -24,7 +24,6 @@ public class MqttHelper implements MqttCallback, Runnable {
     private String serverURI;
     private String deviceID;
     private MqttBrick mqttBrick;
-    private LinkedList<String> failedMesMessages;
     private LinkedList<String> failedDebugMessages;
     private String ip;
     private boolean thread = false; // is a thread running executing the run method
@@ -42,7 +41,6 @@ public class MqttHelper implements MqttCallback, Runnable {
         this.deviceID            =   deviceID;
         this.mqttBrick           =   mqttBrick;
         this.serverURI           =   serverURI;
-        this.failedMesMessages   =   new LinkedList<String>();
         this.failedDebugMessages =   new LinkedList<String>();
         this.ip                  =   ip;
         connect();
@@ -67,13 +65,6 @@ public class MqttHelper implements MqttCallback, Runnable {
         }
     }
     private synchronized boolean resend() {
-        while(failedMesMessages.size() > 0) {
-            String current=failedMesMessages.peekLast();
-            if(publishToMES(current))
-                failedMesMessages.remove();
-            else 
-                return false;
-        }
         while(failedDebugMessages.size() > 0) {
             String current=failedDebugMessages.peekLast();
             if(publishToMES(current))
@@ -106,12 +97,11 @@ public class MqttHelper implements MqttCallback, Runnable {
     private synchronized boolean publishToMES(String message) {
         try {
             mqtt.publish("vwp/stiserver", new MqttMessage(message.getBytes()));
+            return true;
         } catch (MqttException e) {
             error=true;
-            failedMesMessages.add(message);
-            startFixer();   // if we fail delivering a message to MES, start a thread to try to fix the situation and deliver the message
+            return false;
         }
-        return true;
     }
     /**
      * Registers the device at the MES, as shown in Mr. Ringel's state diagram in transition 1.
