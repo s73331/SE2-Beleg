@@ -8,8 +8,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
- 
-
 /**
  * Main class for Monitoring Tool.
  * 
@@ -25,7 +23,23 @@ public class MonitoringTool extends Application {
      */
     public static void main(String[] args) {
         logger.debug("main(): entered");
-        launch(args);
+        
+        boolean ok = true;
+        String[] classes = {"org.postgresql.core.BaseStatement", "javafx.application.Platform", "org.apache.logging.log4j.Logger", "org.eclipse.paho.client.mqttv3.MqttMessage"};
+        
+        for (String c : classes) {
+            try {
+                Class.forName(c);
+            } catch( ClassNotFoundException e ) {
+                System.out.println("Class "+c+" not found!");
+                ok = false;
+            }
+        }
+        
+        if (ok)
+            launch(args);
+        else
+            System.out.println("Not all Classes could be loaded. Exiting..");
         logger.debug("main(): exiting");
     }
     /**
@@ -54,6 +68,7 @@ public class MonitoringTool extends Application {
             stop();
         }
     }
+    
     /**
      * Method as defined by javafx.application.Application.
      */

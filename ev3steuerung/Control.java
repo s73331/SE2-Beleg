@@ -28,6 +28,22 @@ public class Control {
         fixDir();
     }
     
+    private boolean checkExtClasses() {
+        boolean ok = true;
+        String[] classes = {"lejos.utility.Delay", "lejos.hardware.Audio", "org.eclipse.paho.client.mqttv3.MqttMessage"};
+        
+        for (String c : classes) {
+            try {
+                Class.forName(c);
+            } catch( ClassNotFoundException e ) {
+                System.out.println("Class "+c+" not found!");
+                ok = false;
+            }
+        }
+        
+        return ok;
+    }
+    
     private void fixDir() {
         String[] directories = java.nio.file.Paths.get("").toAbsolutePath().toFile().list(new java.io.FilenameFilter(){
             @Override
@@ -49,7 +65,10 @@ public class Control {
      * @param args - Arguments of the MAIN (not needed) */
     public static void main(String[] args) {
         Control m = new Control();
-        m.start();
+        if (m.checkExtClasses())
+            m.start();
+        else
+            System.out.println("Not all Classes could be loaded. Exiting..");
         System.exit(1);
     }
 }
