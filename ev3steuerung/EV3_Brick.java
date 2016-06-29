@@ -84,7 +84,7 @@ public class EV3_Brick implements MqttBrick {
             startMqtt();
         } catch (InterruptedException ie) {
             System.out.println("Mqtt-Handler could not be started");
-            Delay.msDelay(5000);
+            ie.printStackTrace();
             System.exit(0);
         }
         // Initialize the LED / Audio / Recipe-set
@@ -99,7 +99,6 @@ public class EV3_Brick implements MqttBrick {
             propertyHelper=new ConcretePropertyLoader("ev3steuerung.properties");
         } catch (IOException ioe) {
             System.out.println("The ev3steuerung.properties file could not be loaded");
-            Delay.msDelay(5000);
             System.exit(0);
         }
         
@@ -124,9 +123,9 @@ public class EV3_Brick implements MqttBrick {
             audio = ev3.getAudio();
             led = ev3.getLED();
             recipes = new HashMap<String,Recipe>();
-        } catch (NoClassDefFoundError nce) {
+        } catch (Exception e) {
             System.out.println("The Brick could not be loaded");
-            Delay.msDelay(5000);
+            e.printStackTrace();
             System.exit(0);
         }
     }
