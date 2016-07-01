@@ -318,7 +318,7 @@ public class EV3_Brick implements MqttBrick {
      *  @see MqttHelper */
     public void manualFix() {
         mqttHelper.debug("Manual Fixing");
-        if (getStateName().equals("MAINT")) {
+        if (getStateName().equals("MAINT") || getStateName().equals("DOWN")) {
             this.fix = true;
             mqttHelper.debug("Manual Fix Applied");
         }
