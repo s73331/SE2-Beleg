@@ -1,13 +1,13 @@
 package ev3steuerung; 
 
+import java.util.ArrayDeque;
 import java.util.HashMap;
+import java.io.File;
 import java.io.IOException;
 
 import lejos.hardware.*;
 import lejos.hardware.ev3.*;
-import lejos.hardware.motor.*;
-import lejos.hardware.sensor.*;
-import lejos.utility.Delay;
+import lejos.hardware.port.Port;
 import ev3steuerung.rezeptabarbeitung.Recipe;
 
 /**
@@ -28,10 +28,11 @@ public class EV3_Brick implements MqttBrick {
     private boolean produce;
     private boolean sleep;
     private boolean forcedState;
-    private String recName;
+    private String recipeID;
     private PropertyLoader propertyHelper;
     private MqttHelper mqttHelper;
-    private HashMap<String,Recipe> recipes;
+    private JSONloader jsonloader;
+    private HashMap<String, Object> recipesMap;
     
     /** Variable to see if the program is waiting for a response
      * to catch Out-Of-Time-Frame messages and discard them  */
@@ -58,8 +59,6 @@ public class EV3_Brick implements MqttBrick {
         this.fix = false;
         this.waiting = false;
         this.forcedState = false;
-        
-        startEV3();
     }
     
     /**
@@ -68,7 +67,10 @@ public class EV3_Brick implements MqttBrick {
      * @return  EV3_Brick - The Instance of the Singleton */
     public static EV3_Brick getInstance() {
         if (instance == null)
+        {
             instance = new EV3_Brick();
+            instance.startEV3();
+        }
         return instance;
     }
     
@@ -80,15 +82,21 @@ public class EV3_Brick implements MqttBrick {
         initializeProperties();
         
         // Start MQTT-Handling
+        
+        System.out.println("Connecting to MQTT-Broker");
         try {
             startMqtt();
-        } catch (InterruptedException ie) {
+        } catch (Exception ie) {
             System.out.println("Mqtt-Handler could not be started");
             ie.printStackTrace();
             System.exit(0);
         }
+        
         // Initialize the LED / Audio / Recipe-set
         initializeHardware();
+        
+        //create JSONloader object
+        initializeJSONloader();
         
         // Set the State 
         this.setState(new TurningOn(), false);
@@ -122,7 +130,6 @@ public class EV3_Brick implements MqttBrick {
             this.ev3 = (EV3)BrickFinder.getLocal();//getDefault();
             audio = ev3.getAudio();
             led = ev3.getLED();
-            recipes = new HashMap<String,Recipe>();
         } catch (Exception e) {
             System.out.println("The Brick could not be loaded");
             e.printStackTrace();
@@ -137,6 +144,10 @@ public class EV3_Brick implements MqttBrick {
      * @see State */
     public State getState() {
         return this.currentState;
+    }
+    
+    public Port getPortfromString(String p) {
+    	return ev3.getPort(p);
     }
     
     /**
@@ -182,6 +193,63 @@ public class EV3_Brick implements MqttBrick {
         this.waiting = wait;
     }
     
+    public void setRecipes(HashMap recipes) {
+    	this.recipesMap = recipes;
+    }
+    
+    public ArrayDeque<Object[]> getRecipe(String recipeID){
+    	
+    	ArrayDeque<Object[]> deque =(ArrayDeque<Object[]>) this.recipesMap.get(recipeID+"_deque");
+    	if(deque != null){
+    		//Rezept schon geladen
+    		//check for Update
+    		
+    		File recipePath = new File("./recipes/" + this.recipesMap.get(recipeID+"_filename"));
+    		
+    		if(this.recipesMap.get(recipeID).equals(jsonloader.getHash(recipePath)))
+    		{   
+    			mqttHelper.debug("same Hash, use cached recipe");
+    			System.out.println("use cached recipe");
+    			return (ArrayDeque<Object[]>) this.recipesMap.get(recipeID+"_deque");
+    		}
+            else {
+            	mqttHelper.debug("changed Hash, load file new");
+
+                // alten einträge löschen
+                recipesMap.remove(recipeID);
+                recipesMap.remove(recipeID +"_deque");
+                recipesMap.remove(recipeID +"_filename");
+                
+                mqttHelper.debug("delete old keys in our HashMap");
+
+                //versuchen verändertes Rezept neu einzulesen
+                if(jsonloader.buildDeuque(recipePath,recipesMap))
+                {
+                	mqttHelper.debug("successfully read new recipe");
+                	Object newRecipedeque = this.recipesMap.get(recipeID+"_deque");
+                	
+                	if( newRecipedeque != null)
+                	{
+                		System.out.println("sucessfully load updated recipe");
+                	return (ArrayDeque<Object[]>) this.recipesMap.get(recipeID+"_deque");
+                	}else
+                	{//wenn im rezept die ID verändert wurde landet man hier
+                		return null;}
+ 
+                }else{
+                	return null;
+                }
+    		
+    	}
+    	}else{
+    		//Rezept noch nicht vorhanden -> Alle neu laden
+    		//TODO
+    		//einfache Lösung nichts machen
+    		//-> bedeutet neue Rezepte werden nur bei neustart eingelesen
+    		return null;
+    	}
+    	
+    }
     /**
      * Changes the State to a given new state
      * 
@@ -212,13 +280,17 @@ public class EV3_Brick implements MqttBrick {
         return this.mqttHelper;
     }
     
+    public JSONloader getJSONloader() {
+    	return this.jsonloader;
+    }
+    
     /**
      * Returns the next Recipe that shall be completed
      * 
      * @return Recipe - Object that was loaded
      */
-    public Recipe getNextRecipe() {
-        return recipes.get(recName);
+    public String getrecipeID() {
+        return this.recipeID;
     }
     
     /*  MAIN FUNCTIONS END      */
@@ -310,6 +382,11 @@ public class EV3_Brick implements MqttBrick {
     public void startMqtt() throws InterruptedException {
         this.mqttHelper = new MqttHelper(this,DEVICE_ID, "tcp://"+MQTTSERV_IP, IP);
     }
+    
+    public void initializeJSONloader() {
+    	mqttHelper.debug("JSONloader is being initialized");
+    	this.jsonloader = new JSONloader();
+    }
     /**
      *  Method to call from MqttHelper when "manual fix" message arrives.
      *  This sets a fix flag, if the current State is instanceof Maint
@@ -344,27 +421,24 @@ public class EV3_Brick implements MqttBrick {
      *  @see Recipe
      */
     public synchronized void messageArrived(String message) {
+    	
+    	
+    	
         if (message.contains("produce") && getStateName().equals("IDLE") && waiting && !produce) {
             mqttHelper.debug("Message Arrived: "+message);
             String recString;
             
-            // Add the recipe name to the variable recName
+            // Add the recipe name to the variable recipeID
             recString = message.replaceAll("produce:", "");     // Remove Produce:
-            recString = message.replaceAll(" ", "");            // Remove Whitespaces
+            recString = recString.replaceAll(" ", "");            // Remove Whitespaces
             
             if (recString.isEmpty()) {
                 mqttHelper.debug("Recipe-String was empty, did not recieve a valid response");
                 return;
             }
             
-            this.recName = recString;
-            // Tell them you recieved shit
+            this.recipeID = recString;
             this.produce = true;
-            
-            mqttHelper.debug("Add Recipe newly to the set");
-            recipes.put(recString, Recipe.load(recString));
-            
-            mqttHelper.debug("Set contains Recipe now");
                 
         } else if (waiting) {
             switch (message) {

@@ -20,7 +20,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 public class MqttHelper implements MqttCallback, Runnable {
     private MqttAsyncClient mqtt;
     private boolean error = false;
-    private boolean debugMode = false;
+    private boolean debugMode = true;
     private String serverURI;
     private String deviceID;
     private MqttBrick mqttBrick;
@@ -81,7 +81,8 @@ public class MqttHelper implements MqttCallback, Runnable {
             new Thread(this).start();
     }
     private synchronized boolean publishToDeviceID(String message) {
-        if(error&&!connect()) {
+        
+    	if(error&&!connect()) {
             return false;
         }
         try {
@@ -218,8 +219,6 @@ public class MqttHelper implements MqttCallback, Runnable {
                 case "debug":
                     if("true".equals(information[1]) || "false".equals(information[1]))
                         debugMode = Boolean.parseBoolean(information[1]);
-                    else
-                        System.out.println("unrecognized message "+new String(message.getPayload()));
                     break;
                 case "manual":
                     mqttBrick.manualFix();

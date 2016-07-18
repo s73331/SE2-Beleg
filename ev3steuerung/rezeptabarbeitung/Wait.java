@@ -1,11 +1,12 @@
 package ev3steuerung.rezeptabarbeitung;
 
 import lejos.utility.Delay;
+import ev3steuerung.rezeptabarbeitung.Flag.WaitMode;
 
 public class Wait {
 	
-	private long ms;
-	private int mode;
+	private int ms;
+	private WaitMode mode;
 	private int sensor;
 
     /**
@@ -18,14 +19,14 @@ public class Wait {
     /**
      *@param ms for the waiting time in ms(milliseconds)
      */
-    public void setMs(long ms) {
+    public void setMs(int ms) {
         this.ms = ms;
     }
     
     /**
      *@return mode
      */
-	public int getMode() {
+	public WaitMode getMode() {
 		return mode;
 	}
 
@@ -36,7 +37,7 @@ public class Wait {
      *2 = wait for releasing the TouchSensor
      *@param mode
      */
-	public void setMode(int mode) {
+	public void setMode(WaitMode mode) {
 		this.mode = mode;
 	}
     
@@ -60,7 +61,7 @@ public class Wait {
      *@param ms
      *@param mode
      */
-	public Wait(long ms, int mode){
+	public Wait(int ms, WaitMode mode){
 		this.ms = ms;
 		this.mode = mode;
 	}
@@ -71,8 +72,8 @@ public class Wait {
      *@param sensor
      *@param mode
      */
-	public Wait(int sensor, int mode){
-		this.sensor = sensor;
+	public Wait(Flag.DevicePort sensor, WaitMode mode){
+		this.sensor = sensor.ordinal();
 		this.mode = mode;
 	}
 	

@@ -67,18 +67,17 @@ public class MediumMotor extends MotorDevice {
     public boolean rotate(boolean mode,int speed, int angle ){
         
         if(speed <= (int) motor.getMaxSpeed()){
+        	System.out.println("Motorspeed medium ok");
             motor.setSpeed(speed);
         }
         else{
             //TODO Fehler ausgeben und return false
             // Warnung oder Abbruch
+        	System.out.println("Motorspeed medium nicht ok neu" + motor.getMaxSpeed());
             motor.setSpeed(motor.getMaxSpeed());
         }
         
-        motor.resetTachoCount();
         motor.rotate(angle,mode);
-        
-        int currentAngle = motor.getTachoCount(); // should be -360
         
         return true;
         
@@ -104,7 +103,6 @@ public class MediumMotor extends MotorDevice {
             motor.setSpeed(motor.getMaxSpeed());
         }
         
-        motor.resetTachoCount();
         motor.forward();
         
         return true;

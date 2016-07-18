@@ -37,14 +37,14 @@ public class Idle implements State
         // WAIT FOR NON-CONFIRM
         ev3.getMqttHelper().debug("Waiting for produce-task or sleep");
         ev3.setWaiting(true);
-        for (int i = 0; i < ev3.TASKREQ_TIMEOUT && !produce; i++) {
+        for (int i = 0; i < ev3.TASKREQ_TIMEOUT && !produce && ev3.getStateName().equals("IDLE"); i++) {
             if (ev3.isSleep()) {
                 i = 0;
                 ev3.getMqttHelper().debug("Sleep acknowlegded, Resetting Wait time");
             }
             if (ev3.isProduce()) {
                 produce = true;
-                ev3.setState(new Proc(),false); //TODO: RECIPE STRUCTURES
+                ev3.setState(new Proc(),false);
                 ev3.getMqttHelper().debug("Produce acknowlegded");
             }
             else {

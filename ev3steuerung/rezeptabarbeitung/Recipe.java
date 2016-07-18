@@ -1,16 +1,11 @@
 package ev3steuerung.rezeptabarbeitung;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Deque;
-import java.util.LinkedList;
-import lejos.hardware.Button;
-import lejos.hardware.lcd.LCD;
+
+import java.util.ArrayDeque;
+import lejos.hardware.device.DeviceIdentifier;
 import lejos.hardware.motor.BaseRegulatedMotor;
 import lejos.utility.Delay;
+
 
 
 import ev3steuerung.EV3_Brick;
@@ -20,18 +15,70 @@ public class Recipe {
     /** Constant for the Work on the Recipe */
     public static final boolean PARALLEL = true;
     public static final boolean SEQENZIELL = false;
-    public static final int TOUCHWAITTIMEOUT = 10000;
+    public static final int TOUCHWAITTIMEOUT = 50000;
     
-    private Deque<Object[]> rezept;
+    private ArrayDeque<Object[]> rezept;
     private Device[] devices;
-    private String name;
     private EV3_Brick ev3;
+    private String recipeID;
     
-    private Recipe(String recName, Deque<Object[]> rezept) {
-        this.name = recName;
+    public Recipe(ArrayDeque<Object[]> rezept, String recipeID) {
         this.rezept = rezept;
         this.ev3 = EV3_Brick.getInstance();
+        this.recipeID = recipeID;
         ev3.getMqttHelper().debug("Creating Recipe");
+    }
+    
+    
+    public boolean checkConfiguration(){
+
+        this.devices = (Device[]) rezept.getFirst();
+        String[] Ports = {"A", "B", "C", "D", "S1", "S2", "S3", "S4"};
+        
+        
+    	for (int i = 0; i<8 ; i++){
+            if(devices[i] != null){
+        		DeviceIdentifier ids = new DeviceIdentifier(ev3.getPortfromString(Ports[i]));
+        		String signature = ids.getDeviceSignature(false);
+            	switch (devices[i].getClass().getName()) {
+            	case "ev3steuerung.rezeptabarbeitung.MediumMotor" :	
+            		if ( !signature.contains("OUTPUT_TACHO:MINITACHO") )
+            		{
+            			ev3.getMqttHelper().debug("No MediumMotor on Port " +Ports[i]);
+            			ids.close();
+            			return false;
+            		}
+            		break;
+            	case "ev3steuerung.rezeptabarbeitung.LargeMotor" :
+            		if ( !signature.contains("OUTPUT_TACHO:TACHO") )
+            		{
+            			ev3.getMqttHelper().debug("No LargeMotor on Port " +Ports[i]);
+            			ids.close();
+            			return false;
+            		}
+            		break;
+            	case "ev3steuerung.rezeptabarbeitung.TouchSensor" :
+            		if ( !signature.contains("EV3_ANALOG:EV3_TOUCH") )
+            		{
+            			ev3.getMqttHelper().debug("No ToucSensor on Port " +Ports[i]);
+            			ids.close();
+            			return false;
+            		}
+            		break;
+            	case "ev3steuerung.rezeptabarbeitung.ColorSensor" :
+            		if ( !signature.contains("UART:COL-REFLECT") )
+            		{
+            			ev3.getMqttHelper().debug("No ColorSensor on Port " +Ports[i]);
+            			ids.close();
+            			return false;
+            		}
+            		break;
+            	}
+            	ids.close();
+            }
+        }
+    	ev3.getMqttHelper().debug("Devices are Ok");
+    	return true;
     }
     
     /**
@@ -41,12 +88,16 @@ public class Recipe {
      * @see Device
      * */
     public void register() throws lejos.hardware.DeviceException, NullPointerException {
-        ev3.getMqttHelper().debug("Recipe: "+this+" registering Devices");
+    	ev3.getMqttHelper().debug("Recipe: "+this.recipeID+" registering Devices");
         /* Ger�te registrieren */
-        this.devices = (Device[]) rezept.getFirst();
-        for (Device x:devices){
-            if (!x.register()) {
-                throw new NullPointerException("Failed Registering a Device");
+        
+        for (int i = 0; i<8 ; i++){
+            if(devices[i] != null){
+            	if(!devices[i].register()) {
+	            	System.out.println("Failed to register a Device");
+	            	ev3.getMqttHelper().debug("Failed to register a Device");
+	                throw new NullPointerException("Failed Registering a Device");
+	            }
             }
         }
         rezept.removeFirst();
@@ -58,11 +109,16 @@ public class Recipe {
      * @see Device
      */
     public void close() {
-        ev3.getMqttHelper().debug("Recipe: "+this+" close Devices");
+        ev3.getMqttHelper().debug("Recipe: "+this.recipeID+" close Devices");
         /* Verbindungen zu Motoren/Sensoren trennen */
-        for (Device x:devices){
-            x.close();
+        if(devices != null){
+	        for (int i = 0; i<8 ; i++){
+	            if(devices[i] != null){
+	            	devices[i].close();
+	            }
+        	}
         }
+    
     }
     
     /**
@@ -74,113 +130,125 @@ public class Recipe {
      * @return True - When The whole Recipe has been finished without Problems
      */
     public boolean work() throws InterruptedException {
-        ev3.getMqttHelper().debug("Recipe: "+this+" working the tasks");
+        ev3.getMqttHelper().debug("Recipe: "+this.recipeID+" working the tasks");
         boolean ok = true;
         
         /* Solange Rezeptbefehle vorhanden sind*/
         while(!rezept.isEmpty() && ok) { 
             
-            boolean pressinTime;
-            boolean releaseinTime;
-            boolean rightAngle;
-            boolean run = true;
             int time = 0;
-            boolean stall = false;
             
             /* Spin starten */
             if(rezept.getFirst().getClass().toString().contains("Spin")) {
                 Spin[] befehl = (Spin[]) rezept.getFirst();
-                boolean mode;
-                if(befehl.length == 1) { //mehrere Spins 
-                    mode = SEQENZIELL;
-                    }
-                else
-                    mode = PARALLEL; // Auf Motoren warten bis nächsten Schritt
-                
+      
                 for (Spin s:befehl) {
                     ev3.getMqttHelper().debug("Working on Spin "+s.toString());
                     
-                    BaseRegulatedMotor em = ((MotorDevice)devices[s.getDevice()]).getEV3Motor();
-                    TouchSensor touch = (TouchSensor)devices[s.getSensor()];
                     MotorDevice md = (MotorDevice)devices[s.getDevice()];
-                    em.setStallThreshold(2, 50);
-                    if(s.getTill() == 1) {
-                        System.out.println("Press TouchSensor");
-                        ev3.getMqttHelper().debug("Wait util its pressed");
-                        md.forward(s.getSpeed());
-                        stall = false;
-                        time = 0;
-                        while (!touch.isPressed() && time < TOUCHWAITTIMEOUT && !stall) {
-                            if (em.isStalled()) {
-                                ev3.getMqttHelper().debug("Stalling detected");
-                                stall = true;
-                            }
-                            Delay.msDelay(50);
-                            time += 50;
-                        }
-                        
-                        if (stall || time >= TOUCHWAITTIMEOUT) {
-                                md.stop();
-                                ok = false;
-                                throw new InterruptedException("Stalled or Timeout");
-                        }
-                        md.stop();
-                    }
-                    else if(s.getTill() == 0){
-                        System.out.println("Release TouchSensor");
+                    BaseRegulatedMotor em = md.getEV3Motor();
+                    em.setStallThreshold(10, 50);
+                    em.resetTachoCount();
+                    switch(s.getMode()){
+                    case Spin_Till_Pressed:
+                    	System.out.println("Press TouchSensor");
+                        ev3.getMqttHelper().debug("Wait until its pressed");
+                        md.forward(s.getSpeed());                       
+                    	break;
+                    case Spin_Till_Released:
+                    	System.out.println("Release TouchSensor");
                         ev3.getMqttHelper().debug("Wait until its released");
                         md.forward(s.getSpeed());
-                        time = 0;
-                        stall = false;
-                        while (touch.isPressed() && time < TOUCHWAITTIMEOUT && !stall) {
-                            if (em.isStalled()) {
-                                ev3.getMqttHelper().debug("Stalling detected");
-                                stall = true;
-                            }
-                            Delay.msDelay(50);
-                            time += 50;
-                        }
-                        
-                        if (stall || time >= TOUCHWAITTIMEOUT) {
-                                md.stop();
-                                ok = false;
-                                throw new InterruptedException("Stalled or Timeout");
-                        }
-                    }
-                    else if(s.getTill() == 9){
+                    	break;
+                    case Turn_to_Angle:
                         ev3.getMqttHelper().debug("Turn to an angle");
-                        md.rotate(mode, s.getSpeed(), s.getAngle());
-                        time = 0;
-                        while (time < TOUCHWAITTIMEOUT && !stall && md.getEV3Motor().isMoving()) {
-                            if (em.isStalled()) {
-                                ev3.getMqttHelper().debug("Stalling detected");
-                                stall = true;
-                            }
-                            Delay.msDelay(50);
-                            time += 50;
-                        }
-                        if (time >= TOUCHWAITTIMEOUT || stall) {
-                            md.stop();
-                            throw new InterruptedException("not the right angle!");
-                        }
+                        md.rotate(true, s.getSpeed(), s.getAngle());
+                    	break;
+                    	default:
+                    		ev3.getMqttHelper().debug("Mode nicht erkannt");
                     }
+                }
+                time=0;
+                boolean[] loop=new boolean[befehl.length];
+                for(int i=0;i<loop.length;i++) {
+                	loop[i]=true;
+                }
+                boolean mloop=true;
+                while(mloop) {
+	                for (int i=0; i<befehl.length; i++){
+	                	Spin s=befehl[i];
+                		MotorDevice md = (MotorDevice)devices[s.getDevice()];
+                        BaseRegulatedMotor em = md.getEV3Motor();
+	                	switch(s.getMode()) {
+	                	case Spin_Till_Pressed:
+	                		TouchSensor touch = (TouchSensor)devices[s.getSensor()];
+	                        if (!touch.isPressed()) {
+	                            if (em.isStalled()) {
+	                            	for(Spin s2:befehl) 
+	                                	((MotorDevice)devices[s2.getDevice()]).getEV3Motor().stop();
+	                        		throw new InterruptedException("stall");
+	                        	}
+	                        } else {
+	                        	loop[i] = false;
+	                        }                   
+	                        break;
+	                	
+	                        
+	                	case Spin_Till_Released:
+	                        TouchSensor touch2 = (TouchSensor)devices[s.getSensor()];
+	                        if (touch2.isPressed()) {
+	                            if (em.isStalled()) {
+	                            	for(Spin s2:befehl) 
+	                                	((MotorDevice)devices[s2.getDevice()]).getEV3Motor().stop();
+	                        		throw new InterruptedException("stall");
+	                        	}
+	                        } else {
+	                        	loop[i] = false;
+	                        }                   
+	                        break;
+	                		
+	                		
+	                	case Turn_to_Angle:
+	                		double progress=((double)em.getTachoCount())/s.getAngle();
+	                		boolean end=progress>0.9 && progress < 1.1;
+	                		if(em.isStalled() && !end) {
+                        		for(Spin s2:befehl) 
+                                	((MotorDevice)devices[s2.getDevice()]).getEV3Motor().stop();
+                        		throw new InterruptedException("stall");
+                        	} 
+	                		if(!em.isMoving()) {
+	                        	loop[i] = false;
+	                        }
+	                        break;
+	                		
+	                		
+	                		default:
+	                			ev3.getMqttHelper().debug("Modus nicht erkannt");
+	                	}
+	                }
+	                mloop=false;
+	                for(boolean lo:loop)
+	                	mloop=mloop||lo;
+	                Delay.msDelay(10);
                 }
             }
             /* Wartezeit starten */
             else if(rezept.getFirst().getClass().toString().contains("Wait")) {
                 ev3.getMqttHelper().debug("Waiting operation");
                 Wait[] befehl = (Wait[]) rezept.getFirst();
-                TouchSensor touch = (TouchSensor)devices[befehl[0].getSensor()];
+                TouchSensor touch;
                 time = 0;
                 
+                
                 switch(befehl[0].getMode()) {
-                case 0:
+                case Wait_Time:
                     long toWait = befehl[0].getMs();
                     ev3.getMqttHelper().debug("Wait certain time");
                     Delay.msDelay(toWait);
                     break;
                     
-                case 1:
+                case Wait_for_Release:
+                    touch = (TouchSensor)devices[befehl[0].getSensor()];
                     System.out.println("Release TouchSensor");
                     ev3.getMqttHelper().debug("Wait for Release");
                     time = 0;
@@ -197,7 +265,8 @@ public class Recipe {
                     }
                     break;
                 
-                case 2:
+                case Wait_for_Press:
+                    touch = (TouchSensor)devices[befehl[0].getSensor()];
                     System.out.println("Press TouchSensor");
                     ev3.getMqttHelper().debug("Wait for Press");
                     time = 0;
@@ -224,133 +293,4 @@ public class Recipe {
         else
             return false;
     }
-    
-    /**
-     * Loads up the specified Recipe, creates a new Recipe-Object,
-     * loads the Resources and returns it.
-     * 
-     * @param recName Name of the Recipe that shall be loaded
-     * @Return Recipe that was created and filled
-     * @see EV3_Brick.loadRecipe(..)
-     */
-    public static Recipe load(String recName) {
-        // GET ALL NAMES OF SUBDIRECTORY ./RECIPES
-        
-        /* Insert Code here start */
-        
-        // Load Certain Recipe that is specified in the recName
-        
-        /* Insert Code here end */
-        
-        // -> Sample Recipe here
-        /* Sepp */
-        
-        LargeMotor d1 = new LargeMotor("B");
-        MediumMotor d2 = new MediumMotor("A");
-        TouchSensor d3 = new TouchSensor("S2");
-        ColorSensor d4 = new ColorSensor("S1");
-
-        
-        Device[] init = {d1, d2, d3, d4};
-        
-        Spin s1 = new Spin(2500,360,1,0, 9);    // Medium Motor allein bis Gradzahl
-        Spin s2 = new Spin(2500,360,0, 0,9);    // Große Motor allein bis Gradzahl
-        Spin s3 = new Spin(0,360, 0, 2, 1);     // Drehe bis Sensor gedrückt wird
-        Spin s4 = new Spin(0, 360, 0, 2, 0);    // Drehe bis Sensor losgelassen
-        Wait s5 = new Wait(5000, 0);            // Warten in ms
-        Wait s6 = new Wait(2, 1);               // Warten auf Touch
-        
-        
-        /*angle, speed, welcher Motor ,welcher Touchsensor, Touchsensor Einstellung*/
-        
-        Wait[] befehl8 = {s6};
-        Wait[] befehl7 = {s5};
-        Spin[] befehl6 = {s2};
-        Spin[] befehl5 = {s4};
-        Spin[] befehl4 ={s3};
-        Spin[] befehl3 ={s1,s2};
-        Spin[] befehl2 = {s1};
-    
-        Deque<Object[]> rezept = new LinkedList<>();
-        
-        rezept.addLast(init);
-        //rezept.addLast(befehl6);
-        //rezept.addLast(befehl3);
-        rezept.addLast(befehl4);
-        //rezept.addLast(befehl5);
-        //rezept.addLast(befehl7);  // Color
-        
-        //rezept.addLast(befehl2);
-        //rezept.addLast(befehl8);
-        //rezept.addLast(befehl2);
-
-
-        /* Bis hier bekommen wir von Sepp übergeben */
-        return new Recipe(recName, rezept);
-    }
-    
-    
-    /**
-     * Override the toString()-Method to display the name of the Recipe
-     * 
-     * @return Name of the Recipe
-     */
-    @Override
-    public String toString() {
-        return name;
-    }
-    
-    /**
-     * Overrides the usual Hashcode-method to return
-     * the name as HashCode for Identification purpose in a HashSet
-     * 
-     * @return hashcode that is used to identify it
-     * @see EV3_Brick
-     * @see java.util.HashSet
-     */
-    @Override
-    public int hashCode() {
-        int i = 0;
-        int num = 0;
-        boolean isNeg = false;
-        
-        //Process each character of the string;
-        while( i < name.length()) {
-            num *= 10;
-            num += name.charAt(i++) - '0'; //Minus the ASCII code of '0' to get the value of the charAt(i++).
-        }
-        
-        //Check for negative sign; if it's there, set the isNeg flag
-        if (name.charAt(0) == '-') {
-            isNeg = true;
-            i = 1;
-        }
-        
-        // Check for negativity, if so make it positive again
-        if (isNeg)
-            num = -num;
-            
-        return num;
-    }
-    
-    /**
-     * Overrides the equals-Method to better check if two
-     * Recipes are in fact equal
-     * 
-     * @param obj The Object to check equality against
-     * @return True - If the Objects describe the same Recipe
-     */
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj)
-         return true;
-      if (obj == null)
-         return false;
-      if (getClass() != obj.getClass())
-         return false;
-      Recipe other = (Recipe) obj;
-      if (!this.toString().equals(other.toString()))
-         return false;
-      return true;
-    }
-}
+  }

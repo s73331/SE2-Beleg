@@ -69,15 +69,17 @@ public class LargeMotor extends MotorDevice {
     public boolean rotate(boolean mode,int speed, int angle ){
         
         if(speed <= (int) motor.getMaxSpeed()){
+        	System.out.println("Motorspeed Large ok");
             motor.setSpeed(speed);
         }
         else{
             //TODO Fehler ausgeben und return false
             // Warnung oder Abbruch
+        	System.out.println("Motorspeed Large ok");
+        	 
             motor.setSpeed(motor.getMaxSpeed());
         }
         
-        motor.resetTachoCount();
         motor.rotate(angle,mode);
         
         return true;
@@ -102,7 +104,6 @@ public class LargeMotor extends MotorDevice {
             motor.setSpeed(motor.getMaxSpeed());
         }
         
-        motor.resetTachoCount();
         motor.forward();
         
         return true;

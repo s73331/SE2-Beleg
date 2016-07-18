@@ -2,11 +2,8 @@ package ev3steuerung.rezeptabarbeitung;
 
 import lejos.hardware.Brick;
 import lejos.hardware.BrickFinder;
-import lejos.hardware.lcd.LCD;
 import lejos.hardware.port.Port;
 import lejos.hardware.sensor.EV3TouchSensor;
-import lejos.hardware.sensor.SensorMode;
-import lejos.utility.Delay;
 
 public class TouchSensor extends SensorDevice {
     

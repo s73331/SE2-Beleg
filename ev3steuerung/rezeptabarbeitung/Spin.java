@@ -1,5 +1,8 @@
 package ev3steuerung.rezeptabarbeitung;
 
+import ev3steuerung.rezeptabarbeitung.Flag.DevicePort;
+import ev3steuerung.rezeptabarbeitung.Flag.SpinMode;
+
 
 public class Spin {
 
@@ -7,9 +10,17 @@ public class Spin {
 	private int speed;
 	private int device;
 	private int sensor;
-	private int till;
+	private SpinMode mode;
 
-    /**
+    public SpinMode getMode() {
+		return mode;
+	}
+
+	public void setMode(SpinMode mode) {
+		this.mode = mode;
+	}
+
+	/**
      *@return angle
      */
 	public int getAngle() {
@@ -50,28 +61,6 @@ public class Spin {
 	public void setDevice(int device) {
 		this.device = device;
 	}
-
-    /**
-     *The mode for the motor and sensor coorporation.
-     *0 = spin till TouchSensor is released
-     *1 = Spin till TouchSensor is pressed
-     *9 = Spin the specified angle
-     *@return till
-     */
-	public int getTill() {
-		return till;
-	}
-
-    /**
-     *The mode for the motor and sensor coorporation.
-     *0 = spin till TouchSensor is released
-     *1 = Spin till TouchSensor is pressed
-     *9 = Spin the specified angle
-     *@param till
-     */
-	public void setTill(int till) {
-		this.till = till;
-	}
 	
     /**
      *@return sensor
@@ -95,12 +84,18 @@ public class Spin {
      * @param sensor - What sensor on which the motor should react for press/release
      * @param till - TODO: No Idea
      */
-	public Spin(int angle, int speed, int device, int sensor, int till){
+	public Spin(int speed, DevicePort device, DevicePort sensor, SpinMode mode){
+		this.speed = speed;
+		this.device = device.ordinal();
+		this.sensor = sensor.ordinal();
+		this.mode = mode;
+	}
+
+	public Spin(int angle, int speed, DevicePort device, SpinMode mode){
 		this.speed = speed;
 		this.angle = angle;
-		this.device = device;
-		this.setSensor(sensor);
-		this.setTill(till);
+		this.device = device.ordinal();
+		this.mode = mode;
 	}
 
 	
