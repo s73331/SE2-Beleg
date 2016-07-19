@@ -21,8 +21,8 @@ import org.apache.logging.log4j.Logger;
 public class PropertyHelper {
     private static final Logger logger=LogManager.getLogger();
     private Properties properties;
-    Map<String, String> queries=new HashMap<String, String>();
-    Set<String> autoUpdateQueries=new HashSet<String>();
+    private Map<String, String> queries=new HashMap<String, String>();
+    private Set<String> autoUpdateQueries=new HashSet<String>();
     /**
      * 
      * @param file path to the properties file
@@ -32,6 +32,7 @@ public class PropertyHelper {
         InputStream fileStream=new FileInputStream(file);
         properties=new Properties();
         properties.load(fileStream);
+        fileStream.close();
         //checks
         if(!properties.containsKey("host")) throw new IOException("key host not found");
         if(!properties.containsKey("port")) throw new IOException("key port not found");

@@ -37,7 +37,7 @@ public class Controller implements InvalidationListener, Runnable, View {
     @FXML
     private Text recipes, currentRecipe, currentItem, onlineTime, processedItems, failedItems, debugState, debugInformation, mqttError, sqlError, mqttStatus, extraStatus;
     @FXML
-    private Pane debugPane, queryPane, informationPane, buttonPane;
+    private Pane debugPane, queryPane, informationPane, buttonPane, topPane;
     @FXML
     private ListView<String> queryList;
     @FXML
@@ -272,6 +272,9 @@ public class Controller implements InvalidationListener, Runnable, View {
         }
         informationPane.setStyle("-fx-background-color: "+backgroundColor+";");
         buttonPane.setStyle("-fx-background-color: "+backgroundColor+";");
+        try {
+            topPane.setStyle("-fx-background-color: "+backgroundColor+";");
+        } catch(NullPointerException npe){} // topPane isn't in all layouts, but must be recolored if existant
         updateQuery(false);
         logger.info("refreshed view");
     } 
